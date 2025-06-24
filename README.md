@@ -48,3 +48,85 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+# Modi Again - Live Connection Counter
+
+A React Native/Expo app that displays real-time connection counts using Firebase Realtime Database.
+
+## Features
+
+- Real-time connection tracking across multiple devices/browsers
+- Live counter showing how many people are currently connected
+- Unique connection IDs for each session
+- Automatic cleanup when connections are closed
+
+## Quick Start
+
+1. Install dependencies:
+   ```bash
+   yarn install
+   ```
+
+2. Set up Firebase (see [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed instructions):
+   - Create a Firebase project
+   - Enable Realtime Database
+   - Update the configuration in `config/firebase.ts`
+
+3. Start the development server:
+   ```bash
+   yarn start
+   ```
+
+4. Open the app in multiple browser tabs to see the connection counter in action!
+
+## Environment Variables (Optional)
+
+For better security, you can use environment variables for Firebase configuration. Create a `.env` file in the root directory:
+
+```env
+EXPO_PUBLIC_FIREBASE_API_KEY=your-api-key-here
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.firebaseio.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
+```
+
+## How It Works
+
+- Each app instance generates a unique connection ID
+- Connections are tracked in Firebase Realtime Database
+- All clients subscribe to connection changes in real-time
+- When a client disconnects (closes tab/app), their connection is automatically removed
+- The counter updates instantly across all connected clients
+
+## Project Structure
+
+```
+├── app/
+│   └── index.tsx              # Main home screen with connection counter
+├── components/
+│   ├── ThemedText.tsx         # Themed text component
+│   └── ThemedView.tsx         # Themed view component
+├── config/
+│   └── firebase.ts            # Firebase configuration and connection functions
+├── hooks/
+│   └── useConnectionTracker.ts # Custom hook for connection tracking
+└── FIREBASE_SETUP.md          # Detailed Firebase setup instructions
+```
+
+## Development
+
+- Built with Expo SDK 53
+- Uses Firebase Realtime Database for real-time updates
+- TypeScript for type safety
+- Themed components for consistent styling
+
+## Troubleshooting
+
+If you see a "Firebase not configured" warning:
+1. Follow the setup instructions in `FIREBASE_SETUP.md`
+2. Make sure your Firebase project has Realtime Database enabled
+3. Check that your database URL is correct
+4. Verify your security rules allow read/write access
