@@ -1,0 +1,1 @@
+export { MapProviderToProps } from "./MapProviderToProps";
