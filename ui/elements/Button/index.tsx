@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
 import {
   StyleProp,
-  ViewStyle,
   TextStyle,
-  TouchableOpacityProps,
   TouchableOpacity,
+  TouchableOpacityProps,
+  ViewStyle,
 } from "react-native";
 
-import Text from "src/elements/Text";
-import { colors, ColorName } from "src/styles";
+import Text from "@/ui/elements/Text";
+import { ColorName, colors } from "@/ui/styles";
 
 interface ButtonProps {
   color?: ColorName;

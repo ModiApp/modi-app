@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Text as RNText, StyleProp, TextStyle } from "react-native";
 
-import { colors, fontFamilies, ColorName } from "src/styles";
+import { ColorName, colors, fontFamilies } from "@/ui/styles";
 
 interface TextProps extends React.PropsWithChildren {
   /** Defaults to 14 */

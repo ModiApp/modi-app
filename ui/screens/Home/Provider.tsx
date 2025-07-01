@@ -1,6 +1,6 @@
+import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 
-import useNavigation from "src/navigation/useNavigation";
 import type { HomeScreenProps } from "./Base";
 
 const defaultContextValue: HomeScreenProps = {
@@ -14,7 +14,7 @@ export const HomeScreenContext =
   createContext<HomeScreenProps>(defaultContextValue);
 
 export default function HomeScreenProvider(props: React.PropsWithChildren) {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <HomeScreenContext.Provider
@@ -23,7 +23,7 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
         shouldAskForUsername: false,
         onCreateGameBtnPressed() {},
         onJoinGameBtnPressed: () => {
-          navigation.navigate("JoinLobby");
+          router.push("/join-lobby");
         },
       }}
     >

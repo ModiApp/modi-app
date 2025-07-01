@@ -1,4 +1,4 @@
-import { MapProviderToProps } from "src/util";
+import { MapProviderToProps } from "@/ui/util";
 
 import JoinLobbyScreenBase from "./Base";
 import JoinLobbyProvider, { JoinLobbyContext } from "./Provider";

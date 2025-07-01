@@ -1,4 +1,4 @@
-import { MapProviderToProps } from "src/util/MapProviderToProps";
+import { MapProviderToProps } from "@/ui/util/MapProviderToProps";
 
 import HomeScreenBase from "./Base";
 import HomeScreenProvider, { HomeScreenContext } from "./Provider";

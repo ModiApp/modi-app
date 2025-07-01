@@ -1,7 +1,7 @@
 import React from "react";
 import { View, ViewProps } from "react-native";
 
-import { colors, ColorName } from "src/styles";
+import { ColorName, colors } from "@/ui/styles";
 
 export interface ContainerProps extends ViewProps {
   color?: ColorName;

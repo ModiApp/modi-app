@@ -5,7 +5,7 @@ import {
   StyleSheet,
 } from "react-native";
 
-import { fontFamilies } from "src/styles";
+import { fontFamilies } from "@/ui/styles";
 
 export interface TextInputProps extends RNTextInputProps {}
 const TextInput: React.FC<TextInputProps> = ({ style, ...props }) => {

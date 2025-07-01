@@ -1,6 +1,6 @@
+import useUsername from "@/ui/providers/Username";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { createContext } from "react";
-import useUsername from "src/providers/Username";
-import { LobbyNavigationProps } from "src/navigation/types";
 import { LobbyScreenProps } from "./Base";
 
 const defaultContextValue: LobbyScreenProps = {
@@ -22,12 +22,9 @@ const defaultContextValue: LobbyScreenProps = {
 export const LobbyContext =
   createContext<LobbyScreenProps>(defaultContextValue);
 
-export default function LobbyProvider({
-  navigation,
-  route,
-  children,
-}: React.PropsWithChildren<LobbyNavigationProps>) {
-  const lobbyId = route.params.lobbyId;
+export default function LobbyProvider({ children }: React.PropsWithChildren) {
+  const router = useRouter();
+  const { lobbyId } = useLocalSearchParams<{ lobbyId: string }>();
   return (
     <LobbyContext.Provider
       value={{
@@ -41,7 +38,7 @@ export default function LobbyProvider({
         onStartGameBtnPressed: () => {
           console.log("Firing LobbyContext.onStartGameBtnPressed");
         },
-        onBackBtnPressed: () => navigation.navigate("JoinLobby"),
+        onBackBtnPressed: () => router.push("/join-lobby"),
       }}
     >
       {children}

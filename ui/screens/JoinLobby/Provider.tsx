@@ -1,5 +1,5 @@
+import { useRouter } from "expo-router";
 import React, { createContext } from "react";
-import useNavigation from "src/navigation/useNavigation";
 import { JoinLobbyScreenProps } from "./Base";
 
 const defaultContextValue: JoinLobbyScreenProps = {
@@ -14,13 +14,13 @@ export const JoinLobbyContext =
   createContext<JoinLobbyScreenProps>(defaultContextValue);
 
 export default function JoinLobbyProvider(props: React.PropsWithChildren) {
-  const navigation = useNavigation();
+  const router = useRouter();
   return (
     <JoinLobbyContext.Provider
       value={{
         ...defaultContextValue,
-        onCancel: () => navigation.navigate("Home"),
-        onLobbyIdSet: (lobbyId) => navigation.navigate("Lobby", { lobbyId }),
+        onCancel: () => router.push("/"),
+        onLobbyIdSet: (lobbyId) => router.push(`/lobby?lobbyId=${lobbyId}`),
       }}
     >
       {props.children}

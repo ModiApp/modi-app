@@ -1,14 +1,14 @@
 import React from "react";
-import { KeyboardAvoidingView, Keyboard, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, View } from "react-native";
 
 import {
+  Button,
+  Icon,
+  LoadingSpinner,
+  ScreenContainer,
   Text,
   TextInput,
-  LoadingSpinner,
-  Icon,
-  Button,
-  ScreenContainer,
-} from "src/elements";
+} from "@/ui/elements";
 
 export interface JoinLobbyScreenProps {
   isValidatingLobbyId: boolean;

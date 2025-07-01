@@ -1,7 +1,7 @@
 import React from "react";
-import { SafeAreaView, View, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 
-import { colors } from "src/styles";
+import { colors } from "@/ui/styles";
 
 const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => (
   <SafeAreaView style={styles.container}>

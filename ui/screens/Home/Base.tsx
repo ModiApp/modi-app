@@ -1,8 +1,8 @@
 import React from "react";
-import { View, KeyboardAvoidingView } from "react-native";
+import { KeyboardAvoidingView, View } from "react-native";
 
-import { Button, LoadingSpinner, ScreenContainer, Text } from "src/elements";
-import UsernameInput from "src/components/UsernameInput";
+import UsernameInput from "@/ui/components/UsernameInput";
+import { Button, LoadingSpinner, ScreenContainer, Text } from "@/ui/elements";
 
 export interface HomeScreenProps {
   isCreatingGame: boolean;

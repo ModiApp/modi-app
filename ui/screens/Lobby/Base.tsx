@@ -1,8 +1,8 @@
 import React from "react";
 import { KeyboardAvoidingView } from "react-native";
 
-import UsernameInput from "src/components/UsernameInput";
-import { Button, Container, Icon, ScreenContainer, Text } from "src/elements";
+import UsernameInput from "@/ui/components/UsernameInput";
+import { Button, Container, Icon, ScreenContainer, Text } from "@/ui/elements";
 
 export interface LobbyScreenProps {
   lobbyId: string;
