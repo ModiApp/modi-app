@@ -19,10 +19,10 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack>
-        <Stack.Screen name="index" options={{ title: "Home" }} />
-        <Stack.Screen name="join-lobby" options={{ title: "Join Lobby" }} />
-        <Stack.Screen name="lobby" options={{ title: "Lobby" }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="join-lobby" />
+        <Stack.Screen name="lobby" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
