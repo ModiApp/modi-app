@@ -1,45 +1,25 @@
-import React, {
-  createContext,
-  useContext,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAsyncStorage } from "@react-native-async-storage/async-storage";
+import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "@modi/username";
 
-const UsernameContext = createContext({
-  value: "",
-  setValue(username: string) {},
-});
-
-export function UsernameProvider(props: React.PropsWithChildren) {
-  const [username, _setUsername] = useState("");
+export function useUsername() {
+  const { getItem, setItem } = useAsyncStorage(STORAGE_KEY);
+  const [username, setUsernameState] = useState("");
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((val) => {
-      if (val) _setUsername(val);
+    getItem().then((val) => {
+      if (val) setUsernameState(val);
     });
-  }, []);
+  }, [getItem]);
 
-  const setUsername = useCallback((name: string) => {
-    _setUsername(name);
-    AsyncStorage.setItem(STORAGE_KEY, name);
-  }, []);
-
-  return (
-    <UsernameContext.Provider
-      value={{
-        value: username,
-        setValue: setUsername,
-      }}
-    >
-      {props.children}
-    </UsernameContext.Provider>
+  const setUsername = useCallback(
+    (name: string) => {
+      setUsernameState(name);
+      setItem(name);
+    },
+    [setItem]
   );
+
+  return { value: username, setValue: setUsername };
 }
-
-const useUsername = () => useContext(UsernameContext);
-
-export default useUsername;

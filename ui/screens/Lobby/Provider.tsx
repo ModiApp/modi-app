@@ -1,4 +1,4 @@
-import useUsername from "@/ui/providers/Username";
+import { useUsername } from "@/ui/providers/Username";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { createContext } from "react";
 import { LobbyScreenProps } from "./Base";
