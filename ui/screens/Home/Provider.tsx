@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 
 import type { HomeScreenProps } from "./Base";
+import { useCreateGame } from "./hooks/useCreateGame";
 
 const defaultContextValue: HomeScreenProps = {
   isCreatingGame: false,
@@ -15,13 +16,14 @@ export const HomeScreenContext =
 
 export default function HomeScreenProvider(props: React.PropsWithChildren) {
   const router = useRouter();
+  const { createGame, isCreatingGame } = useCreateGame();
 
   return (
     <HomeScreenContext.Provider
       value={{
-        isCreatingGame: false,
+        isCreatingGame,
         shouldAskForUsername: false,
-        onCreateGameBtnPressed() {},
+        onCreateGameBtnPressed: createGame,
         onJoinGameBtnPressed: () => {
           router.push("/join-lobby");
         },
