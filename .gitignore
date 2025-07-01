@@ -25,6 +25,7 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
 
 # macOS
 .DS_Store
@@ -38,3 +39,4 @@ yarn-error.*
 
 app-example
 .env
+.vercel

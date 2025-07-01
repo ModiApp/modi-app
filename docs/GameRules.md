@@ -41,7 +41,7 @@
 ### Dealer's Special Ability
 - Dealer can choose to draw a new card from the top of the deck instead of swapping
 - This counts as their "swap" action for the turn
-- Dealer can still choose to stick or swap normally
+- Dealer can still choose to stick
 
 ### Round Resolution
 1. After all players have taken their turn, all cards are revealed

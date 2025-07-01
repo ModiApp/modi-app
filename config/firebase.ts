@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, onValue, ref, remove, serverTimestamp, set } from 'firebase/database';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 // Your Firebase configuration
 // You'll need to replace these with your actual Firebase project credentials
@@ -27,6 +29,29 @@ if (!isFirebaseConfigured) {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const firestore = getFirestore(app);
+const functions = getFunctions(app);
+
+// Connect to emulators in development
+const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
+
+if (isDevelopment && isFirebaseConfigured) {
+  try {
+    // Connect to Firestore emulator
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    console.log('🔗 Connected to Firestore emulator on localhost:8080');
+    
+    // Connect to Functions emulator
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.log('🔗 Connected to Functions emulator on localhost:5001');
+    
+    // Connect to Realtime Database emulator (if needed)
+    // connectDatabaseEmulator(database, 'localhost', 9000);
+    // console.log('🔗 Connected to Realtime Database emulator on localhost:9000');
+  } catch (error) {
+    console.log('⚠️ Emulator connection failed (this is normal if emulators are not running):', error);
+  }
+}
 
 // Connection tracking
 export const connectionRef = ref(database, 'connections');
@@ -76,4 +101,4 @@ export const subscribeToConnections = (callback: (count: number) => void) => {
   });
 };
 
-export { database, isFirebaseConfigured };
+export { database, firestore, functions, isFirebaseConfigured };
