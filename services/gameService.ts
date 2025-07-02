@@ -1,6 +1,6 @@
 import { get, off, onValue, push, ref, remove, serverTimestamp, set } from 'firebase/database';
 import { database } from '../config/firebase';
-import { GameAction, GameSettings, GameState, Player } from '../types/game';
+import { GameAction, GameSettings, GameState, Player } from '../types/_game';
 import { initializeGame } from '../utils/gameLogic';
 
 // Game database references

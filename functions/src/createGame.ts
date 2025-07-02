@@ -20,8 +20,9 @@ export const createGame = onCall(async (request) => {
   const gameId = await generateGameId();
   console.debug("CreateGame: Generated game id:", gameId);
 
-  
+
   return db.collection("games").doc(gameId).set({
+    gameId,
     players: [userId],
     host: userId,
     gameState: "gathering-players",

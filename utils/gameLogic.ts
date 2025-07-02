@@ -1,4 +1,4 @@
-import { Card, GameSettings, GameState, Player, SwapResult } from '../types/game';
+import { Card, GameSettings, GameState, Player, SwapResult } from '../types/_game';
 
 // Standard 52-card deck
 export const createDeck = (): Card[] => {

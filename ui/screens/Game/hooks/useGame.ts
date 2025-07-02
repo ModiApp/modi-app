@@ -1,10 +1,11 @@
 import { firestore } from "@/config/firebase";
+import { Game } from "@/types/game";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 /** Exports a live subscription to a game */
-export function useGame(gameId: string) {
-  const [game, setGame] = useState<any>(null);
+export function useGame(gameId: string): Game | null {
+  const [game, setGame] = useState<Game | null>(null);
   useEffect(() => {
     return subscribeToGame(gameId, (game) => {
       console.log("Game updated:", game);
@@ -29,6 +30,6 @@ const subscribeToGame = (gameId: string, callback: (gameState: any | null) => vo
   });
   
   return () => {
-      unsubscribe();
+    unsubscribe();
   };
 };
