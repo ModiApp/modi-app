@@ -1,7 +1,7 @@
+import { useJoinLobby } from "@/hooks/useJoinLobby";
 import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 import { JoinLobbyScreenProps } from "./Base";
-import { useJoinLobby } from "./useJoinLobby";
 
 const defaultContextValue: JoinLobbyScreenProps = {
   isLobbyIdInvalid: false,

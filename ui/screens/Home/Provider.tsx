@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 
+import { useCreateGame } from "@/hooks/useCreateGame";
 import type { HomeScreenProps } from "./Base";
-import { useCreateGame } from "./hooks/useCreateGame";
 
 const defaultContextValue: HomeScreenProps = {
   isCreatingGame: false,

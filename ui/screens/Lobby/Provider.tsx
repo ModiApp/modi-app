@@ -1,18 +1,26 @@
 import { useUsername } from "@/ui/providers/Username";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 import { LobbyScreenProps } from "./Base";
 
 const defaultContextValue: LobbyScreenProps = {
-  lobbyId: "Lobby ID",
+  game: {
+    gameId: "Game ID",
+    gameState: "gathering-players",
+    players: [],
+    playerInfo: {},
+    host: "Host ID",
+  },
   currUserId: "User ID",
-  attendees: [],
   showUsernameInput: true,
   onInviteFriendsBtnPressed: () => {
     console.log("Firing LobbyContext.onInviteFriendsBtnPressed");
   },
   onStartGameBtnPressed: () => {
     console.log("Firing LobbyContext.onStartGameBtnPressed");
+  },
+  onJoinGameBtnPressed: () => {
+    console.log("Firing LobbyContext.onJoinGameBtnPressed");
   },
   onBackBtnPressed: () => {
     console.log("Firing LobbyContext.onBackBtnPressed");
@@ -24,19 +32,20 @@ export const LobbyContext =
 
 export default function LobbyProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
-  const { lobbyId } = useLocalSearchParams<{ lobbyId: string }>();
   return (
     <LobbyContext.Provider
       value={{
-        lobbyId: lobbyId || defaultContextValue.lobbyId,
+        game: defaultContextValue.game,
         currUserId: "User ID", // TODO
-        attendees: [], // TODO
         showUsernameInput: !useUsername().value.length,
         onInviteFriendsBtnPressed: () => {
           console.log("Firing LobbyContext.onInviteFriendsBtnPressed");
         },
         onStartGameBtnPressed: () => {
           console.log("Firing LobbyContext.onStartGameBtnPressed");
+        },
+        onJoinGameBtnPressed: () => {
+          console.log("Firing LobbyContext.onJoinGameBtnPressed");
         },
         onBackBtnPressed: () => router.push("/join-lobby"),
       }}

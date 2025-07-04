@@ -7,9 +7,11 @@ const db = getFirestore();
 export interface CreateGameRequest {
   username: string;
 }
+
 export interface CreateGameResponse {
   gameId: string;
 }
+
 export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>(async (request) => {
   const userId = request.auth?.uid;
   if (!userId) {
@@ -31,7 +33,6 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
       },
     },
   }
-
 
   return db.collection("games").doc(gameId).set(game).then(() => {
   }).then((res) => {

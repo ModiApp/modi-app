@@ -7,3 +7,9 @@ export type InitialGameState = {
 }
 
 export type Game = InitialGameState;
+
+export type UserGameParticipation = {
+  gameId: string;
+  joinedAt: Date;
+  isHost: boolean;
+}

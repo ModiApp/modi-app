@@ -67,7 +67,6 @@ export const joinGame = onCall<JoinGameRequest, Promise<JoinGameResponse>>(async
       return { success: true, gameId };
     }
 
-
     // Update the game document
     const updateData: Partial<InitialGameState> = {
       players: [...(gameData.players || []), userId],
