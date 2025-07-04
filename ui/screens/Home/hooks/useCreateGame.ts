@@ -1,9 +1,10 @@
+import { CreateGameRequest, CreateGameResponse } from '@/functions/src/createGame';
 import { useRouter } from 'expo-router';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
 const functions = getFunctions();
-const createGameFunction = httpsCallable <void, { gameId: string }>(functions, 'createGame');
+const createGameFunction = httpsCallable<CreateGameRequest, CreateGameResponse>(functions, 'createGame');
 
 /**
  * A hook to create a new game in the backend and navigate to the game screen.
@@ -19,7 +20,7 @@ export function useCreateGame() {
     try {
       console.log("useCreateGame: Creating game");
       setIsCreatingGame(true);
-      const game = await createGameFunction();
+      const game = await createGameFunction({ username: "test" });
       console.log("useCreateGame: Game created:", game);
       router.push(`/games/${game.data.gameId}`);
     } catch (error) {

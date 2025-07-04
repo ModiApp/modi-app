@@ -1,5 +1,5 @@
 import { firestore } from "@/config/firebase";
-import { Game } from "@/types/game";
+import { Game } from "@/functions/src/types";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 

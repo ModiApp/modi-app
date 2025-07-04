@@ -1,25 +1,26 @@
 import React from "react";
 import { KeyboardAvoidingView } from "react-native";
 
+import { InitialGameState } from "@/functions/src/types";
 import UsernameInput from "@/ui/components/UsernameInput";
 import { Button, Container, Icon, ScreenContainer, Text } from "@/ui/elements";
 
 export interface LobbyScreenProps {
-  lobbyId: string;
   currUserId: string;
-  attendees: any; // TODO
+  game: InitialGameState;
   showUsernameInput: boolean;
   onInviteFriendsBtnPressed: () => void;
   onStartGameBtnPressed: () => void;
+  onJoinGameBtnPressed: () => void;
   onBackBtnPressed: () => void;
 }
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
-  lobbyId,
+  game,
   currUserId,
-  attendees,
   showUsernameInput,
   onInviteFriendsBtnPressed,
   onStartGameBtnPressed,
+  onJoinGameBtnPressed,
   onBackBtnPressed,
 }) => (
   <ScreenContainer>
@@ -30,7 +31,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       <Container style={{ flex: 1, justifyContent: "center", minHeight: 52 }}>
         <Container style={{ alignItems: "center" }}>
           <Text size={24}>Game PIN:</Text>
-          <Text size={42}>{lobbyId}</Text>
+          <Text size={42}>{game.gameId}</Text>
           <Button color="red" onPress={onInviteFriendsBtnPressed} thin>
             <Text size={14}>Invite Friends</Text>
           </Button>
@@ -59,18 +60,26 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </Button>
 
         <Container style={{ flex: 1 }}>
-          {attendees[0]?.playerId === currUserId ? (
+          {game.players.includes(currUserId) ? (
+            game.host === currUserId ? (
+              <Button
+                color="blue"
+                onPress={onStartGameBtnPressed}
+                style={{ height: 64, marginRight: 0 }}
+              >
+                <Text size={28}>Start Game</Text>
+              </Button>
+            ) : (
+              <Text size={28}>Waiting for host to start the game...</Text>
+            )
+          ) : (
             <Button
               color="blue"
-              onPress={onStartGameBtnPressed}
+              onPress={onJoinGameBtnPressed}
               style={{ height: 64, marginRight: 0 }}
             >
-              <Text size={28}>Start Game</Text>
+              Join Game
             </Button>
-          ) : (
-            <Text size={28}>
-              Waiting for {attendees[0]?.username} to start the game...
-            </Text>
           )}
         </Container>
       </Container>

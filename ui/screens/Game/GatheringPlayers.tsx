@@ -1,20 +1,19 @@
+import { InitialGameState } from "@/functions/src/types";
 import { useAuth } from "@/providers/Auth";
-import { Game } from "@/types/game";
 import React from "react";
 import LobbyScreen from "../Lobby/Base";
 
-export function GatheringPlayers(props: { game: Game }) {
+export function GatheringPlayers(props: { game: InitialGameState }) {
   const { userId } = useAuth();
-  const { gameId } = props.game;
 
   return (
     <LobbyScreen
-      lobbyId={gameId}
+      game={props.game}
       currUserId={userId || ""}
-      attendees={props.game.players}
       showUsernameInput={false}
       onInviteFriendsBtnPressed={() => {}}
       onStartGameBtnPressed={() => {}}
+      onJoinGameBtnPressed={() => {}}
       onBackBtnPressed={() => {}}
     />
   );
