@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"firebase emulators:start\"",
+    "dev": "concurrently \"yarn start\" \"firebase emulators:start\" \"cd functions && yarn build:watch\"",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
