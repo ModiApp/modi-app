@@ -20,4 +20,5 @@ initializeApp();
 setGlobalOptions({ maxInstances: 10 });
 
 export { createGame } from "./createGame";
+export { joinGame } from "./joinGame";
 
