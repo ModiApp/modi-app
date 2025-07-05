@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, onValue, ref, remove, serverTimestamp, set } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
@@ -31,6 +32,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const firestore = getFirestore(app);
 const functions = getFunctions(app);
+const auth = getAuth(app);
 
 // Connect to emulators in development
 const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
@@ -53,52 +55,6 @@ if (isDevelopment && isFirebaseConfigured) {
   }
 }
 
-// Connection tracking
-export const connectionRef = ref(database, 'connections');
 
-export const addConnection = async (connectionId: string) => {
-  if (!isFirebaseConfigured) {
-    console.warn("Firebase not configured - connection not added");
-    return;
-  }
-  
-  try {
-    await set(ref(database, `connections/${connectionId}`), {
-      timestamp: serverTimestamp(),
-      platform: 'web' // or 'mobile' based on your needs
-    });
-  } catch (error) {
-    console.error('Error adding connection:', error);
-  }
-};
+export { auth, database, firestore, functions, isFirebaseConfigured };
 
-export const removeConnection = async (connectionId: string) => {
-  if (!isFirebaseConfigured) {
-    console.warn("Firebase not configured - connection not removed");
-    return;
-  }
-  
-  try {
-    await remove(ref(database, `connections/${connectionId}`));
-  } catch (error) {
-    console.error('Error removing connection:', error);
-  }
-};
-
-export const subscribeToConnections = (callback: (count: number) => void) => {
-  if (!isFirebaseConfigured) {
-    console.warn("Firebase not configured - using mock data");
-    // Return a mock subscription for development
-    const mockUnsubscribe = () => {};
-    callback(1); // Show 1 connection as default
-    return mockUnsubscribe;
-  }
-  
-  return onValue(connectionRef, (snapshot) => {
-    const connections = snapshot.val();
-    const count = connections ? Object.keys(connections).length : 0;
-    callback(count);
-  });
-};
-
-export { database, firestore, functions, isFirebaseConfigured };

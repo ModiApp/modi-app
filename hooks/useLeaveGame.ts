@@ -1,9 +1,9 @@
+import { functions } from '@/config/firebase';
 import { LeaveGameRequest, LeaveGameResponse } from '@/functions/src/leaveGame';
 import { useRouter } from 'expo-router';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
-const functions = getFunctions();
 const leaveGameFunction = httpsCallable<LeaveGameRequest, LeaveGameResponse>(functions, 'leaveGame');
 
 /**

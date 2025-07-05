@@ -1,10 +1,10 @@
+import { functions } from '@/config/firebase';
 import { CreateGameRequest, CreateGameResponse } from '@/functions/src/createGame';
 import { useUsername } from '@/ui/providers/Username';
 import { useRouter } from 'expo-router';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
-const functions = getFunctions();
 const createGameFunction = httpsCallable<CreateGameRequest, CreateGameResponse>(functions, 'createGame');
 
 /**

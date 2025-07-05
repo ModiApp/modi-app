@@ -7,7 +7,8 @@
  *
  * We just need a persistent user id, so we can identify the user across sessions, and authorize them to access the game.
  */
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { auth } from "@/config/firebase";
+import { signInAnonymously } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextValue {
@@ -32,8 +33,6 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const auth = getAuth();
-
     signInAnonymously(auth)
       .then((result) => {
         console.debug("Signed in anonymously", result.user.uid);

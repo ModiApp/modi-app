@@ -1,10 +1,10 @@
+import { functions } from '@/config/firebase';
 import { JoinGameRequest, JoinGameResponse } from '@/functions/src/joinGame';
 import { useUsername } from '@/ui/providers/Username';
 import { useRouter } from 'expo-router';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
-const functions = getFunctions();
 const joinGameFunction = httpsCallable<JoinGameRequest, JoinGameResponse>(functions, 'joinGame');
 
 /**
