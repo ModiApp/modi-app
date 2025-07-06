@@ -97,7 +97,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               onPress={onJoinGameBtnPressed}
               style={{ height: 64, marginRight: 0 }}
             >
-              Join Game
+              <Text size={28}>Join Game</Text>
             </Button>
           )}
         </Container>

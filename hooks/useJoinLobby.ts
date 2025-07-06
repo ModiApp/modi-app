@@ -1,7 +1,7 @@
 import { functions } from '@/config/firebase';
 import { JoinGameRequest, JoinGameResponse } from '@/functions/src/joinGame';
 import { useUsername } from '@/ui/providers/Username';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 
@@ -15,6 +15,7 @@ const joinGameFunction = httpsCallable<JoinGameRequest, JoinGameResponse>(functi
  */
 export function useJoinLobby() {
   const router = useRouter();
+  const pathname = usePathname();
   const { value: username } = useUsername();
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,10 @@ export function useJoinLobby() {
       console.log("useJoinLobby: Successfully joined game:", result.data);
       
       // Navigate to the lobby with the game ID
-      router.push(`/lobby?lobbyId=${gameId}`);
+      // if route is not already /games/:gameId, push to it
+      if (pathname !== `games/${gameId}`) {
+        router.push(`/games/${gameId}`);
+      }
     } catch (error: any) {
       console.error("useJoinLobby: Error joining game:", error);
       
