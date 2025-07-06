@@ -30,7 +30,6 @@ export interface LobbyScreenProps {
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
   game,
   currUserId,
-  // showUsernameInput,
   onInviteFriendsBtnPressed,
   onStartGameBtnPressed,
   onJoinGameBtnPressed,

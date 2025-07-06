@@ -1,5 +1,4 @@
 import ScreenContainer from "@/ui/elements/Screen";
-import Text from "@/ui/elements/Text";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { GatheringPlayers } from "./GatheringPlayers";
@@ -12,7 +11,6 @@ const GameScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      <Text>Game Screen: {JSON.stringify(game, null, 2)}</Text>
       {game?.gameState === "gathering-players" && (
         <GatheringPlayers game={game} />
       )}
