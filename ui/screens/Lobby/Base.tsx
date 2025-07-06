@@ -2,22 +2,35 @@ import React from "react";
 import { KeyboardAvoidingView } from "react-native";
 
 import { InitialGameState } from "@/functions/src/types";
-import UsernameInput from "@/ui/components/UsernameInput";
+import { PlayersList } from "@/ui/components/PlayerList";
 import { Button, Container, Icon, ScreenContainer, Text } from "@/ui/elements";
 
 export interface LobbyScreenProps {
   currUserId: string;
   game: InitialGameState;
-  showUsernameInput: boolean;
+  /**
+   * Typical native share interface for sharing the link to this game page.
+   */
   onInviteFriendsBtnPressed: () => void;
+  /**
+   * For the host to begin the game.
+   */
   onStartGameBtnPressed: () => void;
+  /**
+   * If you get to the game screen while its still gathering players, and you came here directly without going
+   * through the join lobby screen, you'll be offered a button that let's you join the game directly from this screen.
+   * In which case, this callback will be called.
+   */
   onJoinGameBtnPressed: () => void;
+  /**
+   * Removes you from the game, if you're a part of it, and returns you to the home screen.
+   */
   onBackBtnPressed: () => void;
 }
 const LobbyScreen: React.FC<LobbyScreenProps> = ({
   game,
   currUserId,
-  showUsernameInput,
+  // showUsernameInput,
   onInviteFriendsBtnPressed,
   onStartGameBtnPressed,
   onJoinGameBtnPressed,
@@ -38,8 +51,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </Container>
       </Container>
 
-      <Container style={{ flex: 7, paddingVertical: 8 }}>
-        {/* <PlayerList players={attendees} /> */}
+      <Container
+        style={{
+          flex: 7,
+          paddingVertical: 8,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <PlayersList game={game} />
       </Container>
 
       <Container
@@ -83,7 +103,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           )}
         </Container>
       </Container>
-      {showUsernameInput && <UsernameInput />}
     </KeyboardAvoidingView>
   </ScreenContainer>
 );

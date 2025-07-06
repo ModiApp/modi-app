@@ -2,15 +2,16 @@ import { Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export type ColorName = 'blue' | 'red' | 'feltGreen' | 'lightGreen' | 'white' | 'transparent';
-export const colors: { [key in ColorName]: string } = {
+export const colors = {
   feltGreen: '#35654D',
   lightGreen: '#428161',
   blue: '#177E89',
   red: '#DB3A34',
   white: 'white',
   transparent: 'transparent',
-};
+  gray: '#4A5D5E',
+} as const;
+export type ColorName = keyof typeof colors;
 export const fontFamilies = {
   primary: 'Chalkduster',
 };

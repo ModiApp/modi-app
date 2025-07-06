@@ -14,7 +14,6 @@ export function GatheringPlayers(props: { game: InitialGameState }) {
     <LobbyScreen
       game={props.game}
       currUserId={userId || ""}
-      showUsernameInput={false}
       onInviteFriendsBtnPressed={() => {}}
       onStartGameBtnPressed={() => {}}
       onJoinGameBtnPressed={() => joinLobby(props.game.gameId)}

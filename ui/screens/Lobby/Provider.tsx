@@ -1,4 +1,3 @@
-import { useUsername } from "@/ui/providers/Username";
 import { useRouter } from "expo-router";
 import React, { createContext } from "react";
 import { LobbyScreenProps } from "./Base";
@@ -12,7 +11,6 @@ const defaultContextValue: LobbyScreenProps = {
     host: "Host ID",
   },
   currUserId: "User ID",
-  showUsernameInput: true,
   onInviteFriendsBtnPressed: () => {
     console.log("Firing LobbyContext.onInviteFriendsBtnPressed");
   },
@@ -36,8 +34,7 @@ export default function LobbyProvider({ children }: React.PropsWithChildren) {
     <LobbyContext.Provider
       value={{
         game: defaultContextValue.game,
-        currUserId: "User ID", // TODO
-        showUsernameInput: !useUsername().value.length,
+        currUserId: "User ID",
         onInviteFriendsBtnPressed: () => {
           console.log("Firing LobbyContext.onInviteFriendsBtnPressed");
         },
