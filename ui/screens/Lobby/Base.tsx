@@ -59,7 +59,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           justifyContent: "center",
         }}
       >
-        <PlayersList game={game} />
+        <PlayersList game={game} currUserId={currUserId} />
       </Container>
 
       <Container
