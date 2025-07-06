@@ -3,7 +3,7 @@ import React from "react";
 import { Container, Text } from "../elements";
 
 export function PlayersList(props: {
-  game: InitialGameState;
+  game: Pick<InitialGameState, "players" | "playerInfo">;
   currUserId: string;
 }) {
   const { players, playerInfo } = props.game;
@@ -18,21 +18,29 @@ export function PlayersList(props: {
   const currentUserAngle = (currentUserIndex * 360) / players.length;
   const rotationDegrees = 90 - currentUserAngle;
 
+  // Calculate dynamic radius based on number of players
+  // Base radius for 2-4 players, scales up for more players
+  const baseRadius = 80;
+  const maxRadius = 140;
+  const radius = Math.min(
+    baseRadius + (players.length - 2) * 3, // Increase by 3px per additional player
+    maxRadius
+  );
+
   return (
     <Container
       color="lightGreen"
       style={{
         padding: 16,
-        borderRadius: 16,
-        width: 300,
-        height: 300,
+        borderRadius: 999, // Make it circular
+        width: (radius + 50) * 2, // Container width = 2 * (radius + player circle radius)
+        height: (radius + 50) * 2, // Container height = 2 * (radius + player circle radius)
         position: "relative",
         transform: [{ rotate: `${rotationDegrees}deg` }],
       }}
     >
       {players.map((playerId, index) => {
         const angle = (index * 2 * Math.PI) / players.length;
-        const radius = 120; // Slightly less than container width/2 to account for padding
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
