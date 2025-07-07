@@ -25,5 +25,6 @@ export { endRound } from "./endRound";
 export { joinGame } from "./joinGame";
 export { leaveGame } from "./leaveGame";
 export { startGame } from "./startGame";
+export { stick } from "./stick";
 export { swapCard } from "./swapCard";
 

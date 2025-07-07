@@ -1,6 +1,7 @@
 import { ActiveGame } from "@/functions/src/types";
 import { useDealCards } from "@/hooks/useDealCards";
 import { useEndRound } from "@/hooks/useEndRound";
+import { useStick } from "@/hooks/useStick";
 import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
 
@@ -27,14 +28,7 @@ export function PlayerControls(props: {
       return (
         <Container style={{ flexDirection: "row", gap: 16, width: "100%" }}>
           <SwapCardsButton game={game} currUserId={currUserId} />
-          <Button
-            color="blue"
-            onPress={dealCards}
-            loading={isDealing}
-            fullWidth
-          >
-            <Text>Stick</Text>
-          </Button>
+          <StickButton />
         </Container>
       );
     }
@@ -75,6 +69,16 @@ function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
   return (
     <Button color="red" onPress={swapCard} loading={isSwapping} fullWidth>
       <Text>{game.dealer === currUserId ? "Hit Deck" : "Swap"}</Text>
+    </Button>
+  );
+}
+
+function StickButton() {
+  const { stick, isSticking } = useStick();
+
+  return (
+    <Button color="blue" onPress={stick} loading={isSticking} fullWidth>
+      <Text>Stick</Text>
     </Button>
   );
 }
