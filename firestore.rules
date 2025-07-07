@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Main game document - public game info
+    match /games/{gameId} {
+      // Allow read access to game documents
+      allow read: if request.auth != null;
+      
+      // Allow write access only through cloud functions (no direct client writes)
+      allow write: if false;
+    }
+    
+    // Player hands subcollection - players can only read their own hand
+    match /games/{gameId}/playerHands/{playerId} {
+      allow read: if request.auth != null && 
+        // User must be a player in the game
+        request.auth.uid in get(/databases/$(database)/documents/games/$(gameId)).data.players &&
+        // User can only read their own hand
+        request.auth.uid == playerId;
+      
+      // Allow write access only through cloud functions (no direct client writes)
+      allow write: if false;
+    }
+    
+    // Internal state subcollection - no client access (cloud functions only)
+    match /games/{gameId}/internalState/{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

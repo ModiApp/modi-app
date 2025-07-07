@@ -1,12 +1,12 @@
-import { InitialGameState } from "@/functions/src/types";
+import { InitialGame } from "@/functions/src/types";
 import React from "react";
 import { Container, Text } from "../elements";
 
 export function PlayersList(props: {
-  game: Pick<InitialGameState, "players" | "playerInfo">;
+  game: Pick<InitialGame, "players" | "usernames">;
   currUserId: string;
 }) {
-  const { players, playerInfo } = props.game;
+  const { players, usernames } = props.game;
   const { currUserId } = props;
 
   // Find the index of the current user
@@ -65,7 +65,7 @@ export function PlayersList(props: {
               alignItems: "center",
             }}
           >
-            <Text>{playerInfo[playerId]?.username.slice(0, 2)}</Text>
+            <Text>{usernames[playerId].slice(0, 2)}</Text>
           </Container>
         );
       })}

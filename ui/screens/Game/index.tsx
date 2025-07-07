@@ -3,6 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { GatheringPlayers } from "./GatheringPlayers";
 import { useGame } from "./hooks/useGame";
+import { GamePlaying } from "./Playing";
 
 const GameScreen: React.FC = () => {
   // get the game id from the url
@@ -11,9 +12,8 @@ const GameScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      {game?.gameState === "gathering-players" && (
-        <GatheringPlayers game={game} />
-      )}
+      {game?.status === "gathering-players" && <GatheringPlayers game={game} />}
+      {game?.status === "active" && <GamePlaying game={game} />}
     </ScreenContainer>
   );
 };

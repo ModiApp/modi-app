@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { InitialGameState } from "./types";
+import { InitialGame } from "./types";
 
 const db = getFirestore();
 
@@ -22,19 +22,15 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
   const gameId = await generateGameId();
   console.debug("CreateGame: Generated game id:", gameId);
 
-  const game: InitialGameState = {
+  const game: InitialGame = {
     gameId,
-    gameState: "gathering-players",
+    status: "gathering-players",
     players: [userId],
     host: userId,
-    playerInfo: {
-      [userId]: {
-        username: request.data.username,
-      },
-    },
+    usernames: { [userId]: request.data.username },
   }
-
-  return db.collection("games").doc(gameId).set(game).then(() => {
+  
+return db.doc(`games/${gameId}`).set(game).then(() => {
   }).then((res) => {
     console.info("CreateGame: Game document created:", res);
     return { gameId };

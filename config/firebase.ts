@@ -1,8 +1,9 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+import config from '../firebase.json';
 
 // Your Firebase configuration
 // You'll need to replace these with your actual Firebase project credentials
@@ -40,12 +41,16 @@ const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
 if (isDevelopment && isFirebaseConfigured) {
   try {
     // Connect to Firestore emulator
-    connectFirestoreEmulator(firestore, 'localhost', 8080);
-    console.log('🔗 Connected to Firestore emulator on localhost:8080');
+    connectFirestoreEmulator(firestore, '127.0.0.1', config.emulators.firestore.port);
+    console.log(`🔗 Connected to Firestore emulator on localhost:${config.emulators.firestore.port}`);
     
     // Connect to Functions emulator
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.log('🔗 Connected to Functions emulator on localhost:5001');
+    connectFunctionsEmulator(functions, '127.0.0.1', config.emulators.functions.port);
+    console.log(`🔗 Connected to Functions emulator on http://127.0.0.1:${config.emulators.functions.port}`);
+
+    // Connect to Auth emulator
+    connectAuthEmulator(auth, `http://127.0.0.1:${config.emulators.auth.port}`, { disableWarnings: true });
+    console.log(`🔗 Connected to Auth emulator on http://127.0.0.1:${config.emulators.auth.port}`);
     
     // Connect to Realtime Database emulator (if needed)
     // connectDatabaseEmulator(database, 'localhost', 9000);

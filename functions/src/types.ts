@@ -1,15 +1,38 @@
-export type InitialGameState = {
+interface GameBase {
   gameId: string;
-  gameState: 'gathering-players';
   players: string[];
   host: string;
-  playerInfo: { [playerId: string]: { username: string } };
+  usernames: { [playerId: string]: string };
 }
 
-export type Game = InitialGameState;
-
-export type UserGameParticipation = {
-  gameId: string;
-  joinedAt: Date;
-  isHost: boolean;
+export interface InitialGame extends GameBase {
+  status: 'gathering-players';
 }
+
+export interface ActiveGame extends GameBase {
+  status: 'active';
+  playerLives: { [playerId: string]: number };
+  dealer: string;
+  round: number;
+  activePlayer: string;
+  roundState: 'pre-deal' | 'playing' | 'tallying';
+}
+
+// Separate document for internal game state (deck, trash)
+export interface GameInternalState {
+  deck: CardID[];
+  trash: CardID[];
+}
+
+// Separate document for each player's hand
+export interface PlayerHand {
+  card: CardID | null;
+  playerId: string;
+}
+
+
+export type CardRank = '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
+export type CardSuit = 'H' | 'D' | 'C' | 'S';
+export type CardID = `${CardRank}${CardSuit}`;
+
+export type Game = InitialGame | ActiveGame;

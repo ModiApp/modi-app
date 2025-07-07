@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { InitialGameState } from "./types";
+import { InitialGame } from "./types";
 
 const db = getFirestore();
 
@@ -49,15 +49,15 @@ export const joinGame = onCall<JoinGameRequest, Promise<JoinGameResponse>>(async
       throw new HttpsError("not-found", "Game not found");
     }
 
-    const gameData = gameDoc.data();
+    const gameData = gameDoc.data() as InitialGame;
     if (!gameData) {
       console.error("JoinGame: Game data is null", { gameId });
       throw new HttpsError("internal", "Game data is corrupted");
     }
 
     // Check if game is in gathering-players state
-    if (gameData.gameState !== "gathering-players") {
-      console.error("JoinGame: Game is not accepting players", { gameId, gameState: gameData.gameState });
+    if (gameData.status !== "gathering-players") {
+      console.error("JoinGame: Game is not accepting players", { gameId, status: gameData.status });
       throw new HttpsError("failed-precondition", "Game is not accepting players");
     }
 
@@ -68,11 +68,9 @@ export const joinGame = onCall<JoinGameRequest, Promise<JoinGameResponse>>(async
     }
 
     // Update the game document
-    const updateData: Partial<InitialGameState> = {
+    const updateData: Partial<InitialGame> = {
       players: [...(gameData.players || []), userId],
-      [`playerInfo.${userId}`]: {
-        username: username.trim(),
-      },
+      usernames: { ...gameData.usernames, [userId]: username.trim() },
     };
 
     await gameRef.update(updateData);

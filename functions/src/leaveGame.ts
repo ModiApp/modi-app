@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { InitialGameState } from "./types";
+import { InitialGame } from "./types";
 
 const db = getFirestore();
 
@@ -33,7 +33,7 @@ export const leaveGame = onCall<LeaveGameRequest, Promise<LeaveGameResponse>>(as
     // Get the first (and should be only) game the user is in
     const gameDoc = snapshot.docs[0];
     const gameId = gameDoc.id;
-    const gameData = gameDoc.data() as InitialGameState;
+    const gameData = gameDoc.data() as InitialGame;
 
     // Check if user is the host
     if (gameData.host === userId) {
@@ -43,14 +43,14 @@ export const leaveGame = onCall<LeaveGameRequest, Promise<LeaveGameResponse>>(as
 
     // Remove user from the game
     const updatedPlayers = gameData.players.filter((playerId: string) => playerId !== userId);
-    const updateData: Partial<InitialGameState> = {
+    const updateData: Partial<InitialGame> = {
       players: updatedPlayers,
     };
 
     // Remove player info
-    if (gameData.playerInfo && gameData.playerInfo[userId]) {
-      const { [userId]: removedPlayer, ...remainingPlayerInfo } = gameData.playerInfo;
-      updateData.playerInfo = remainingPlayerInfo;
+    if (gameData.usernames && gameData.usernames[userId]) {
+      const { [userId]: removedPlayer, ...remainingPlayerInfo } = gameData.usernames;
+      updateData.usernames = remainingPlayerInfo;
     }
 
     await gameDoc.ref.update(updateData);
