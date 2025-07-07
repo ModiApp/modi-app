@@ -117,6 +117,16 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       throw new HttpsError("failed-precondition", "Current player has no card to swap");
     }
 
+    // Check if the current player has a King - players with Kings cannot swap
+    if (currentPlayerCard.startsWith('K')) {
+      console.info("SwapCard: Current player has king, disallowing swap", {
+        gameId,
+        currentPlayer: userId,
+        currentPlayerCard
+      });
+      throw new HttpsError("failed-precondition", "Players with Kings cannot swap cards");
+    }
+
     let newActivePlayer: string | undefined;
     let updatedInternalState: GameInternalState;
     let updatedPlayerHands: { [playerId: string]: CardID | null } = {};

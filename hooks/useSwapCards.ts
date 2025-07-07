@@ -55,6 +55,8 @@ export function useSwapCards() {
           setError("You have no card to swap.");
         } else if (error.message?.includes('Next player has no card')) {
           setError("The next player has no card to swap.");
+        } else if (error.message?.includes('Players with Kings cannot swap')) {
+          setError("Players with Kings cannot swap cards.");
         } else {
           setError("Cards cannot be swapped right now.");
         }
