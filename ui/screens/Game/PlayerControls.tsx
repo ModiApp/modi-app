@@ -1,5 +1,6 @@
 import { ActiveGame } from "@/functions/src/types";
 import { useDealCards } from "@/hooks/useDealCards";
+import { useEndRound } from "@/hooks/useEndRound";
 import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
 
@@ -36,11 +37,19 @@ export function PlayerControls(props: {
           </Button>
         </Container>
       );
-    } else {
-      return (
-        <Text>It&apos;s {game.usernames[game.activePlayer]}&apos;s turn</Text>
-      );
     }
+    return (
+      <Text>It&apos;s {game.usernames[game.activePlayer]}&apos;s turn</Text>
+    );
+  }
+
+  if (game.roundState === "tallying") {
+    if (game.dealer === currUserId) {
+      return <EndRoundButton />;
+    }
+    return (
+      <Text>Waiting for {game.usernames[game.dealer]} to end the round...</Text>
+    );
   }
 
   return (
@@ -66,6 +75,16 @@ function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
   return (
     <Button color="red" onPress={swapCard} loading={isSwapping} fullWidth>
       <Text>{game.dealer === currUserId ? "Hit Deck" : "Swap"}</Text>
+    </Button>
+  );
+}
+
+function EndRoundButton() {
+  const { endRound, isEndingRound } = useEndRound();
+
+  return (
+    <Button color="blue" fullWidth onPress={endRound} loading={isEndingRound}>
+      <Text>End Round</Text>
     </Button>
   );
 }
