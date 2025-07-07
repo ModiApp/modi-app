@@ -3,6 +3,7 @@ import { useUserId } from "@/providers/Auth";
 import { PlayersList } from "@/ui/components/PlayerList";
 import { Container, Text } from "@/ui/elements";
 import React from "react";
+import { PlayerControls } from "./PlayerControls";
 
 export function GamePlaying(props: { game: ActiveGame }) {
   const { game } = props;
@@ -69,17 +70,8 @@ export function GamePlaying(props: { game: ActiveGame }) {
       </Container>
 
       {/* Game Status */}
-      <Container
-        color="gray"
-        style={{
-          padding: 16,
-          borderRadius: 8,
-          marginTop: "auto",
-        }}
-      >
-        <Text style={{ fontSize: 14, textAlign: "center" }}>
-          Game is active - waiting for game logic implementation
-        </Text>
+      <Container style={{ flex: 1, justifyContent: "flex-end" }}>
+        <PlayerControls game={game} currUserId={currentUserId} />
       </Container>
     </Container>
   );
