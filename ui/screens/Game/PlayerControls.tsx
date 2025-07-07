@@ -1,4 +1,5 @@
 import { ActiveGame } from "@/functions/src/types";
+import { useDealCards } from "@/hooks/useDealCards";
 import { Button, Container, Text } from "@/ui/elements";
 
 export function PlayerControls(props: {
@@ -6,11 +7,12 @@ export function PlayerControls(props: {
   currUserId: string;
 }) {
   const { game, currUserId } = props;
+  const { dealCards, isDealing } = useDealCards();
 
   if (game.roundState === "pre-deal") {
     if (game.dealer === currUserId && game.activePlayer === currUserId) {
       return (
-        <Button color="blue" onPress={() => {}}>
+        <Button color="blue" onPress={dealCards} loading={isDealing}>
           <Text>Deal Cards</Text>
         </Button>
       );

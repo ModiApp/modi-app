@@ -9,6 +9,7 @@ import {
 
 import Text from "@/ui/elements/Text";
 import { ColorName, colors } from "@/ui/styles";
+import { LoadingSpinner } from "..";
 
 interface ButtonProps {
   color?: ColorName;
@@ -22,6 +23,9 @@ interface ButtonProps {
 
   /** Lessens padding of button title. Default is false */
   thin?: boolean;
+
+  /** Shows a loading spinner instead of children when true. Also disables the button. */
+  loading?: boolean;
 }
 
 const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
@@ -33,6 +37,7 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
   thin,
   children,
   style,
+  loading,
   ...props
 }) => {
   const defaultStyles = useMemo<StyleProp<ViewStyle>>(
@@ -44,7 +49,7 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
       alignItems: "center",
       justifyContent: "center",
     }),
-    [color, thin, fullWidth]
+    [color, thin]
   );
 
   return (
@@ -53,7 +58,13 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
       style={[defaultStyles, style]}
       {...props}
     >
-      {title ? <Text style={titleStyle}>{title}</Text> : children}
+      {loading ? (
+        <LoadingSpinner size="large" color="white" />
+      ) : title ? (
+        <Text style={titleStyle}>{title}</Text>
+      ) : (
+        children
+      )}
     </TouchableOpacity>
   );
 };

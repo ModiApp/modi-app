@@ -20,6 +20,7 @@ initializeApp();
 setGlobalOptions({ maxInstances: 10 });
 
 export { createGame } from "./createGame";
+export { dealCards } from "./dealCards";
 export { joinGame } from "./joinGame";
 export { leaveGame } from "./leaveGame";
 export { startGame } from "./startGame";
