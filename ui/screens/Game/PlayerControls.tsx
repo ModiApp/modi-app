@@ -1,4 +1,5 @@
 import { ActiveGame } from "@/functions/src/types";
+import { useCurrentCard } from "@/hooks/useCurrentCard";
 import { useDealCards } from "@/hooks/useDealCards";
 import { useEndRound } from "@/hooks/useEndRound";
 import { useStick } from "@/hooks/useStick";
@@ -11,6 +12,7 @@ export function PlayerControls(props: {
 }) {
   const { game, currUserId } = props;
   const { dealCards, isDealing } = useDealCards();
+  const currentCard = useCurrentCard(game.gameId);
 
   if (game.roundState === "pre-deal") {
     if (game.dealer === currUserId && game.activePlayer === currUserId) {
@@ -20,14 +22,18 @@ export function PlayerControls(props: {
         </Button>
       );
     }
-    return <Text>Waiting for dealer to deal cards...</Text>;
+    return (
+      <Text>Waiting for {game.usernames[game.dealer]} to deal cards...</Text>
+    );
   }
 
   if (game.roundState === "playing") {
     if (game.activePlayer === currUserId) {
       return (
         <Container style={{ flexDirection: "row", gap: 16, width: "100%" }}>
-          <SwapCardsButton game={game} currUserId={currUserId} />
+          {!currentCard?.startsWith("K") && (
+            <SwapCardsButton game={game} currUserId={currUserId} />
+          )}
           <StickButton />
         </Container>
       );
