@@ -48,8 +48,9 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
       borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
+      flex: fullWidth ? 1 : undefined,
     }),
-    [color, thin]
+    [color, thin, fullWidth]
   );
 
   return (

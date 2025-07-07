@@ -24,4 +24,5 @@ export { dealCards } from "./dealCards";
 export { joinGame } from "./joinGame";
 export { leaveGame } from "./leaveGame";
 export { startGame } from "./startGame";
+export { swapCard } from "./swapCard";
 

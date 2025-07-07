@@ -1,5 +1,6 @@
 import { ActiveGame } from "@/functions/src/types";
 import { useDealCards } from "@/hooks/useDealCards";
+import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
 
 export function PlayerControls(props: {
@@ -17,6 +18,29 @@ export function PlayerControls(props: {
         </Button>
       );
     }
+    return <Text>Waiting for dealer to deal cards...</Text>;
+  }
+
+  if (game.roundState === "playing") {
+    if (game.activePlayer === currUserId) {
+      return (
+        <Container style={{ flexDirection: "row", gap: 16, width: "100%" }}>
+          <SwapCardsButton game={game} currUserId={currUserId} />
+          <Button
+            color="blue"
+            onPress={dealCards}
+            loading={isDealing}
+            fullWidth
+          >
+            <Text>Stick</Text>
+          </Button>
+        </Container>
+      );
+    } else {
+      return (
+        <Text>It&apos;s {game.usernames[game.activePlayer]}&apos;s turn</Text>
+      );
+    }
   }
 
   return (
@@ -32,5 +56,16 @@ export function PlayerControls(props: {
         Game is active - waiting for game logic implementation
       </Text>
     </Container>
+  );
+}
+
+function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
+  const { game, currUserId } = props;
+  const { swapCard, isSwapping } = useSwapCards();
+
+  return (
+    <Button color="red" onPress={swapCard} loading={isSwapping} fullWidth>
+      <Text>{game.dealer === currUserId ? "Hit Deck" : "Swap"}</Text>
+    </Button>
   );
 }
