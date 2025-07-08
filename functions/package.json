@@ -1,5 +1,6 @@
 {
   "name": "functions",
+  "version": "1.0.0",
   "scripts": {
     "lint": "echo 'Skipping lint for now'",
     "build": "tsc",

@@ -2,13 +2,19 @@
   "name": "modi-again",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "workspaces": [
+    "functions"
+  ],
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"firebase emulators:start\" \"cd functions && yarn build:watch\"",
+    "dev": "concurrently \"yarn start\" \"firebase emulators:start\" \"yarn workspace functions build:watch\"",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "functions:build": "yarn workspace functions build",
+    "functions:build:watch": "yarn workspace functions build:watch",
+    "functions:lint": "yarn workspace functions lint"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

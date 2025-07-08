@@ -62,7 +62,7 @@ A React Native/Expo app that displays real-time connection counts using Firebase
 
 ## Quick Start
 
-1. Install dependencies:
+1. Install dependencies (this will install both main app and functions dependencies):
    ```bash
    yarn install
    ```
@@ -122,6 +122,15 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
 - Uses Firebase Realtime Database for real-time updates
 - TypeScript for type safety
 - Themed components for consistent styling
+- Yarn Workspaces for managing both main app and functions dependencies
+
+### Available Scripts
+
+- `yarn start` - Start the Expo development server
+- `yarn dev` - Start Expo + Firebase emulators + functions watch mode
+- `yarn functions:build` - Build the functions TypeScript code
+- `yarn functions:build:watch` - Watch and rebuild functions on changes
+- `yarn functions:lint` - Lint the functions code
 
 ## Deployment
 
