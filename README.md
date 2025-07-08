@@ -123,6 +123,38 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
 - TypeScript for type safety
 - Themed components for consistent styling
 
+## Deployment
+
+This project includes a GitHub Action that automatically deploys Firebase Cloud Functions and syncs Firestore rules when you push to the `main` branch.
+
+### Setting up GitHub Actions
+
+1. **Generate a Firebase CI token:**
+   ```bash
+   firebase login:ci
+   ```
+   This will open a browser window for authentication and output a token.
+
+2. **Add the token to GitHub Secrets:**
+   - Go to your GitHub repository
+   - Navigate to Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `FIREBASE_TOKEN`
+   - Value: Paste the token from step 1
+
+3. **Push to main:**
+   The workflow will automatically run when you push to the `main` branch, deploying:
+   - Cloud Functions
+   - Firestore security rules
+   - Firestore indexes
+
+### Manual Deployment
+
+You can also trigger the deployment manually:
+- Go to your GitHub repository
+- Navigate to Actions → Deploy Firebase
+- Click "Run workflow"
+
 ## Troubleshooting
 
 If you see a "Firebase not configured" warning:
@@ -130,3 +162,11 @@ If you see a "Firebase not configured" warning:
 2. Make sure your Firebase project has Realtime Database enabled
 3. Check that your database URL is correct
 4. Verify your security rules allow read/write access
+
+### GitHub Actions Issues
+
+If the deployment fails:
+1. Check that the `FIREBASE_TOKEN` secret is properly set
+2. Verify your Firebase project ID in `.firebaserc` matches your actual project
+3. Ensure your Firebase project has the necessary APIs enabled (Cloud Functions, Firestore)
+4. Check the Actions tab in GitHub for detailed error logs
