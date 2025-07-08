@@ -1,12 +1,20 @@
-import { InitialGame } from "@/functions/src/types";
 import React from "react";
-import { Container, Text } from "../elements";
+import { ViewStyle } from "react-native";
+import { Container } from "../elements";
+import { PlayerCircle } from "./PlayerCircle";
+
+export interface PlayersListGame {
+  players: string[];
+  usernames: { [playerId: string]: string };
+  playerLives?: { [playerId: string]: number };
+  roundState?: "pre-deal" | "playing" | "tallying";
+}
 
 export function PlayersList(props: {
-  game: Pick<InitialGame, "players" | "usernames">;
+  game: PlayersListGame;
   currUserId: string;
 }) {
-  const { players, usernames } = props.game;
+  const { players, usernames, playerLives, roundState } = props.game;
   const { currUserId } = props;
 
   // Find the index of the current user
@@ -44,29 +52,26 @@ export function PlayersList(props: {
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
+        const style: ViewStyle = {
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: [
+            { translateX: x - 25 },
+            { translateY: y - 25 },
+            { rotate: `${-rotationDegrees}deg` },
+          ],
+        };
+
         return (
-          <Container
+          <PlayerCircle
             key={playerId}
-            color="gray"
-            style={{
-              padding: 8,
-              borderRadius: 25,
-              width: 50,
-              height: 50,
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              transform: [
-                { translateX: x - 25 }, // -25 to center (half of width)
-                { translateY: y - 25 }, // -25 to center (half of height)
-                { rotate: `${-rotationDegrees}deg` }, // Counter-rotate to keep text upright
-              ],
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text>{usernames[playerId].slice(0, 2)}</Text>
-          </Container>
+            playerId={playerId}
+            username={usernames[playerId]}
+            lives={playerLives ? playerLives[playerId] : undefined}
+            roundState={roundState}
+            style={style}
+          />
         );
       })}
     </Container>
