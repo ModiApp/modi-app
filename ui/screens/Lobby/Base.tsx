@@ -1,13 +1,13 @@
 import React from "react";
 import { KeyboardAvoidingView } from "react-native";
 
-import { InitialGameState } from "@/functions/src/types";
+import { InitialGame } from "@/functions/src/types";
 import { PlayersList } from "@/ui/components/PlayerList";
 import { Button, Container, Icon, ScreenContainer, Text } from "@/ui/elements";
 
 export interface LobbyScreenProps {
   currUserId: string;
-  game: InitialGameState;
+  game: InitialGame;
   /**
    * Typical native share interface for sharing the link to this game page.
    */
@@ -71,11 +71,10 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       >
         <Button
           color="red"
-          fullWidth
           onPress={onBackBtnPressed}
-          style={{ height: 64, width: 64, borderRadius: 32, marginRight: 16 }}
+          style={{ height: 48, width: 48, borderRadius: 24, marginRight: 16 }}
         >
-          <Icon name="back" size={32} color="white" />
+          <Icon name="back" size={24} color="white" />
         </Button>
 
         <Container style={{ flex: 1 }}>
@@ -83,22 +82,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
             game.host === currUserId ? (
               <Button
                 color="blue"
+                fullWidth
                 onPress={onStartGameBtnPressed}
+                title="Start Game"
+                titleStyle={{ fontSize: 28 }}
                 style={{ height: 64, marginRight: 0 }}
-              >
-                <Text size={28}>Start Game</Text>
-              </Button>
+              />
             ) : (
               <Text size={28}>Waiting for host to start the game...</Text>
             )
           ) : (
             <Button
               color="blue"
+              fullWidth
               onPress={onJoinGameBtnPressed}
+              title="Join Game"
+              titleStyle={{ fontSize: 28 }}
               style={{ height: 64, marginRight: 0 }}
-            >
-              <Text size={28}>Join Game</Text>
-            </Button>
+            />
           )}
         </Container>
       </Container>

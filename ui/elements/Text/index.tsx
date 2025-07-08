@@ -12,16 +12,29 @@ interface TextProps extends React.PropsWithChildren {
 
   /** Optional override styles */
   style?: StyleProp<TextStyle>;
+
+  /** Forwarded to RN Text for truncation */
+  numberOfLines?: number;
 }
 
-const Text: React.FC<TextProps> = ({ size, children, style, color }) => {
+const Text: React.FC<TextProps> = ({
+  size,
+  children,
+  style,
+  color,
+  numberOfLines,
+}) => {
   const styles = useRef<StyleProp<TextStyle>>({
     fontSize: size || 18,
     fontFamily: fontFamilies.primary,
     color: colors[color || "white"],
   }).current;
 
-  return <RNText style={[styles, style]}>{children}</RNText>;
+  return (
+    <RNText numberOfLines={numberOfLines} style={[styles, style]}>
+      {children}
+    </RNText>
+  );
 };
 
 export default Text;

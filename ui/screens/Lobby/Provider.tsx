@@ -5,9 +5,9 @@ import { LobbyScreenProps } from "./Base";
 const defaultContextValue: LobbyScreenProps = {
   game: {
     gameId: "Game ID",
-    gameState: "gathering-players",
+    status: "gathering-players",
     players: [],
-    playerInfo: {},
+    usernames: {},
     host: "Host ID",
   },
   currUserId: "User ID",

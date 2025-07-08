@@ -43,8 +43,8 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
   const defaultStyles = useMemo<StyleProp<ViewStyle>>(
     () => ({
       backgroundColor: color ? colors[color] : undefined,
-      padding: 16,
-      paddingVertical: thin ? 6 : 16,
+      padding: 12,
+      paddingVertical: thin ? 4 : 12,
       borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
@@ -62,7 +62,9 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
       {loading ? (
         <LoadingSpinner size="large" color="white" />
       ) : title ? (
-        <Text style={titleStyle}>{title}</Text>
+        <Text numberOfLines={1} style={titleStyle}>
+          {title}
+        </Text>
       ) : (
         children
       )}
