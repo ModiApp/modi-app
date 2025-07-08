@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Needed to compare with previous commit
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,7 +27,32 @@ jobs:
       - name: Install Firebase CLI
         run: yarn global add firebase-tools
 
-      - name: Deploy to Firebase
-        run: firebase deploy --only functions,firestore:rules,firestore:indexes --token "${{ secrets.FIREBASE_TOKEN }}"
+      - name: Check for changes in functions directory
+        id: check-functions
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q "^functions/"; then
+            echo "functions_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "functions_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for changes in Firestore files
+        id: check-firestore
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -E "^(firestore\.rules|firestore\.indexes\.json)"; then
+            echo "firestore_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "firestore_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy Firestore rules and indexes (if changed)
+        if: steps.check-firestore.outputs.firestore_changed == 'true'
+        run: firebase deploy --only firestore:rules,firestore:indexes --token "${{ secrets.FIREBASE_TOKEN }}"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Functions (if changed)
+        if: steps.check-functions.outputs.functions_changed == 'true'
+        run: firebase deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}"
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }} 
