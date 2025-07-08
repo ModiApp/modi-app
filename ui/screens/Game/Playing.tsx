@@ -44,33 +44,6 @@ export function GamePlaying(props: { game: ActiveGame }) {
         <PlayersList game={game} currUserId={currentUserId} />
       </Container>
 
-      {/* Player Lives */}
-      <Container style={{ marginBottom: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
-          Lives
-        </Text>
-        <Container style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {game.players.map((playerId) => (
-            <Container
-              key={playerId}
-              color="blue"
-              style={{
-                padding: 8,
-                borderRadius: 8,
-                minWidth: 80,
-                alignItems: "center",
-              }}
-            >
-              <Text size={12} style={{ fontSize: 12, marginBottom: 4 }}>
-                {game.usernames[playerId]}
-              </Text>
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                ❤️ {game.playerLives[playerId]}
-              </Text>
-            </Container>
-          ))}
-        </Container>
-      </Container>
 
       {/* Current Player's Card */}
       <Container
