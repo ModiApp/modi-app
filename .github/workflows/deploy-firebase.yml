@@ -15,18 +15,6 @@ jobs:
         with:
           fetch-depth: 2  # Needed to compare with previous commit
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Install Firebase CLI
-        run: yarn global add firebase-tools
-
       - name: Check for changes in functions directory
         id: check-functions
         run: |
@@ -44,6 +32,21 @@ jobs:
           else
             echo "firestore_changed=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Setup Node.js and install dependencies (if needed)
+        if: steps.check-functions.outputs.functions_changed == 'true' || steps.check-firestore.outputs.firestore_changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies (if needed)
+        if: steps.check-functions.outputs.functions_changed == 'true' || steps.check-firestore.outputs.firestore_changed == 'true'
+        run: yarn install --frozen-lockfile
+
+      - name: Install Firebase CLI (if needed)
+        if: steps.check-functions.outputs.functions_changed == 'true' || steps.check-firestore.outputs.firestore_changed == 'true'
+        run: yarn global add firebase-tools
 
       - name: Deploy Firestore rules and indexes (if changed)
         if: steps.check-firestore.outputs.firestore_changed == 'true'
