@@ -1,7 +1,7 @@
 import { CardID } from "@/functions/src/types";
 import cardImgs from "@/ui/assets/images/cards";
 import React from "react";
-import { Image, ImageStyle } from "react-native";
+import { Image, ImageProps, ImageStyle } from "react-native";
 
 interface CardProps {
   cardId: CardID | null;
@@ -84,4 +84,26 @@ export function Card({ cardId, style, width = 80, height = 120 }: CardProps) {
     console.error("Card: Error rendering card", cardId, error);
     return null; // Fail silently
   }
+}
+
+export function CardBack({
+  style,
+  width = 80,
+  height = 120,
+  ...props
+}: ImageProps) {
+  return (
+    <Image
+      source={cardImgs.back}
+      {...props}
+      style={[
+        style,
+        {
+          width,
+          height,
+          resizeMode: "contain",
+        },
+      ]}
+    />
+  );
 }

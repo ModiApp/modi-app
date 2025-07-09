@@ -10,7 +10,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="join-lobby" />
-        <Stack.Screen name="lobby" />
+        <Stack.Screen name="playground" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
