@@ -35,6 +35,12 @@ export default function PlaygroundScreen() {
         color="red"
         style={{ marginTop: 48 }}
       />
+      <Button
+        onPress={() => cardsRef.current?.swapCards("3", "4")}
+        title="Swap Cards"
+        color="blue"
+        style={{ marginTop: 16 }}
+      />
     </ScreenContainer>
   );
 }
@@ -131,6 +137,9 @@ function PlayerCircles(props: {
             position: "absolute",
             borderRadius: 999,
             padding: 16,
+            aspectRatio: 1,
+            justifyContent: "center",
+            alignItems: "center",
             transform: [
               { translateX: "-50%" },
               { translateY: "-50%" },
@@ -139,7 +148,7 @@ function PlayerCircles(props: {
             ],
           }}
         >
-          <Text>{username.slice(0, 2)}</Text>
+          <Text>{playerId}</Text>
         </Container>
       ))}
     </>
@@ -158,8 +167,17 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
   const [deckPosition, setDeckPosition] = useState<PlayerPosition | null>(null);
 
   const [cardAnimationValues, setCardAnimationValues] = useState<
-    { x: Animated.Value; y: Animated.Value; rotation: Animated.Value }[]
+    {
+      x: Animated.Value;
+      y: Animated.Value;
+      rotation: Animated.Value;
+      playerId: string;
+    }[]
   >([]);
+  const cardDealOrder = useRef<string[]>([]);
+  const cardPositions = useRef<{ x: number; y: number; rotation: number }[]>(
+    []
+  );
 
   const dealCards = useCallback(
     (toPlayers: string[]) => {
@@ -167,44 +185,57 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
         console.warn("No deck position set");
         return;
       }
-      const startingAnimationValues = toPlayers.map(() => {
+
+      console.log("dealing cards to players", toPlayers);
+
+      cardDealOrder.current = [...toPlayers];
+
+      // Initialize and draw all the cards at the start position, on top of the deck
+      const startingAnimationValues = toPlayers.map((playerId) => {
         return {
           x: new Animated.Value(deckPosition.x),
           y: new Animated.Value(deckPosition.y),
           rotation: new Animated.Value(deckPosition.rotation),
+          playerId,
         };
       });
       setCardAnimationValues(startingAnimationValues);
 
       const animations = startingAnimationValues.map((value, index) => {
+        const toXValue =
+          playerPositions[toPlayers[index]].x +
+          Math.cos(
+            degreesToRadians(playerPositions[toPlayers[index]].rotation - 90)
+          ) *
+            80;
+        const toYValue =
+          playerPositions[toPlayers[index]].y +
+          Math.sin(
+            degreesToRadians(playerPositions[toPlayers[index]].rotation - 90)
+          ) *
+            80;
+        const toRotationValue = playerPositions[toPlayers[index]].rotation;
+
+        cardPositions.current.push({
+          x: toXValue,
+          y: toYValue,
+          rotation: toRotationValue,
+        });
+
         return Animated.parallel([
           Animated.timing(value.x, {
             // I want the card to be like 150px away from the player, towards the center of the table
-            toValue:
-              playerPositions[toPlayers[index]].x +
-              Math.cos(
-                degreesToRadians(
-                  playerPositions[toPlayers[index]].rotation - 90
-                )
-              ) *
-                80,
+            toValue: toXValue,
             duration: 500,
             useNativeDriver: true,
           }),
           Animated.timing(value.y, {
-            toValue:
-              playerPositions[toPlayers[index]].y +
-              Math.sin(
-                degreesToRadians(
-                  playerPositions[toPlayers[index]].rotation - 90
-                )
-              ) *
-                80,
+            toValue: toYValue,
             duration: 500,
             useNativeDriver: true,
           }),
           Animated.timing(value.rotation, {
-            toValue: playerPositions[toPlayers[index]].rotation,
+            toValue: toRotationValue,
             duration: 500,
             useNativeDriver: true,
           }),
@@ -213,12 +244,70 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
 
       Animated.stagger(300, animations).start();
     },
-    [playerPositions, deckPosition]
+    [playerPositions, deckPosition, cardPositions]
   );
 
   const swapCards = useCallback(
-    (fromPlayerId: string, toPlayerId: string) => {},
-    []
+    (player1: string, player2: string) => {
+      const player1Index = cardDealOrder.current.indexOf(player1);
+      const player1CardPosition = cardPositions.current[player1Index];
+      const player1CardAnimationValue = cardAnimationValues[player1Index];
+
+      const player2Index = cardDealOrder.current.indexOf(player2);
+      const player2CardPosition = cardPositions.current[player2Index];
+      const player2CardAnimationValue = cardAnimationValues[player2Index];
+
+      console.log({
+        cardDealOrder: [...cardDealOrder.current],
+        player1Index,
+        player1CardPosition,
+        player1CardAnimationValue,
+        player2Index,
+        player2CardPosition,
+        player2CardAnimationValue,
+      });
+
+      Animated.parallel([
+        Animated.parallel([
+          Animated.timing(player1CardAnimationValue.x, {
+            toValue: player2CardPosition.x,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(player1CardAnimationValue.y, {
+            toValue: player2CardPosition.y,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(player1CardAnimationValue.rotation, {
+            toValue: player2CardPosition.rotation,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(player2CardAnimationValue.x, {
+            toValue: player1CardPosition.x,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(player2CardAnimationValue.y, {
+            toValue: player1CardPosition.y,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(player2CardAnimationValue.rotation, {
+            toValue: player1CardPosition.rotation,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      cardDealOrder.current[player1Index] = player2;
+      cardDealOrder.current[player2Index] = player1;
+    },
+    [cardAnimationValues, cardPositions]
   );
 
   useImperativeHandle(
