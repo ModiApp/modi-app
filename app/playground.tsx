@@ -123,7 +123,7 @@ function PlayerCircles(props: {
 
   return (
     <>
-      {playerCircles.map(({ playerId, username, x, y, rotation }) => (
+      {playerCircles.map(({ playerId, username, x, y }) => (
         <Container
           key={playerId}
           color="gray"
@@ -148,6 +148,7 @@ function PlayerCircles(props: {
 
 interface CardsRef {
   dealCards(toPlayers: string[]): void;
+  swapCards(fromPlayerId: string, toPlayerId: string): void;
 }
 const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
   { dealerId },
@@ -178,12 +179,27 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
       const animations = startingAnimationValues.map((value, index) => {
         return Animated.parallel([
           Animated.timing(value.x, {
-            toValue: playerPositions[toPlayers[index]].x,
+            // I want the card to be like 150px away from the player, towards the center of the table
+            toValue:
+              playerPositions[toPlayers[index]].x +
+              Math.cos(
+                degreesToRadians(
+                  playerPositions[toPlayers[index]].rotation - 90
+                )
+              ) *
+                80,
             duration: 500,
             useNativeDriver: true,
           }),
           Animated.timing(value.y, {
-            toValue: playerPositions[toPlayers[index]].y,
+            toValue:
+              playerPositions[toPlayers[index]].y +
+              Math.sin(
+                degreesToRadians(
+                  playerPositions[toPlayers[index]].rotation - 90
+                )
+              ) *
+                80,
             duration: 500,
             useNativeDriver: true,
           }),
@@ -200,12 +216,18 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
     [playerPositions, deckPosition]
   );
 
+  const swapCards = useCallback(
+    (fromPlayerId: string, toPlayerId: string) => {},
+    []
+  );
+
   useImperativeHandle(
     ref,
     () => ({
       dealCards,
+      swapCards,
     }),
-    [dealCards]
+    [dealCards, swapCards]
   );
 
   return (
