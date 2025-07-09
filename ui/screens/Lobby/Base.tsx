@@ -1,13 +1,13 @@
 import React from "react";
 import { KeyboardAvoidingView } from "react-native";
 
-import { InitialGameState } from "@/functions/src/types";
+import { InitialGame } from "@/functions/src/types";
 import { PlayersList } from "@/ui/components/PlayerList";
 import { Button, Container, Icon, ScreenContainer, Text } from "@/ui/elements";
 
 export interface LobbyScreenProps {
   currUserId: string;
-  game: InitialGameState;
+  game: InitialGame;
   /**
    * Typical native share interface for sharing the link to this game page.
    */
