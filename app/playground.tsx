@@ -36,7 +36,7 @@ export default function PlaygroundScreen() {
         style={{ marginTop: 48 }}
       />
       <Button
-        onPress={() => cardsRef.current?.swapCards("3", "4")}
+        onPress={() => cardsRef.current?.swapCards("1", "2")}
         title="Swap Cards"
         color="blue"
         style={{ marginTop: 16 }}
@@ -257,16 +257,6 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
       const player2CardPosition = cardPositions.current[player2Index];
       const player2CardAnimationValue = cardAnimationValues[player2Index];
 
-      console.log({
-        cardDealOrder: [...cardDealOrder.current],
-        player1Index,
-        player1CardPosition,
-        player1CardAnimationValue,
-        player2Index,
-        player2CardPosition,
-        player2CardAnimationValue,
-      });
-
       Animated.parallel([
         Animated.parallel([
           Animated.timing(player1CardAnimationValue.x, {
@@ -304,8 +294,18 @@ const Cards = React.forwardRef<CardsRef, { dealerId: string }>(function Cards(
         ]),
       ]).start();
 
+      // Update the order tracking
       cardDealOrder.current[player1Index] = player2;
       cardDealOrder.current[player2Index] = player1;
+
+      // Update the position tracking to match the new order
+      const tempPosition = cardPositions.current[player1Index];
+      cardPositions.current[player1Index] = cardPositions.current[player2Index];
+      cardPositions.current[player2Index] = tempPosition;
+
+      console.log({
+        cardDealOrder: [...cardDealOrder.current],
+      });
     },
     [cardAnimationValues, cardPositions]
   );
