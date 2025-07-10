@@ -28,7 +28,6 @@ export function GamePlaying(props: { game: ActiveGame }) {
     [game.usernames]
   );
 
-  // Listen to game actions and trigger animations
   useGameActions({ gameId: game.gameId, cardsRef });
 
   if (!currentUserId) {

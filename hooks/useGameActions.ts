@@ -55,8 +55,7 @@ export function useGameActions({ gameId, cardsRef }: UseGameActionsProps) {
         break;
 
       case ActionType.END_ROUND:
-        // Could trigger end round animations
-        break;
+        return cardsRef.current.trashCards();
 
       default:
         // Handle other action types

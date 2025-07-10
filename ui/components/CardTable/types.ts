@@ -23,6 +23,7 @@ export interface CardPosition {
 export interface CardsRef {
   dealCards(toPlayers: string[]): void;
   swapCards(fromPlayerId: string, toPlayerId: string): void;
+  trashCards(): void;
 }
 
 export interface CardTableConfig {
