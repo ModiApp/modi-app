@@ -18,6 +18,7 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
       }
 
       animationState.cardDealOrder.current = [...toPlayers];
+      animationState.cardPositions.current = [];
 
       // Initialize and draw all the cards at the start position, on top of the deck
       const startingAnimationValues = toPlayers.map((playerId) => {

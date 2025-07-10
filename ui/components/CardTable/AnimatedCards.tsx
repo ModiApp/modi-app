@@ -57,7 +57,7 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
               ],
             }}
           >
-            <CardBack />
+            <CardBack width={20} height={30} />
           </Animated.View>
         ))}
       </>

@@ -51,6 +51,8 @@ export function CardDeck({
 
   return (
     <CardBack
+      width={20}
+      height={30}
       style={{
         transform: [
           { translateX: "-50%" },
