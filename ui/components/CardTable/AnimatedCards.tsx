@@ -15,20 +15,19 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
     const [deckPosition, setDeckPosition] = useState<PlayerPosition | null>(
       null
     );
-    const { cardAnimationValues, dealCards, swapCards } =
+    const { cardAnimationValues, dealCards, swapCards, trashCards } =
       useCardAnimations(config);
-
-    const handleDealCards = (toPlayers: string[]) => {
-      dealCards(toPlayers, deckPosition);
-    };
 
     useImperativeHandle(
       ref,
       () => ({
-        dealCards: handleDealCards,
+        dealCards: (toPlayers: string[]) => {
+          dealCards(toPlayers, deckPosition);
+        },
         swapCards,
+        trashCards,
       }),
-      [handleDealCards, swapCards]
+      [deckPosition, swapCards, trashCards, dealCards]
     );
 
     return (
@@ -57,7 +56,7 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
               ],
             }}
           >
-            <CardBack />
+            <CardBack width={20} height={30} />
           </Animated.View>
         ))}
       </>

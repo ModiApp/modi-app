@@ -78,6 +78,7 @@ export const startGame = onCall<StartGameRequest, Promise<StartGameResponse>>(as
       activePlayer: gameData.host, // Host starts as active player
       roundState: "pre-deal",
       actionCount: 0, // Initialize action count
+      publicCardHolders: [],
     };
 
     // Create internal state document

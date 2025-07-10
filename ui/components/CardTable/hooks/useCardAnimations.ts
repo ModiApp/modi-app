@@ -18,6 +18,7 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
       }
 
       animationState.cardDealOrder.current = [...toPlayers];
+      animationState.cardPositions.current = [];
 
       // Initialize and draw all the cards at the start position, on top of the deck
       const startingAnimationValues = toPlayers.map((playerId) => {
@@ -134,10 +135,40 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
     [animationState, mergedConfig]
   );
 
+  /** Moves all cards from players hands to the trash, in the middle of the table. */
+  const trashCards = useCallback(() => {
+    
+    const animations = animationState.cardAnimationValues.map(({ x, y, rotation }) => {
+      return Animated.parallel([
+        Animated.timing(x, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(y, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotation, {
+          toValue: Math.floor(Math.random() * 20),
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]);
+    });
+
+    Animated.stagger(200, animations).start();
+
+    animationState.cardDealOrder.current = [];
+    animationState.cardPositions.current = [];
+  }, [animationState.cardAnimationValues, animationState.cardDealOrder, animationState.cardPositions]);
+
   return {
     cardAnimationValues: animationState.cardAnimationValues,
     dealCards,
     swapCards,
+    trashCards,
     resetState: animationState.resetState,
   };
 } 
