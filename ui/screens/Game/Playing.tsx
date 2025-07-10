@@ -1,5 +1,6 @@
 import { ActiveGame } from "@/functions/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
+import { useGameActions } from "@/hooks/useGameActions";
 import { useUserId } from "@/providers/Auth";
 import { Card } from "@/ui/components/Card";
 import {
@@ -26,6 +27,9 @@ export function GamePlaying(props: { game: ActiveGame }) {
       })),
     [game.usernames]
   );
+
+  // Listen to game actions and trigger animations
+  useGameActions({ gameId: game.gameId, cardsRef });
 
   if (!currentUserId) {
     return (

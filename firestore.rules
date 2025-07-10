@@ -8,6 +8,13 @@ service cloud.firestore {
       
       // Allow write access only through cloud functions (no direct client writes)
       allow write: if false;
+
+      // Actions subcollection - allow read for players in the game
+      match /actions/{actionId} {
+        allow read: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/games/$(gameId)).data.players;
+        allow write: if false;
+      }
     }
     
     // Player hands subcollection - players can only read their own hand
