@@ -47,7 +47,7 @@ export function PlayerCircles({ players, currentUserId }: PlayerCirclesProps) {
             ],
           }}
         >
-          <Text>{playerId}</Text>
+          <Text>{username.slice(0, 2)}</Text>
         </Container>
       ))}
     </>
