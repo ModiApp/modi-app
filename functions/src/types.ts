@@ -19,6 +19,8 @@ export interface ActiveGame extends GameBase {
   // Action tracking fields
   lastActionId?: string;
   actionCount: number;
+  // Public card holders for frontend animation
+  publicCardHolders: string[];
 }
 
 interface EndedGame extends Omit<ActiveGame, 'status'> {

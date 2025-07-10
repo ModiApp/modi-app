@@ -196,6 +196,9 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
     const dealCardsAction = createDealCardsAction(userId, dealingOrder);
     addActionToBatch(batch, gameId, dealCardsAction, currentActionCount);
 
+    // NEW: Update publicCardHolders on the main game doc
+    batch.update(gameRef, { publicCardHolders: dealingOrder });
+
     // Commit the batch (all changes including actions happen atomically)
     await batch.commit();
 
