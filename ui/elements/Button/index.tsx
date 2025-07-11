@@ -60,7 +60,7 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
       {...props}
     >
       {loading ? (
-        <LoadingSpinner size="large" color="white" />
+        <LoadingSpinner size="small" color="white" />
       ) : title ? (
         <Text style={titleStyle}>{title}</Text>
       ) : (
