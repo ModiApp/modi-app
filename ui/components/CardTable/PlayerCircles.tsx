@@ -1,20 +1,19 @@
+import { useUserId } from "@/providers/Auth";
 import { Container, Text } from "@/ui/elements";
+import { useActiveGame } from "@/ui/screens/Game/PlayingContext";
+import { colors } from "@/ui/styles";
 import React, { useEffect, useMemo } from "react";
 import { useCardTable } from "./context";
-import { Player } from "./types";
 import { calculatePlayerPositions } from "./utils";
 
-interface PlayerCirclesProps {
-  players: Player[];
-  currentUserId: string;
-}
-
-export function PlayerCircles({ players, currentUserId }: PlayerCirclesProps) {
+export function PlayerCircles() {
+  const { game } = useActiveGame();
+  const currUserId = useUserId();
   const { radius, setPlayerPositions } = useCardTable();
 
   const playerCircles = useMemo(
-    () => calculatePlayerPositions(players, radius, currentUserId),
-    [players, radius, currentUserId]
+    () => calculatePlayerPositions(game.players, radius, currUserId),
+    [game.players, radius, currUserId]
   );
 
   useEffect(() => {
@@ -28,28 +27,33 @@ export function PlayerCircles({ players, currentUserId }: PlayerCirclesProps) {
 
   return (
     <>
-      {playerCircles.map(({ playerId, username, x, y }) => (
-        <Container
-          key={playerId}
-          color="gray"
-          style={{
-            position: "absolute",
-            borderRadius: 999,
-            padding: 16,
-            aspectRatio: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            transform: [
-              { translateX: "-50%" },
-              { translateY: "-50%" },
-              { translateX: x },
-              { translateY: y },
-            ],
-          }}
-        >
-          <Text>{username.slice(0, 2)}</Text>
-        </Container>
-      ))}
+      {playerCircles.map(({ playerId, x, y }) => {
+        const isActivePlayer = game.activePlayer === playerId;
+
+        return (
+          <Container
+            key={playerId}
+            color={isActivePlayer ? "blue" : "gray"}
+            style={{
+              position: "absolute",
+              borderRadius: 999,
+              borderColor: colors.blue,
+              padding: 16,
+              aspectRatio: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              transform: [
+                { translateX: "-50%" },
+                { translateY: "-50%" },
+                { translateX: x },
+                { translateY: y },
+              ],
+            }}
+          >
+            <Text>{game.usernames[playerId].slice(0, 2)}</Text>
+          </Container>
+        );
+      })}
     </>
   );
 }

@@ -2,11 +2,6 @@ import { Animated } from "react-native";
 
 export type PlayerPosition = { x: number; y: number; rotation: number };
 
-export interface Player {
-  playerId: string;
-  username: string;
-}
-
 export interface CardAnimationValue {
   x: Animated.Value;
   y: Animated.Value;

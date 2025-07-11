@@ -60,5 +60,8 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
 
 export function useUserId() {
   const { userId } = useAuth();
+  if (!userId) {
+    throw new Error("useUserId must be used within an AuthProvider");
+  }
   return userId;
 }

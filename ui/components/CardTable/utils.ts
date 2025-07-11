@@ -7,12 +7,12 @@ export function degreesToRadians(degrees: number): number {
 }
 
 export function calculatePlayerPositions(
-  players: { playerId: string; username: string }[],
+  players: string[],
   radius: number,
   currentUserId: string
-): { playerId: string; username: string; x: number; y: number; rotation: number }[] {
+): { playerId: string; x: number; y: number; rotation: number }[] {
   const currentUserIndex = players.findIndex(
-    (player) => player.playerId === currentUserId
+    (player) => player === currentUserId
   );
   const currentUserAngle = (currentUserIndex * 360) / players.length;
   const rotationDegrees = 90 - currentUserAngle;
@@ -26,7 +26,7 @@ export function calculatePlayerPositions(
       x,
       y,
       rotation: radiansToDegrees(rotatedAngle) - 90,
-      ...player,
+      playerId: player,
     };
   });
 } 
