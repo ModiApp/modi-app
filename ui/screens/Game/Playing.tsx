@@ -40,18 +40,6 @@ export function GamePlaying(props: { game: ActiveGame }) {
 
   return (
     <Container style={{ flex: 1, padding: 16 }}>
-      {/* Game Header */}
-      <Container style={{ marginBottom: 16 }}>
-        <Text size={24}>Game #{game.gameId}</Text>
-        <Text size={16}>
-          Round: {game.round} | State: {game.roundState}
-        </Text>
-        <Text size={14}>
-          Dealer: {game.usernames[game.dealer]} | Active:{" "}
-          {game.usernames[game.activePlayer]}
-        </Text>
-      </Container>
-
       {/* Card Table */}
       <CardTable>
         <PlayerCircles players={players} currentUserId={currentUserId} />
