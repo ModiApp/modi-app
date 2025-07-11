@@ -26,6 +26,7 @@ export function CardTable({ children, onLayout }: CardTableProps) {
         borderRadius: 999,
         maxWidth: 600,
         position: "relative",
+        margin: 24, // absolutely positioned player circles exceed bounds of the card table
       }}
       onLayout={handleLayout}
     >
