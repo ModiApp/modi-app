@@ -3,20 +3,19 @@ import React, { useImperativeHandle, useState } from "react";
 import { Animated } from "react-native";
 import { CardDeck } from "./CardDeck";
 import { useCardAnimations } from "./hooks/useCardAnimations";
-import { CardsRef, CardTableConfig, PlayerPosition } from "./types";
+import { CardsRef, PlayerPosition } from "./types";
 
 interface AnimatedCardsProps {
   dealerId: string;
-  config?: Partial<CardTableConfig>;
 }
 
 export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
-  function AnimatedCards({ dealerId, config }, ref) {
+  function AnimatedCards({ dealerId }, ref) {
     const [deckPosition, setDeckPosition] = useState<PlayerPosition | null>(
       null
     );
     const { cardAnimationValues, dealCards, swapCards, trashCards } =
-      useCardAnimations(config);
+      useCardAnimations();
 
     useImperativeHandle(
       ref,
@@ -32,11 +31,7 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
 
     return (
       <>
-        <CardDeck
-          dealerId={dealerId}
-          onLayout={setDeckPosition}
-          distanceFromDealer={config?.deckDistanceFromDealer}
-        />
+        <CardDeck dealerId={dealerId} onLayout={setDeckPosition} />
         {cardAnimationValues.map((value, index) => (
           <Animated.View
             key={index}

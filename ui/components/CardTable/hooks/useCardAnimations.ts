@@ -1,14 +1,13 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { Animated } from "react-native";
 import { useCardTable } from "../context";
-import { CardTableConfig, DEFAULT_CARD_TABLE_CONFIG, PlayerPosition } from "../types";
+import { CARD_TABLE_CONFIG, PlayerPosition } from "../types";
 import { degreesToRadians } from "../utils";
 import { useCardAnimationState } from "./useCardAnimationState";
 
-export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
+export function useCardAnimations() {
   const { playerPositions } = useCardTable();
   const animationState = useCardAnimationState();
-  const mergedConfig = useMemo(() => ({ ...DEFAULT_CARD_TABLE_CONFIG, ...config }), [config]);
 
   const dealCards = useCallback(
     (toPlayers: string[], deckPosition: PlayerPosition | null) => {
@@ -37,13 +36,13 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
           Math.cos(
             degreesToRadians(playerPositions[toPlayers[index]].rotation - 90)
           ) *
-            mergedConfig.cardDistanceFromPlayer;
+            CARD_TABLE_CONFIG.cardDistanceFromPlayer;
         const toYValue =
           playerPositions[toPlayers[index]].y +
           Math.sin(
             degreesToRadians(playerPositions[toPlayers[index]].rotation - 90)
           ) *
-            mergedConfig.cardDistanceFromPlayer;
+            CARD_TABLE_CONFIG.cardDistanceFromPlayer;
         const toRotationValue = playerPositions[toPlayers[index]].rotation;
 
         animationState.cardPositions.current.push({
@@ -55,25 +54,25 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
         return Animated.parallel([
           Animated.timing(value.x, {
             toValue: toXValue,
-            duration: mergedConfig.dealAnimationDuration,
+            duration: CARD_TABLE_CONFIG.dealAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(value.y, {
             toValue: toYValue,
-            duration: mergedConfig.dealAnimationDuration,
+            duration: CARD_TABLE_CONFIG.dealAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(value.rotation, {
             toValue: toRotationValue,
-            duration: mergedConfig.dealAnimationDuration,
+            duration: CARD_TABLE_CONFIG.dealAnimationDuration,
             useNativeDriver: true,
           }),
         ]);
       });
 
-      Animated.stagger(mergedConfig.dealStaggerDelay, animations).start();
+      Animated.stagger(CARD_TABLE_CONFIG.dealStaggerDelay, animations).start();
     },
-    [playerPositions, animationState, mergedConfig]
+    [playerPositions, animationState]
   );
 
   const swapCards = useCallback(
@@ -90,34 +89,34 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
         Animated.parallel([
           Animated.timing(player1CardAnimationValue.x, {
             toValue: player2CardPosition.x,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(player1CardAnimationValue.y, {
             toValue: player2CardPosition.y,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(player1CardAnimationValue.rotation, {
             toValue: player2CardPosition.rotation,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
         ]),
         Animated.parallel([
           Animated.timing(player2CardAnimationValue.x, {
             toValue: player1CardPosition.x,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(player2CardAnimationValue.y, {
             toValue: player1CardPosition.y,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
           Animated.timing(player2CardAnimationValue.rotation, {
             toValue: player1CardPosition.rotation,
-            duration: mergedConfig.swapAnimationDuration,
+            duration: CARD_TABLE_CONFIG.swapAnimationDuration,
             useNativeDriver: true,
           }),
         ]),
@@ -132,7 +131,7 @@ export function useCardAnimations(config: Partial<CardTableConfig> = {}) {
       animationState.cardPositions.current[player1Index] = animationState.cardPositions.current[player2Index];
       animationState.cardPositions.current[player2Index] = tempPosition;
     },
-    [animationState, mergedConfig]
+    [animationState]
   );
 
   /** Moves all cards from players hands to the trash, in the middle of the table. */

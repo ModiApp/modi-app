@@ -34,9 +34,9 @@ export interface CardTableConfig {
   dealStaggerDelay: number;
 }
 
-export const DEFAULT_CARD_TABLE_CONFIG: CardTableConfig = {
+export const CARD_TABLE_CONFIG: CardTableConfig = {
   cardDistanceFromPlayer: 80,
-  deckDistanceFromDealer: 100,
+  deckDistanceFromDealer: 30,
   dealAnimationDuration: 500,
   swapAnimationDuration: 300,
   dealStaggerDelay: 300,
