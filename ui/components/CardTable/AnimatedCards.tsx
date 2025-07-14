@@ -11,8 +11,9 @@ import { useCardTable } from "./context";
 import { PlayerPosition } from "./types";
 
 export function AnimatedCards() {
-  const { playerPositions } = useCardTable();
-  if (!Object.keys(playerPositions).length) return null;
+  const { playerPositions, radius } = useCardTable();
+  if (!radius || !Object.keys(playerPositions).length) return null;
+
   return <AnimatedCardsInner />;
 }
 
@@ -33,7 +34,9 @@ function AnimatedCardsInner() {
     const cards = deck.current?.getCardAnimationValues();
     if (!cards) throw new Error("No cards in deck");
     const totalCards = cards.length;
-    const nextCardIndex = totalCards - cardsOnTable.current.size - 1;
+    const trashSize = virtualTrash.current.length;
+    const cardsOnTableSize = cardsOnTable.current.size;
+    const nextCardIndex = totalCards - cardsOnTableSize - trashSize - 1;
     const nextCard = cards[nextCardIndex];
     cardsOnTable.current.add(nextCard);
     return nextCard;
@@ -48,7 +51,7 @@ function AnimatedCardsInner() {
         const dealerPosition = playerPositions[toDealerId];
         const cardsLeftInDeck = cards.slice(
           0,
-          cards.length - cardsOnTable.current.size
+          cards.length - cardsOnTable.current.size - virtualTrash.current.length
         );
         moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).start(() =>
           resolve()
@@ -193,6 +196,8 @@ function moveDeckNextToPlayer(
   deck: CardAnimatableProps[],
   playerPosition: PlayerPosition
 ): Animated.CompositeAnimation {
+  console.log("moveDeckNextToPlayer", deck, playerPosition);
+
   function moveCard(card: CardAnimatableProps): Animated.CompositeAnimation {
     return Animated.parallel([
       Animated.timing(card.x, {

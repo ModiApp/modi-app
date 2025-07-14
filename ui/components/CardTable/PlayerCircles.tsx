@@ -17,13 +17,14 @@ export function PlayerCircles() {
   );
 
   useEffect(() => {
+    if (!radius) return;
     setPlayerPositions(
       playerCircles.reduce((acc, { playerId, x, y, rotation }) => {
         acc[playerId] = { x, y, rotation };
         return acc;
       }, {} as { [playerId: string]: { x: number; y: number; rotation: number } })
     );
-  }, [playerCircles, setPlayerPositions]);
+  }, [playerCircles, setPlayerPositions, radius]);
 
   return (
     <>
