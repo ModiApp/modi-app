@@ -1,8 +1,8 @@
 import { firestore } from "@/config/firebase";
 import { CardID } from "@/functions/src/types";
 import { ActionType, GameAction } from "@/functions/src/types/actions.types";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { useEffect } from "react";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { useEffect, useRef } from "react";
 
 interface GameActionHandlers {
   moveDeck?(toDealerId: string): Promise<void>;
@@ -13,27 +13,33 @@ interface GameActionHandlers {
   revealCards?(playerCards: { [playerId: string]: CardID }): Promise<void>;
 }
 
+
 export function useGameActions(gameId: string, handlers: GameActionHandlers) {
+  const actionQueue = useRef<GameAction[]>([]).current;
+  const processing = useRef(false);
+
+  async function processActionQueue() {
+    if (processing.current) return;
+    processing.current = true;
+    while (actionQueue.length) {
+      const action = actionQueue.shift();
+      if (!action) continue;
+      await handleAction(action);
+    }
+    processing.current = false;
+  }
+
   useEffect(() => {
-    if (!gameId) return;
-
-    const fetchAndProcessActions = async () => {
-      const actionsRef = collection(firestore, "games", gameId, "actions");
-      const actionsQuery = query(actionsRef, orderBy("timestamp"));
-      const snapshot = await getDocs(actionsQuery);
-      const actions: GameAction[] = snapshot.docs.map(doc => doc.data() as GameAction);
-
-      // Find the index of the first GAME_STARTED action
-      const startIdx = actions.findIndex(a => a.type === ActionType.GAME_STARTED);
-      if (startIdx === -1) return; // No game started action, nothing to process
-
-      // Process actions in order, starting from GAME_STARTED
-      for (let i = startIdx; i < actions.length; i++) {
-        await handleAction(actions[i]);
-      }
-    };
-
-    fetchAndProcessActions();
+    const actionsRef = collection(firestore, "games", gameId, "actions");
+    const actionsQuery = query(actionsRef, orderBy("timestamp"));
+    const unsubscribe = onSnapshot(actionsQuery, (snapshot) => {
+      snapshot.docChanges().filter((change) => change.type === 'added').forEach((change) => {
+        const action = change.doc.data() as GameAction;
+        actionQueue.push(action);
+        processActionQueue();
+      });
+    });
+    return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId]);
 
