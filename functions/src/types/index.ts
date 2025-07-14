@@ -1,3 +1,6 @@
+import { CardID } from "./card.types";
+export * from "./card.types";
+
 interface GameBase {
   gameId: string;
   players: string[];
@@ -40,9 +43,7 @@ export interface PlayerHand {
   playerId: string;
 }
 
-export type CardRank = '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
-export type CardSuit = 'H' | 'D' | 'C' | 'S';
-export type CardID = `${CardRank}${CardSuit}`;
+
 
 export type Game = InitialGame | ActiveGame | EndedGame;
 

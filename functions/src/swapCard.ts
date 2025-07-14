@@ -295,15 +295,22 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       const playerHandsSnapshot = await playerHandsRef.get();
 
       if (!playerHandsSnapshot.empty) {
-        const playerCards: { [playerId: string]: string } = {};
+        const playerCards: { [playerId: string]: CardID } = {};
 
         playerHandsSnapshot.forEach(doc => {
           const playerId = doc.id;
           const handData = doc.data() as { card: CardID | null };
-          
+
           // Only include players with lives and cards
-          if (gameData.playerLives[playerId] > 0 && handData.card) {
-            playerCards[playerId] = handData.card;
+          if (gameData.playerLives[playerId] > 0) {
+            // Use the updated card if present in updatedPlayerHands, otherwise use the card from Firestore
+            const card =
+              playerId in updatedPlayerHands
+                ? updatedPlayerHands[playerId]
+                : handData.card;
+            if (card) {
+              playerCards[playerId] = card;
+            }
           }
         });
 

@@ -22,8 +22,6 @@ function AnimatedCardsInner() {
   const deck = useRef<AnimatableCardDeckRef>(null);
   const { playerPositions } = useCardTable();
 
-  console.log("playerPositions", playerPositions);
-
   const virtualTrash = useRef<CardAnimatableProps[]>([]);
   const playerHands = useRef<{
     [playerId: string]: CardAnimatableProps | null;
@@ -65,7 +63,7 @@ function AnimatedCardsInner() {
           playerHands.current[playerId] = nextCard;
           return moveCardToPlayer(playerPositions[playerId], nextCard);
         });
-        Animated.stagger(100, animations).start(() => resolve());
+        Animated.stagger(200, animations).start(() => resolve());
       });
     },
     swapCards: (fromPlayerId, toPlayerId) => {
@@ -140,7 +138,7 @@ function moveCardToPlayer(
     pairs.map(([value, toValue]) =>
       Animated.timing(value, {
         toValue,
-        duration: 300,
+        duration: 500,
         useNativeDriver: true,
       })
     )
@@ -200,17 +198,23 @@ function moveDeckNextToPlayer(
   deck: CardAnimatableProps[],
   playerPosition: PlayerPosition
 ): Animated.CompositeAnimation {
-  console.log("moveDeckNextToPlayer", deck, playerPosition);
+  // position the deck 60px diagonal from the center of the player's circle
+  const centerX = playerPosition.x;
+  const centerY = playerPosition.y;
+  const diagonalDistance = 60;
+  const angle = Math.atan2(centerY, centerX);
+  const x = centerX + diagonalDistance * Math.cos(angle);
+  const y = centerY + diagonalDistance * Math.sin(angle);
 
   function moveCard(card: CardAnimatableProps): Animated.CompositeAnimation {
     return Animated.parallel([
       Animated.timing(card.x, {
-        toValue: playerPosition.x,
+        toValue: x,
         duration: 300,
         useNativeDriver: true,
       }),
       Animated.timing(card.y, {
-        toValue: playerPosition.y,
+        toValue: y,
         duration: 300,
         useNativeDriver: true,
       }),
