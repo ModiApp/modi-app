@@ -26,6 +26,9 @@ export function useCardAnimations() {
           y: new Animated.Value(deckPosition.y),
           rotation: new Animated.Value(deckPosition.rotation),
           playerId,
+          backOpacity: new Animated.Value(1),
+          faceOpacity: new Animated.Value(0),
+          skew: new Animated.Value(0),
         };
       });
       animationState.setCardAnimationValues(startingAnimationValues);
@@ -163,11 +166,22 @@ export function useCardAnimations() {
     animationState.cardPositions.current = [];
   }, [animationState.cardAnimationValues, animationState.cardDealOrder, animationState.cardPositions]);
 
+  /** Reveals all cards by flipping them to show their faces. */
+  const revealCards = useCallback((playerCards: { [playerId: string]: string }) => {
+    const { cardAnimationValues, cardDealOrder, cardPositions } = animationState;
+    
+    const animations = cardDealOrder.current.map((playerId) => {
+      
+    })
+
+  }, [animationState]);
+
   return {
     cardAnimationValues: animationState.cardAnimationValues,
     dealCards,
     swapCards,
     trashCards,
+    revealCards,
     resetState: animationState.resetState,
   };
 } 

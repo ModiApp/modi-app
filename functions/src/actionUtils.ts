@@ -9,6 +9,7 @@ import {
   GameStartedAction,
   PlayerJoinedAction,
   PlayerLeftAction,
+  RevealCardsAction,
   SpecialEventAction,
   StickAction,
   SwapCardsAction
@@ -251,6 +252,21 @@ export function createPlayerJoinedAction(
     playerId,
     username,
     joinEvent: true
+  };
+}
+
+/**
+ * Helper function to create a reveal cards action
+ */
+export function createRevealCardsAction(
+  dealerId: string,
+  playerCards: { [playerId: string]: string }
+): Omit<RevealCardsAction, 'id' | 'timestamp'> {
+  return {
+    type: ActionType.REVEAL_CARDS,
+    playerId: dealerId,
+    playerCards,
+    revealEvent: true
   };
 }
 

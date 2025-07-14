@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDeckReshuffleAction, createSpecialEventAction, createSwapCardsAction } from "./actionUtils";
+import { addActionToBatch, createDeckReshuffleAction, createRevealCardsAction, createSpecialEventAction, createSwapCardsAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -287,6 +287,30 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       // Add dealer draw action
       const dealerDrawAction = createSwapCardsAction(userId, "", true);
       addActionToBatch(batch, gameId, dealerDrawAction, currentActionCount);
+      currentActionCount++;
+      
+      // If the dealer drew, also add a reveal cards action
+      // Get all player hands to reveal everyone's cards
+      const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
+      const playerHandsSnapshot = await playerHandsRef.get();
+
+      if (!playerHandsSnapshot.empty) {
+        const playerCards: { [playerId: string]: string } = {};
+
+        playerHandsSnapshot.forEach(doc => {
+          const playerId = doc.id;
+          const handData = doc.data() as { card: CardID | null };
+          
+          // Only include players with lives and cards
+          if (gameData.playerLives[playerId] > 0 && handData.card) {
+            playerCards[playerId] = handData.card;
+          }
+        });
+
+        // Add the reveal cards action
+        const revealCardsAction = createRevealCardsAction(userId, playerCards);
+        addActionToBatch(batch, gameId, revealCardsAction, currentActionCount);
+      }
     } else if (isKungEvent) {
       // Add Kung special event action
       const kungAction = createSpecialEventAction(userId, 'kung', newActivePlayer);

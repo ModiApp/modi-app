@@ -31,6 +31,12 @@ export interface StickAction extends BaseGameAction {
   action: 'dealer-stick' | 'player-stick';
 }
 
+export interface RevealCardsAction extends BaseGameAction {
+  type: ActionType.REVEAL_CARDS;
+  playerCards: { [playerId: string]: string }; // playerId -> cardId
+  revealEvent: true;
+}
+
 export interface EndRoundAction extends BaseGameAction {
   type: ActionType.END_ROUND;
   playersLost: string[];
@@ -71,6 +77,7 @@ export type GameAction =
   | SwapCardsAction
   | DealerDrawAction
   | StickAction
+  | RevealCardsAction
   | EndRoundAction
   | DeckReshuffleAction
   | SpecialEventAction
@@ -83,6 +90,7 @@ export enum ActionType {
   SWAP_CARDS = 'swap-cards',
   DEALER_DRAW = 'dealer-draw',
   STICK = 'stick',
+  REVEAL_CARDS = 'reveal-cards',
   END_ROUND = 'end-round',
   DECK_RESHUFFLE = 'deck-reshuffle',
   SPECIAL_EVENT = 'special-event',

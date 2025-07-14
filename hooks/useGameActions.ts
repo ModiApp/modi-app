@@ -49,6 +49,11 @@ export function useGameActions({ gameId, cardsRef }: UseGameActionsProps) {
         cardsRef.current.swapCards(action.playerId, action.targetPlayerId);
         break;
 
+      case ActionType.REVEAL_CARDS:
+        // Trigger reveal cards animation
+        cardsRef.current.revealCards(action.playerCards);
+        break;
+
       // Add other action types as needed
       case ActionType.DEALER_DRAW:
         // Could trigger a dealer draw animation

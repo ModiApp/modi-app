@@ -14,8 +14,13 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
     const [deckPosition, setDeckPosition] = useState<PlayerPosition | null>(
       null
     );
-    const { cardAnimationValues, dealCards, swapCards, trashCards } =
-      useCardAnimations();
+    const {
+      cardAnimationValues,
+      dealCards,
+      swapCards,
+      trashCards,
+      revealCards,
+    } = useCardAnimations();
 
     useImperativeHandle(
       ref,
@@ -25,8 +30,9 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
         },
         swapCards,
         trashCards,
+        revealCards,
       }),
-      [deckPosition, swapCards, trashCards, dealCards]
+      [deckPosition, swapCards, trashCards, dealCards, revealCards]
     );
 
     return (
@@ -58,3 +64,5 @@ export const AnimatedCards = React.forwardRef<CardsRef, AnimatedCardsProps>(
     );
   }
 );
+
+function FlippableCard(props: {}) {}

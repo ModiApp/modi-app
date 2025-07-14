@@ -7,6 +7,9 @@ export interface CardAnimationValue {
   y: Animated.Value;
   rotation: Animated.Value;
   playerId: string;
+  backOpacity: Animated.Value;
+  faceOpacity: Animated.Value;
+  skew: Animated.Value;
 }
 
 export interface CardPosition {
@@ -19,6 +22,7 @@ export interface CardsRef {
   dealCards(toPlayers: string[]): void;
   swapCards(fromPlayerId: string, toPlayerId: string): void;
   trashCards(): void;
+  revealCards(playerCards: { [playerId: string]: string }): void;
 }
 
 export interface CardTableConfig {

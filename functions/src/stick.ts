@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createStickAction } from "./actionUtils";
-import { ActiveGame } from "./types";
+import { addActionToBatch, createRevealCardsAction, createStickAction } from "./actionUtils";
+import { ActiveGame, CardID } from "./types";
 
 const db = getFirestore();
 
@@ -106,6 +106,31 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
     const stickAction = createStickAction(userId, isDealer);
     const currentActionCount = gameData.actionCount || 0;
     addActionToBatch(batch, gameId, stickAction, currentActionCount);
+
+    // If the dealer is sticking, also add a reveal cards action
+    if (isDealer) {
+      // Get all player hands to reveal everyone's cards
+      const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
+      const playerHandsSnapshot = await playerHandsRef.get();
+
+      if (!playerHandsSnapshot.empty) {
+        const playerCards: { [playerId: string]: string } = {};
+
+        playerHandsSnapshot.forEach(doc => {
+          const playerId = doc.id;
+          const handData = doc.data() as { card: CardID | null };
+          
+          // Only include players with lives and cards
+          if (gameData.playerLives[playerId] > 0 && handData.card) {
+            playerCards[playerId] = handData.card;
+          }
+        });
+
+        // Add the reveal cards action
+        const revealCardsAction = createRevealCardsAction(userId, playerCards);
+        addActionToBatch(batch, gameId, revealCardsAction, currentActionCount + 1);
+      }
+    }
 
     // Commit the batch (all changes including action happen atomically)
     await batch.commit();
