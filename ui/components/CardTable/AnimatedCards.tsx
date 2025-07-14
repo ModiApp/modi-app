@@ -63,7 +63,7 @@ function AnimatedCardsInner() {
           playerHands.current[playerId] = nextCard;
           return moveCardToPlayer(playerPositions[playerId], nextCard);
         });
-        Animated.stagger(200, animations).start(() => resolve());
+        Animated.stagger(400, animations).start(() => resolve());
       });
     },
     swapCards: (fromPlayerId, toPlayerId) => {
@@ -120,14 +120,21 @@ function AnimatedCardsInner() {
     },
   });
 
-  return <AnimatableCardDeck ref={deck} cardWidth={20} numCards={52} />;
+  return <AnimatableCardDeck ref={deck} cardWidth={40} numCards={52} />;
 }
 
 function moveCardToPlayer(
   playerPosition: PlayerPosition,
   card: CardAnimatableProps
 ): Animated.CompositeAnimation {
-  const { x, y, rotation } = playerPosition;
+  const { rotation } = playerPosition;
+  // the card should be 40px closer to the center of the table than the player's circle
+  const centerX = playerPosition.x;
+  const centerY = playerPosition.y;
+  const diagonalDistance = 40;
+  const angle = Math.atan2(centerY, centerX);
+  const x = centerX - diagonalDistance * Math.cos(angle);
+  const y = centerY - diagonalDistance * Math.sin(angle);
   const pairs = [
     [card.x, x],
     [card.y, y],
@@ -201,8 +208,8 @@ function moveDeckNextToPlayer(
   // position the deck 60px diagonal from the center of the player's circle
   const centerX = playerPosition.x;
   const centerY = playerPosition.y;
-  const diagonalDistance = 60;
-  const angle = Math.atan2(centerY, centerX);
+  const diagonalDistance = 40;
+  const angle = Math.atan2(centerY, centerX) - Math.PI / 2;
   const x = centerX + diagonalDistance * Math.cos(angle);
   const y = centerY + diagonalDistance * Math.sin(angle);
 
