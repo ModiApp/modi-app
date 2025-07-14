@@ -105,15 +105,19 @@ function AnimatedCardsInner() {
       return new Promise((resolve) => {
         const cards = deck.current?.getCardAnimationValues();
         if (!cards) throw new Error("No cards in deck");
-        deck.current?.setCardValues(
-          Object.fromEntries(
-            Object.entries(playerHands).map(([playerId, card]) => {
-              const cardIndex = cards.find((c) => c === card);
-              return [cardIndex, playerCards[playerId]] as const;
-            })
-          )
+        const values = Object.fromEntries(
+          Object.entries(playerHands.current).map(([playerId, card]) => {
+            const cardIndex = cards.findIndex((c) => c === card);
+            return [cardIndex, playerCards[playerId]] as const;
+          })
         );
-        Animated.stagger(200, cards.map(revealCard)).start(() => resolve());
+        deck.current?.setCardValues(values);
+        Animated.stagger(
+          200,
+          Object.values(playerHands.current)
+            .filter(Boolean)
+            .map((card) => revealCard(card!))
+        ).start(() => resolve());
       });
     },
   });
