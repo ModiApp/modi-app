@@ -5,7 +5,7 @@ import { Animated, StyleSheet } from "react-native";
 
 export interface AnimatableCardDeckRef {
   setCardValues(values: { [cardIndex: number]: CardID | null }): void;
-  getCardAnimationValues(): CardAnimatableProps[];
+  getCardAnimationValues(): readonly CardAnimatableProps[];
 }
 
 interface AnimatableCardDeckProps {
@@ -46,7 +46,7 @@ export const AnimatableCardDeck = React.forwardRef<
   AnimatableCardDeckProps
 >(function AnimatableCardDeck(props, ref) {
   const { cardWidth, numCards = 52 } = props;
-  const cards = useRef<CardAnimatableProps[]>(
+  const cards = useRef<readonly CardAnimatableProps[]>(
     createInitialCardDeck(numCards)
   ).current;
   const cardRefs = useRef<React.RefObject<AnimatableCardRef>[]>(
@@ -78,7 +78,7 @@ export const AnimatableCardDeck = React.forwardRef<
   );
 });
 
-interface CardAnimatableProps {
+export interface CardAnimatableProps {
   x: Animated.Value;
   y: Animated.Value;
   rotation: Animated.Value;
@@ -147,16 +147,22 @@ const AnimatableCard = React.forwardRef<AnimatableCardRef, AnimatableCardProps>(
   }
 );
 
-function createInitialCardDeck(numCards: number): CardAnimatableProps[] {
-  return Array.from({ length: numCards }, () => ({
-    x: new Animated.Value(0),
-    y: new Animated.Value(0),
-    rotation: new Animated.Value(Math.floor(Math.random() * 4)),
-    backOpacity: new Animated.Value(1),
-    faceOpacity: new Animated.Value(0),
-    skew: new Animated.Value(0),
-    scale: new Animated.Value(1),
-  }));
+function createInitialCardDeck(
+  numCards: number
+): readonly CardAnimatableProps[] {
+  return Object.freeze(
+    Array.from({ length: numCards }, () =>
+      Object.freeze({
+        x: new Animated.Value(0),
+        y: new Animated.Value(0),
+        rotation: new Animated.Value(Math.floor(Math.random() * 4)),
+        backOpacity: new Animated.Value(1),
+        faceOpacity: new Animated.Value(0),
+        skew: new Animated.Value(0),
+        scale: new Animated.Value(1),
+      })
+    )
+  );
 }
 
 function createCardRefs(

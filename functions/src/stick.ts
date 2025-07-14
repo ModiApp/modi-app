@@ -114,7 +114,7 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
       const playerHandsSnapshot = await playerHandsRef.get();
 
       if (!playerHandsSnapshot.empty) {
-        const playerCards: { [playerId: string]: string } = {};
+        const playerCards: { [playerId: string]: CardID } = {};
 
         playerHandsSnapshot.forEach(doc => {
           const playerId = doc.id;

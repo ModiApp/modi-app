@@ -1,4 +1,5 @@
 import { getFirestore } from "firebase-admin/firestore";
+import { CardID } from "./types";
 import {
   ActionType,
   DealCardsAction,
@@ -13,7 +14,7 @@ import {
   SpecialEventAction,
   StickAction,
   SwapCardsAction
-} from "./actions.types";
+} from "./types/actions.types";
 
 const db = getFirestore();
 
@@ -260,7 +261,7 @@ export function createPlayerJoinedAction(
  */
 export function createRevealCardsAction(
   dealerId: string,
-  playerCards: { [playerId: string]: string }
+  playerCards: { [playerId: string]: CardID }
 ): Omit<RevealCardsAction, 'id' | 'timestamp'> {
   return {
     type: ActionType.REVEAL_CARDS,

@@ -1,3 +1,5 @@
+import { CardID } from "./card.types";
+
 // Base action interface
 interface BaseGameAction {
   id: string;
@@ -33,7 +35,7 @@ export interface StickAction extends BaseGameAction {
 
 export interface RevealCardsAction extends BaseGameAction {
   type: ActionType.REVEAL_CARDS;
-  playerCards: { [playerId: string]: string }; // playerId -> cardId
+  playerCards: { [playerId: string]: CardID }; // playerId -> cardId
   revealEvent: true;
 }
 
