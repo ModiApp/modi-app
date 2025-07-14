@@ -1,50 +1,38 @@
 import {
-  AnimatedCards,
-  CardsRef,
-  CardTable,
-  DEFAULT_CARD_TABLE_CONFIG,
-  PlayerCircles,
-} from "@/ui/components/CardTable";
-import { Button, ScreenContainer } from "@/ui/elements";
-import React, { useRef } from "react";
-
-const mockPlayers = [
-  { playerId: "1", username: "Peter" },
-  { playerId: "2", username: "Jack" },
-  { playerId: "3", username: "Ikey" },
-  { playerId: "4", username: "Raquel" },
-];
-
-const currUserId = "4";
-
-// Example of custom configuration
-const customConfig = {
-  ...DEFAULT_CARD_TABLE_CONFIG,
-  cardDistanceFromPlayer: 120, // Cards further from players
-  dealAnimationDuration: 800, // Slower dealing animation
-  swapAnimationDuration: 500, // Slower swap animation
-};
+  AnimatableCardDeck,
+  AnimatableCardDeckRef,
+} from "@/ui/components/AnimatableCardDeck";
+import { ScreenContainer } from "@/ui/elements";
+import React, { useEffect, useRef } from "react";
+import { Animated, Platform } from "react-native";
 
 export default function PlaygroundScreen() {
-  const cardsRef = useRef<CardsRef>(null);
+  const cardsRef = useRef<AnimatableCardDeckRef>(null);
+
+  useEffect(() => {
+    const cards = cardsRef.current?.getCardAnimationValues();
+    if (!cards) return;
+
+    Animated.stagger(
+      10,
+      cards.map((card) =>
+        Animated.stagger(
+          10,
+          cards.map((card) =>
+            Animated.timing(card.x, {
+              toValue: 100,
+              duration: 20,
+              useNativeDriver: ["ios", "android"].includes(Platform.OS),
+            })
+          )
+        )
+      )
+    ).start();
+  }, []);
+
   return (
     <ScreenContainer>
-      <CardTable>
-        <PlayerCircles players={mockPlayers} currentUserId={currUserId} />
-        <AnimatedCards dealerId="2" ref={cardsRef} config={customConfig} />
-      </CardTable>
-      <Button
-        onPress={() => cardsRef.current?.dealCards(["4", "1", "2"])}
-        title="Deal Cards"
-        color="red"
-        style={{ marginTop: 48 }}
-      />
-      <Button
-        onPress={() => cardsRef.current?.swapCards("1", "2")}
-        title="Swap Cards"
-        color="blue"
-        style={{ marginTop: 16 }}
-      />
+      <AnimatableCardDeck cardWidth={60} ref={cardsRef} />
     </ScreenContainer>
   );
 }
