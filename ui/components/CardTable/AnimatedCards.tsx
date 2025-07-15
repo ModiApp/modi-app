@@ -182,8 +182,8 @@ function moveCardToTrash(card: AnimatedCard): Animated.CompositeAnimation {
 
 function revealCard(card: AnimatedCard): Animated.CompositeAnimation {
   return Animated.sequence([
-    Animated.timing(card.skew, {
-      toValue: 1,
+    Animated.timing(card.rotateY, {
+      toValue: 90,
       duration: 150,
       useNativeDriver: true,
     }),
@@ -199,8 +199,8 @@ function revealCard(card: AnimatedCard): Animated.CompositeAnimation {
         useNativeDriver: true,
       }),
     ]),
-    Animated.timing(card.skew, {
-      toValue: 0,
+    Animated.timing(card.rotateY, {
+      toValue: 180,
       duration: 150,
       useNativeDriver: true,
     }),

@@ -87,7 +87,7 @@ export interface CardAnimatableProps {
   rotation: Animated.Value;
   backOpacity: Animated.Value;
   faceOpacity: Animated.Value;
-  skew: Animated.Value;
+  rotateY: Animated.Value;
   scale: Animated.Value;
 }
 
@@ -104,8 +104,16 @@ const AnimatableCard = React.forwardRef<
   AnimatableCardRef,
   AnimatableCardProps & { zIndex: number }
 >(function AnimatableCard(props, ref) {
-  const { cardWidth, x, y, rotation, backOpacity, faceOpacity, skew, scale } =
-    props;
+  const {
+    cardWidth,
+    x,
+    y,
+    rotation,
+    backOpacity,
+    faceOpacity,
+    rotateY,
+    scale,
+  } = props;
   const [value, setValue] = useState<CardID | null>(null);
   const [zIndex, setZIndex] = useState<number>(props.zIndex);
   const width = cardWidth;
@@ -131,9 +139,9 @@ const AnimatableCard = React.forwardRef<
             }),
           },
           {
-            skewX: skew.interpolate({
-              inputRange: [0, 360],
-              outputRange: ["0deg", "360deg"],
+            rotateY: rotateY.interpolate({
+              inputRange: [0, 180],
+              outputRange: ["0deg", "180deg"],
             }),
           },
           { scale: scale },
@@ -165,7 +173,7 @@ function createInitialCardDeck(
         rotation: new Animated.Value(Math.floor(Math.random() * 4)),
         backOpacity: new Animated.Value(1),
         faceOpacity: new Animated.Value(0),
-        skew: new Animated.Value(0),
+        rotateY: new Animated.Value(0),
         scale: new Animated.Value(1),
       })
     )
