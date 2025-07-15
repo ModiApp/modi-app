@@ -4,8 +4,11 @@ import React, { useImperativeHandle, useRef, useState } from "react";
 import { Animated, StyleSheet } from "react-native";
 
 export interface AnimatableCardDeckRef {
-  setCardValues(values: { [cardIndex: number]: CardID | null }): void;
-  getCardAnimationValues(): readonly CardAnimatableProps[];
+  getCards(): readonly AnimatedCard[];
+}
+
+export interface AnimatedCard extends CardAnimatableProps, AnimatableCardRef {
+  // no extra props
 }
 
 interface AnimatableCardDeckProps {
@@ -20,25 +23,26 @@ interface AnimatableCardDeckProps {
  * <AnimatableCardDeck ref={deckRef} cardWidth={60} />
  * ```
  *
- * You can then use the ref to set the values of the cards:
+ * You can then use the ref to access the cards and control them individually:
  * ```tsx
- * deckRef.current?.setCardValues({
- *   0: "10H",
- *   1: "10D",
- *   2: "10C",
- *   3: "10S",
- * });
+ * const cards = deckRef.current?.getCards();
+ * if (!cards) return;
+ * // Set the value of the first four cards
+ * cards[0].setValue("10H");
+ * cards[1].setValue("10D");
+ * cards[2].setValue("10C");
+ * cards[3].setValue("10S");
  * ```
  *
  * You can also access the animated values of each card to animate them as you please:
  * ```tsx
- * const cards = deckRef.current?.getCardAnimationValues();
+ * const cards = deckRef.current?.getCards();
  * if (!cards) return;
  * Animated.stagger(10, cards.map((card) => Animated.timing(card.x, {
  *   toValue: 100,
  *   duration: 20,
  *   useNativeDriver: true,
- * })).start();
+ * }))).start();
  * ```
  */
 export const AnimatableCardDeck = React.forwardRef<
@@ -54,13 +58,11 @@ export const AnimatableCardDeck = React.forwardRef<
   ).current;
 
   useImperativeHandle(ref, () => ({
-    setCardValues: (values: { [cardIndex: number]: CardID | null }) => {
-      Object.entries(values).forEach(([index, value]) => {
-        cardRefs[Number(index)].current.setValue(value);
-      });
-    },
-    getCardAnimationValues: () => {
-      return cards;
+    getCards: () => {
+      return cards.map((card, index) => ({
+        ...card,
+        ...cardRefs[index].current,
+      }));
     },
   }));
 
@@ -71,6 +73,7 @@ export const AnimatableCardDeck = React.forwardRef<
           key={index}
           ref={cardRefs[index]}
           cardWidth={cardWidth}
+          zIndex={index - cards.length}
           {...card}
         />
       ))}
@@ -94,58 +97,62 @@ interface AnimatableCardProps extends CardAnimatableProps {
 
 interface AnimatableCardRef {
   setValue(value: CardID | null): void;
+  setZIndex(zIndex: number): void;
 }
 
-const AnimatableCard = React.forwardRef<AnimatableCardRef, AnimatableCardProps>(
-  function AnimatableCard(props, ref) {
-    const { cardWidth, x, y, rotation, backOpacity, faceOpacity, skew, scale } =
-      props;
-    const [value, setValue] = useState<CardID | null>(null);
-    const width = cardWidth;
-    const height = cardWidth * 1.4;
-    useImperativeHandle(ref, () => ({ setValue }), [setValue]);
+const AnimatableCard = React.forwardRef<
+  AnimatableCardRef,
+  AnimatableCardProps & { zIndex: number }
+>(function AnimatableCard(props, ref) {
+  const { cardWidth, x, y, rotation, backOpacity, faceOpacity, skew, scale } =
+    props;
+  const [value, setValue] = useState<CardID | null>(null);
+  const [zIndex, setZIndex] = useState<number>(props.zIndex);
+  const width = cardWidth;
+  const height = cardWidth * 1.4;
+  useImperativeHandle(ref, () => ({ setValue, setZIndex }), [setValue]);
 
-    return (
+  return (
+    <Animated.View
+      style={{
+        zIndex,
+        width,
+        height,
+        position: "absolute",
+        transform: [
+          { translateX: "-50%" },
+          { translateY: "-50%" },
+          { translateX: x },
+          { translateY: y },
+          {
+            rotate: rotation.interpolate({
+              inputRange: [0, 360],
+              outputRange: ["0deg", "360deg"],
+            }),
+          },
+          {
+            skewX: skew.interpolate({
+              inputRange: [0, 360],
+              outputRange: ["0deg", "360deg"],
+            }),
+          },
+          { scale: scale },
+        ],
+      }}
+    >
       <Animated.View
-        style={{
-          width,
-          height,
-          position: "absolute",
-          transform: [
-            { translateX: "-50%" },
-            { translateY: "-50%" },
-            { translateX: x },
-            { translateY: y },
-            {
-              rotate: rotation.interpolate({
-                inputRange: [0, 360],
-                outputRange: ["0deg", "360deg"],
-              }),
-            },
-            {
-              skewX: skew.interpolate({
-                inputRange: [0, 360],
-                outputRange: ["0deg", "360deg"],
-              }),
-            },
-            { scale: scale },
-          ],
-        }}
+        style={[{ opacity: backOpacity }, StyleSheet.absoluteFill]}
       >
-        <Animated.View
-          style={[{ opacity: backOpacity }, StyleSheet.absoluteFill]}
-        >
-          <CardBack width={width} height={height} />
-        </Animated.View>
-        <Animated.View
-          style={[{ opacity: faceOpacity }, StyleSheet.absoluteFill]}
-        >
-          {value && <Card cardId={value} width={width} height={height} />}
-        </Animated.View>
+        <CardBack width={width} height={height} />
       </Animated.View>
-    );
-  }
-);
+      <Animated.View
+        style={[{ opacity: faceOpacity }, StyleSheet.absoluteFill]}
+      >
+        {value && <Card cardId={value} width={width} height={height} />}
+      </Animated.View>
+    </Animated.View>
+  );
+});
 
 function createInitialCardDeck(
   numCards: number
@@ -169,6 +176,6 @@ function createCardRefs(
   numCards: number
 ): React.RefObject<AnimatableCardRef>[] {
   return Array.from({ length: numCards }, () => ({
-    current: { setValue: () => {} },
+    current: { setValue: () => {}, setZIndex: () => {} },
   }));
 }

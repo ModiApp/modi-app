@@ -2,7 +2,7 @@ import { useGameActions } from "@/hooks/useGameActions";
 import {
   AnimatableCardDeck,
   AnimatableCardDeckRef,
-  CardAnimatableProps,
+  AnimatedCard,
 } from "@/ui/components/AnimatableCardDeck";
 import { useActiveGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
@@ -22,14 +22,14 @@ function AnimatedCardsInner() {
   const deck = useRef<AnimatableCardDeckRef>(null);
   const { playerPositions } = useCardTable();
 
-  const virtualTrash = useRef<CardAnimatableProps[]>([]);
+  const virtualTrash = useRef<AnimatedCard[]>([]);
   const playerHands = useRef<{
-    [playerId: string]: CardAnimatableProps | null;
+    [playerId: string]: AnimatedCard | null;
   }>({});
-  const cardsOnTable = useRef(new Set<CardAnimatableProps>());
+  const cardsOnTable = useRef(new Set<AnimatedCard>());
 
-  function getNextCardFromDeck(): CardAnimatableProps {
-    const cards = deck.current?.getCardAnimationValues();
+  function getNextCardFromDeck(): AnimatedCard {
+    const cards = deck.current?.getCards();
     if (!cards) throw new Error("No cards in deck");
     const totalCards = cards.length;
     const trashSize = virtualTrash.current.length;
@@ -44,7 +44,7 @@ function AnimatedCardsInner() {
   useGameActions(game.gameId, {
     moveDeck: (toDealerId) => {
       return new Promise((resolve) => {
-        const cards = deck.current?.getCardAnimationValues();
+        const cards = deck.current?.getCards();
         if (!cards) throw new Error("No cards in deck");
         const dealerPosition = playerPositions[toDealerId];
         const cardsLeftInDeck = cards.slice(
@@ -58,12 +58,21 @@ function AnimatedCardsInner() {
     },
     dealCards: (toPlayers) => {
       return new Promise((resolve) => {
+        const zIndexes: { [zIndex: number]: AnimatedCard } = {};
         const animations = toPlayers.map((playerId) => {
           const nextCard = getNextCardFromDeck();
           playerHands.current[playerId] = nextCard;
+          const zIndex =
+            virtualTrash.current.length + cardsOnTable.current.size;
+          zIndexes[zIndex] = nextCard;
           return moveCardToPlayer(playerPositions[playerId], nextCard);
         });
-        Animated.stagger(400, animations).start(() => resolve());
+        Animated.stagger(400, animations).start(() => {
+          Object.entries(zIndexes).forEach(([zIndex, card]) => {
+            card.setZIndex(Number(zIndex));
+          });
+          resolve();
+        });
       });
     },
     swapCards: (fromPlayerId, toPlayerId) => {
@@ -82,10 +91,12 @@ function AnimatedCardsInner() {
     hitDeck: (playerId) => {
       return new Promise((resolve) => {
         const nextCard = getNextCardFromDeck();
+        const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
+        nextCard.setZIndex(zIndex);
         playerHands.current[playerId] = nextCard;
-        moveCardToPlayer(playerPositions[playerId], nextCard).start(() =>
-          resolve()
-        );
+        moveCardToPlayer(playerPositions[playerId], nextCard).start(() => {
+          resolve();
+        });
       });
     },
     trashCards: () => {
@@ -101,15 +112,12 @@ function AnimatedCardsInner() {
     },
     revealCards: (playerCards) => {
       return new Promise((resolve) => {
-        const cards = deck.current?.getCardAnimationValues();
+        const cards = deck.current?.getCards();
         if (!cards) throw new Error("No cards in deck");
-        const values = Object.fromEntries(
-          Object.entries(playerHands.current).map(([playerId, card]) => {
-            const cardIndex = cards.findIndex((c) => c === card);
-            return [cardIndex, playerCards[playerId]] as const;
-          })
-        );
-        deck.current?.setCardValues(values);
+        Object.entries(playerHands.current).forEach(([playerId, card]) => {
+          card?.setValue(playerCards[playerId]);
+        });
+
         Animated.stagger(
           200,
           Object.values(playerHands.current)
@@ -125,7 +133,7 @@ function AnimatedCardsInner() {
 
 function moveCardToPlayer(
   playerPosition: PlayerPosition,
-  card: CardAnimatableProps
+  card: AnimatedCard
 ): Animated.CompositeAnimation {
   const { rotation } = playerPosition;
   // the card should be 40px closer to the center of the table than the player's circle
@@ -152,9 +160,7 @@ function moveCardToPlayer(
   );
 }
 
-function moveCardToTrash(
-  card: CardAnimatableProps
-): Animated.CompositeAnimation {
+function moveCardToTrash(card: AnimatedCard): Animated.CompositeAnimation {
   return Animated.parallel([
     Animated.timing(card.x, {
       toValue: 0,
@@ -174,7 +180,7 @@ function moveCardToTrash(
   ]);
 }
 
-function revealCard(card: CardAnimatableProps): Animated.CompositeAnimation {
+function revealCard(card: AnimatedCard): Animated.CompositeAnimation {
   return Animated.sequence([
     Animated.timing(card.skew, {
       toValue: 1,
@@ -202,7 +208,7 @@ function revealCard(card: CardAnimatableProps): Animated.CompositeAnimation {
 }
 
 function moveDeckNextToPlayer(
-  deck: CardAnimatableProps[],
+  deck: AnimatedCard[],
   playerPosition: PlayerPosition
 ): Animated.CompositeAnimation {
   // position the deck 60px diagonal from the center of the player's circle
@@ -213,7 +219,7 @@ function moveDeckNextToPlayer(
   const x = centerX + diagonalDistance * Math.cos(angle);
   const y = centerY + diagonalDistance * Math.sin(angle);
 
-  function moveCard(card: CardAnimatableProps): Animated.CompositeAnimation {
+  function moveCard(card: AnimatedCard): Animated.CompositeAnimation {
     return Animated.parallel([
       Animated.timing(card.x, {
         toValue: x,
