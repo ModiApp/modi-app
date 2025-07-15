@@ -5,17 +5,15 @@ import { CardTableProvider } from "./context";
 
 interface CardTableProps {
   children: React.ReactNode;
-  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export function CardTable({ children, onLayout }: CardTableProps) {
+export function CardTable({ children }: CardTableProps) {
   const [radius, setRadius] = useState(0);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     const newRadius = Math.min(width, height) / 2;
-    setRadius(newRadius);
-    onLayout?.(event);
+    newRadius && setRadius(newRadius);
   };
 
   return (
@@ -25,6 +23,7 @@ export function CardTable({ children, onLayout }: CardTableProps) {
         aspectRatio: 1,
         borderRadius: 999,
         maxWidth: 600,
+        maxHeight: 600,
         position: "relative",
         margin: 24, // absolutely positioned player circles exceed bounds of the card table
       }}
