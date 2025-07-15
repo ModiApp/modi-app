@@ -177,6 +177,35 @@ function moveCardToTrash(card: AnimatedCard): Animated.CompositeAnimation {
       duration: 300,
       useNativeDriver: true,
     }),
+    hideCard(card),
+  ]);
+}
+
+function hideCard(card: AnimatedCard): Animated.CompositeAnimation {
+  // we're assuming every card that we're sending to trash should already be face up
+  return Animated.sequence([
+    Animated.timing(card.rotateY, {
+      toValue: 90,
+      duration: 150,
+      useNativeDriver: true,
+    }),
+    Animated.parallel([
+      Animated.timing(card.backOpacity, {
+        toValue: 1,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(card.faceOpacity, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+    ]),
+    Animated.timing(card.rotateY, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }),
   ]);
 }
 
