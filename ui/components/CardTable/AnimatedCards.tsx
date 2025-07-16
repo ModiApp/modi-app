@@ -88,13 +88,18 @@ function AnimatedCardsInner() {
         ]).start(() => resolve());
       });
     },
-    hitDeck: (playerId) => {
+    hitDeck: ({ playerId, previousCard }) => {
       return new Promise((resolve) => {
         const nextCard = getNextCardFromDeck();
         const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
         nextCard.setZIndex(zIndex);
-        playerHands.current[playerId] = nextCard;
-        moveCardToPlayer(playerPositions[playerId], nextCard).start(() => {
+        const card = playerHands.current[playerId]!;
+        card.setValue(previousCard);
+        Animated.sequence([
+          revealCard(card),
+          moveCardToPlayer(playerPositions[playerId], nextCard),
+        ]).start(() => {
+          playerHands.current[playerId] = nextCard;
           resolve();
         });
       });

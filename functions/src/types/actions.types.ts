@@ -25,6 +25,7 @@ export interface SwapCardsAction extends BaseGameAction {
 
 export interface DealerDrawAction extends BaseGameAction {
   type: ActionType.DEALER_DRAW;
+  previousCard: CardID;
 }
 
 export interface StickAction extends BaseGameAction {

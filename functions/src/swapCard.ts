@@ -285,7 +285,7 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
 
     if (isDealerDraw) {
       // Add dealer draw action
-      const dealerDrawAction = createSwapCardsAction(userId, "", true);
+      const dealerDrawAction = createSwapCardsAction(userId, "", true, currentPlayerCard);
       addActionToBatch(batch, gameId, dealerDrawAction, currentActionCount);
       currentActionCount++;
       

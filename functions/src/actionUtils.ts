@@ -145,12 +145,17 @@ export function createDealCardsAction(
 export function createSwapCardsAction(
   playerId: string,
   targetPlayerId: string,
-  isDealerDraw: boolean = false
+  isDealerDraw: boolean = false,
+  previousCard?: CardID
 ): Omit<SwapCardsAction | DealerDrawAction, 'id' | 'timestamp'> {
   if (isDealerDraw) {
+    if (!previousCard) {
+      throw new Error('previousCard is required for dealer draw actions');
+    }
     return {
       type: ActionType.DEALER_DRAW,
-      playerId
+      playerId,
+      previousCard
     } as Omit<DealerDrawAction, 'id' | 'timestamp'>;
   } else {
     return {

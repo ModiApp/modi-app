@@ -1,6 +1,6 @@
 import { firestore } from "@/config/firebase";
 import { CardID } from "@/functions/src/types";
-import { ActionType, GameAction } from "@/functions/src/types/actions.types";
+import { ActionType, DealerDrawAction, GameAction } from "@/functions/src/types/actions.types";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useRef } from "react";
 
@@ -8,7 +8,7 @@ interface GameActionHandlers {
   moveDeck?(toDealerId: string): Promise<void>;
   dealCards?(toPlayers: string[]): Promise<void>;
   swapCards?(fromPlayerId: string, toPlayerId: string): Promise<void>;
-  hitDeck?(playerId: string): Promise<void>;
+  hitDeck?(action: DealerDrawAction): Promise<void>;
   trashCards?(): Promise<void>;
   revealCards?(playerCards: { [playerId: string]: CardID }): Promise<void>;
 }
@@ -60,7 +60,7 @@ export function useGameActions(gameId: string, handlers: GameActionHandlers) {
         return handlers.revealCards?.(action.playerCards);
 
       case ActionType.DEALER_DRAW:
-        return handlers.hitDeck?.(action.playerId);
+        return handlers.hitDeck?.(action);
 
       case ActionType.END_ROUND:
         return handlers.trashCards?.().then(() => handlers?.moveDeck?.(action.newDealer));
