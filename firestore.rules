@@ -15,6 +15,12 @@ service cloud.firestore {
           request.auth.uid in get(/databases/$(database)/documents/games/$(gameId)).data.players;
         allow write: if false;
       }
+
+      // Private actions subcollection - only the intended user can read
+      match /privateActions/{userId}/actions/{actionId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
     }
     
     // Player hands subcollection - players can only read their own hand
