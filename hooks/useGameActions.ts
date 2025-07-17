@@ -44,8 +44,6 @@ export function useGameActions(gameId: string, handlers: GameActionHandlers) {
   }, [gameId]);
 
   const handleAction = async (action: GameAction) => {
-    console.log("action", action);
-
     switch (action.type) {
       case ActionType.GAME_STARTED:
         return handlers.moveDeck?.(action.initialDealer);

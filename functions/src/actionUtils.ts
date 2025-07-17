@@ -10,6 +10,7 @@ import {
   GameStartedAction,
   PlayerJoinedAction,
   PlayerLeftAction,
+  ReceiveCardAction,
   RevealCardsAction,
   SpecialEventAction,
   StickAction,
@@ -121,8 +122,8 @@ async function getCurrentActionCount(gameId: string): Promise<number> {
 /**
  * Generates a unique action ID
  */
-function generateActionId(): string {
-  return `action_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+function generateActionId() {
+  return `action_${Date.now()}_${Math.random().toString(36).slice(2, 9)}` as const;
 }
 
 /**
@@ -288,5 +289,21 @@ export function createPlayerLeftAction(
     playerId,
     username,
     leaveEvent: true
+  };
+} 
+
+/**
+ * Helper function to create a receive card action (private action)
+ */
+export function createReceiveCardAction(
+  playerId: string,
+  card: CardID
+): ReceiveCardAction {
+  return {
+    id: `private-${generateActionId()}`,
+    type: ActionType.RECEIVE_CARD,
+    playerId,
+    card,
+    timestamp: new Date() as any,
   };
 } 

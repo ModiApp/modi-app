@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDealCardsAction, createDeckReshuffleAction } from "./actionUtils";
+import { addActionToBatch, createDealCardsAction, createDeckReshuffleAction, createReceiveCardAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -201,6 +201,16 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
 
     // Commit the batch (all changes including actions happen atomically)
     await batch.commit();
+
+    // NEW: After committing the batch, write private 'receive-card' actions for each player
+    const privateActionsRef = db.collection("games").doc(gameId).collection("privateActions");
+    await Promise.all(
+      Object.entries(updatedPlayerHands).map(async ([playerId, card]) => {
+        const playerPrivateActions = privateActionsRef.doc(playerId).collection("actions");
+        const privateAction = createReceiveCardAction(playerId, card);
+        await playerPrivateActions.add(privateAction);
+      })
+    );
 
     console.info("DealCards: Cards dealt successfully", {
       gameId,

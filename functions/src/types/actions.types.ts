@@ -40,6 +40,11 @@ export interface RevealCardsAction extends BaseGameAction {
   revealEvent: true;
 }
 
+export interface ReceiveCardAction extends BaseGameAction {
+  type: ActionType.RECEIVE_CARD;
+  card: CardID;
+}
+
 export interface EndRoundAction extends BaseGameAction {
   type: ActionType.END_ROUND;
   playersLost: string[];
@@ -85,7 +90,8 @@ export type GameAction =
   | DeckReshuffleAction
   | SpecialEventAction
   | PlayerJoinedAction
-  | PlayerLeftAction;
+  | PlayerLeftAction
+  | ReceiveCardAction;
 
 export enum ActionType {
   GAME_STARTED = 'game-started',
@@ -98,5 +104,6 @@ export enum ActionType {
   DECK_RESHUFFLE = 'deck-reshuffle',
   SPECIAL_EVENT = 'special-event',
   PLAYER_JOINED = 'player-joined',
-  PLAYER_LEFT = 'player-left'
+  PLAYER_LEFT = 'player-left',
+  RECEIVE_CARD = 'receive-card'
 } 

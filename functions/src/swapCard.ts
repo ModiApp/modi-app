@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDeckReshuffleAction, createRevealCardsAction, createSpecialEventAction, createSwapCardsAction } from "./actionUtils";
+import { addActionToBatch, createDeckReshuffleAction, createReceiveCardAction, createRevealCardsAction, createSpecialEventAction, createSwapCardsAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -330,6 +330,18 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
 
     // Commit the batch (all changes including actions happen atomically)
     await batch.commit();
+
+    // NEW: After committing the batch, write private 'receive-card' actions for affected player(s)
+    const privateActionsRef = db.collection("games").doc(gameId).collection("privateActions");
+    await Promise.all(
+      Object.entries(updatedPlayerHands).map(async ([playerId, card]) => {
+        if (card) {
+          const playerPrivateActions = privateActionsRef.doc(playerId).collection("actions");
+          const privateAction = createReceiveCardAction(playerId, card);
+          await playerPrivateActions.add(privateAction);
+        }
+      })
+    );
 
     console.info("SwapCard: Card swap completed successfully", {
       gameId,
