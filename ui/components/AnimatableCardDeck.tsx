@@ -1,6 +1,11 @@
 import { CardID } from "@/functions/src/types";
 import { Card, CardBack } from "@/ui/components/Card";
-import React, { useImperativeHandle, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Animated, StyleSheet } from "react-native";
 
 export interface AnimatableCardDeckRef {
@@ -98,6 +103,9 @@ interface AnimatableCardProps extends CardAnimatableProps {
 interface AnimatableCardRef {
   setValue(value: CardID | null): void;
   setZIndex(zIndex: number): void;
+  isFaceDown(): boolean;
+  ensureFaceUp(): Promise<void>;
+  ensureFaceDown(): Promise<void>;
 }
 
 const AnimatableCard = React.forwardRef<
@@ -116,9 +124,55 @@ const AnimatableCard = React.forwardRef<
   } = props;
   const [value, setValue] = useState<CardID | null>(null);
   const [zIndex, setZIndex] = useState<number>(props.zIndex);
+  const isFaceDownRef = useRef<boolean>(true);
+
   const width = cardWidth;
   const height = cardWidth * 1.4;
-  useImperativeHandle(ref, () => ({ setValue, setZIndex }), [setValue]);
+
+  const flip = useCallback(
+    function flip() {
+      const wasFaceDown = isFaceDownRef.current;
+      isFaceDownRef.current = !isFaceDownRef.current;
+
+      return cardFlipAnimation(
+        { rotateY, backOpacity, faceOpacity },
+        wasFaceDown
+      );
+    },
+    [rotateY, backOpacity, faceOpacity]
+  );
+
+  const ensureFaceUp = useCallback(
+    function ensureFaceUp() {
+      if (isFaceDownRef.current) {
+        return flip();
+      }
+      return Promise.resolve();
+    },
+    [flip]
+  );
+
+  const ensureFaceDown = useCallback(
+    function ensureFaceDown() {
+      if (!isFaceDownRef.current) {
+        return flip();
+      }
+      return Promise.resolve();
+    },
+    [flip]
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      setValue,
+      setZIndex,
+      isFaceDown: () => isFaceDownRef.current,
+      ensureFaceUp,
+      ensureFaceDown,
+    }),
+    [setValue, setZIndex, ensureFaceUp, ensureFaceDown]
+  );
 
   return (
     <Animated.View
@@ -184,6 +238,49 @@ function createCardRefs(
   numCards: number
 ): React.RefObject<AnimatableCardRef>[] {
   return Array.from({ length: numCards }, () => ({
-    current: { setValue: () => {}, setZIndex: () => {} },
+    current: {
+      setValue: () => {},
+      setZIndex: () => {},
+      isFaceDown: () => true,
+      ensureFaceUp: () => Promise.resolve(),
+      ensureFaceDown: () => Promise.resolve(),
+    },
   }));
+}
+
+function cardFlipAnimation(
+  card: Pick<CardAnimatableProps, "rotateY" | "backOpacity" | "faceOpacity">,
+  wasFaceDown: boolean
+): Promise<void> {
+  const { rotateY, backOpacity, faceOpacity } = card;
+  return new Promise<void>((resolve) => {
+    const finalRotateY = wasFaceDown ? 180 : 0;
+    const finalBackOpacity = wasFaceDown ? 0 : 1;
+    const finalFaceOpacity = wasFaceDown ? 1 : 0;
+
+    Animated.sequence([
+      Animated.timing(rotateY, {
+        toValue: 90,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(backOpacity, {
+          toValue: finalBackOpacity,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(faceOpacity, {
+          toValue: finalFaceOpacity,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(rotateY, {
+        toValue: finalRotateY,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => resolve());
+  });
 }

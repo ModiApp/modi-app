@@ -56,90 +56,83 @@ function AnimatedCardsInner() {
         );
       });
     },
-    dealCards: (toPlayers) => {
-      return new Promise((resolve) => {
-        const zIndexes: { [zIndex: number]: AnimatedCard } = {};
-        const animations = toPlayers.map((playerId) => {
-          const nextCard = getNextCardFromDeck();
-          playerHands.current[playerId] = nextCard;
-          const zIndex =
-            virtualTrash.current.length + cardsOnTable.current.size;
-          zIndexes[zIndex] = nextCard;
-          return moveCardToPlayer(playerPositions[playerId], nextCard);
-        });
-        Animated.stagger(400, animations).start(() => {
-          Object.entries(zIndexes).forEach(([zIndex, card]) => {
-            card.setZIndex(Number(zIndex));
-          });
-          resolve();
-        });
-      });
-    },
-    swapCards: (fromPlayerId, toPlayerId) => {
-      return new Promise((resolve) => {
-        const fromCard = playerHands.current[fromPlayerId];
-        const toCard = playerHands.current[toPlayerId];
-        if (!fromCard || !toCard) throw new Error("No cards to swap");
-        playerHands.current[fromPlayerId] = toCard;
-        playerHands.current[toPlayerId] = fromCard;
-        Animated.stagger(200, [
-          moveCardToPlayer(playerPositions[toPlayerId], fromCard),
-          moveCardToPlayer(playerPositions[fromPlayerId], toCard),
-        ]).start(() => resolve());
-      });
-    },
-    hitDeck: ({ playerId, previousCard }) => {
-      return new Promise((resolve) => {
+    dealCards: async (toPlayers) => {
+      const zIndexes: { [zIndex: number]: AnimatedCard } = {};
+      const animations = toPlayers.map((playerId) => {
         const nextCard = getNextCardFromDeck();
+        playerHands.current[playerId] = nextCard;
         const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
-        nextCard.setZIndex(zIndex);
-        const card = playerHands.current[playerId]!;
-        card.setValue(previousCard);
-        Animated.sequence([
-          revealCard(card),
-          moveCardToPlayer(playerPositions[playerId], nextCard),
-        ]).start(() => {
-          playerHands.current[playerId] = nextCard;
-          resolve();
-        });
+        zIndexes[zIndex] = nextCard;
+        return () => moveCardToPlayer(playerPositions[playerId], nextCard);
+      });
+      await staggerPromises(400, animations);
+      Object.entries(zIndexes).forEach(([zIndex, card]) => {
+        card.setZIndex(Number(zIndex));
       });
     },
-    trashCards: () => {
-      return new Promise((resolve) => {
-        const cards = Array.from(cardsOnTable.current);
-        cards.forEach((card) => virtualTrash.current.push(card));
-        cardsOnTable.current.clear();
-        playerHands.current = {};
-        Animated.stagger(200, cards.map(moveCardToTrash)).start(() =>
-          resolve()
-        );
-      });
+    swapCards: async (fromPlayerId, toPlayerId) => {
+      const fromCard = playerHands.current[fromPlayerId];
+      const toCard = playerHands.current[toPlayerId];
+      if (!fromCard || !toCard) throw new Error("No cards to swap");
+      playerHands.current[fromPlayerId] = toCard;
+      playerHands.current[toPlayerId] = fromCard;
+      await staggerPromises(200, [
+        () =>
+          staggerPromises(100, [
+            () => fromCard.ensureFaceDown(),
+            () => moveCardToPlayer(playerPositions[toPlayerId], fromCard),
+          ]),
+        () =>
+          staggerPromises(100, [
+            () => moveCardToPlayer(playerPositions[fromPlayerId], toCard),
+            () => toCard.ensureFaceDown(),
+          ]),
+      ]);
     },
-    revealCards: (playerCards) => {
-      return new Promise((resolve) => {
-        const cards = deck.current?.getCards();
-        if (!cards) throw new Error("No cards in deck");
-        Object.entries(playerHands.current).forEach(([playerId, card]) => {
-          card?.setValue(playerCards[playerId]);
-        });
+    hitDeck: async ({ playerId, previousCard }) => {
+      const nextCard = getNextCardFromDeck();
+      const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
+      nextCard.setZIndex(zIndex);
+      const card = playerHands.current[playerId]!;
+      card.setValue(previousCard);
+      await card.ensureFaceUp();
+      await moveCardToPlayer(playerPositions[playerId], nextCard);
+      playerHands.current[playerId] = nextCard;
+    },
+    trashCards: async () => {
+      const cards = Array.from(cardsOnTable.current);
+      cards.forEach((card) => virtualTrash.current.push(card));
+      cardsOnTable.current.clear();
+      playerHands.current = {};
+      await staggerPromises(
+        200,
+        cards.map((card) => () => moveCardToTrash(card))
+      );
+    },
+    revealCards: async (playerCards) => {
+      const cards = deck.current?.getCards();
+      if (!cards) throw new Error("No cards in deck");
 
-        Animated.stagger(
-          200,
-          Object.values(playerHands.current)
-            .filter(Boolean)
-            .map((card) => revealCard(card!))
-        ).start(() => resolve());
+      Object.entries(playerCards).forEach(([playerId, cardId]) => {
+        playerHands.current[playerId]?.setValue(cardId);
       });
+
+      await staggerPromises(
+        200,
+        Object.keys(playerCards).map((playerId) => {
+          return () => playerHands.current[playerId]!.ensureFaceUp();
+        })
+      );
     },
   });
 
   return <AnimatableCardDeck ref={deck} cardWidth={40} numCards={52} />;
 }
 
-function moveCardToPlayer(
+async function moveCardToPlayer(
   playerPosition: PlayerPosition,
   card: AnimatedCard
-): Animated.CompositeAnimation {
+): Promise<void> {
   const { rotation } = playerPosition;
   // the card should be 40px closer to the center of the table than the player's circle
   const centerX = playerPosition.x;
@@ -154,91 +147,55 @@ function moveCardToPlayer(
     [card.rotation, rotation],
   ] as const;
 
-  return Animated.parallel(
-    pairs.map(([value, toValue]) =>
-      Animated.timing(value, {
-        toValue,
-        duration: 500,
-        useNativeDriver: true,
-      })
-    )
+  return new Promise((resolve) => {
+    Animated.parallel(
+      pairs.map(([value, toValue]) =>
+        Animated.timing(value, {
+          toValue,
+          duration: 500,
+          useNativeDriver: true,
+        })
+      )
+    ).start(() => resolve());
+  });
+}
+
+async function moveCardToTrash(card: AnimatedCard) {
+  return Promise.all([
+    card.ensureFaceDown(),
+    new Promise<void>((resolve) => {
+      Animated.parallel([
+        Animated.timing(card.x, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(card.y, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(card.rotation, {
+          toValue: Math.floor(Math.random() * 4) - 2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => resolve());
+    }),
+  ]);
+}
+
+function staggerPromises(
+  delay: number,
+  promises: (() => Promise<unknown>)[]
+): Promise<unknown[]> {
+  return Promise.all(
+    promises.map((promise, index) => {
+      return new Promise<unknown>((resolve) => {
+        setTimeout(() => promise().then(resolve), index * delay);
+      });
+    })
   );
-}
-
-function moveCardToTrash(card: AnimatedCard): Animated.CompositeAnimation {
-  return Animated.parallel([
-    Animated.timing(card.x, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }),
-    Animated.timing(card.y, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }),
-    Animated.timing(card.rotation, {
-      toValue: Math.floor(Math.random() * 4) - 2,
-      duration: 300,
-      useNativeDriver: true,
-    }),
-    hideCard(card),
-  ]);
-}
-
-function hideCard(card: AnimatedCard): Animated.CompositeAnimation {
-  // we're assuming every card that we're sending to trash should already be face up
-  return Animated.sequence([
-    Animated.timing(card.rotateY, {
-      toValue: 90,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-    Animated.parallel([
-      Animated.timing(card.backOpacity, {
-        toValue: 1,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card.faceOpacity, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-    ]),
-    Animated.timing(card.rotateY, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-  ]);
-}
-
-function revealCard(card: AnimatedCard): Animated.CompositeAnimation {
-  return Animated.sequence([
-    Animated.timing(card.rotateY, {
-      toValue: 90,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-    Animated.parallel([
-      Animated.timing(card.backOpacity, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card.faceOpacity, {
-        toValue: 1,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-    ]),
-    Animated.timing(card.rotateY, {
-      toValue: 180,
-      duration: 150,
-      useNativeDriver: true,
-    }),
-  ]);
 }
 
 function moveDeckNextToPlayer(
