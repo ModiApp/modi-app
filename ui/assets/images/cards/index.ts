@@ -59,7 +59,7 @@ const cardImgs = {
     12: require('./Hearts/Queen.png'),
     13: require('./Hearts/King.png'),
   },
-  back: require('./RedBack.png'),
+  back: require('./red_back.png'),
 } as const;
 
 export default cardImgs;

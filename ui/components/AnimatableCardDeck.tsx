@@ -100,15 +100,16 @@ interface AnimatableCardProps extends CardAnimatableProps {
   cardWidth: number;
 }
 
-interface AnimatableCardRef {
+export interface AnimatableCardRef {
   setValue(value: CardID | null): void;
   setZIndex(zIndex: number): void;
   isFaceDown(): boolean;
   ensureFaceUp(): Promise<void>;
+  flip(): Promise<void>;
   ensureFaceDown(): Promise<void>;
 }
 
-const AnimatableCard = React.forwardRef<
+export const AnimatableCard = React.forwardRef<
   AnimatableCardRef,
   AnimatableCardProps & { zIndex: number }
 >(function AnimatableCard(props, ref) {
@@ -170,9 +171,12 @@ const AnimatableCard = React.forwardRef<
       isFaceDown: () => isFaceDownRef.current,
       ensureFaceUp,
       ensureFaceDown,
+      flip,
     }),
-    [setValue, setZIndex, ensureFaceUp, ensureFaceDown]
+    [setValue, setZIndex, ensureFaceUp, ensureFaceDown, flip]
   );
+
+  const perspective = useRef(new Animated.Value(1000)).current;
 
   return (
     <Animated.View
@@ -181,6 +185,7 @@ const AnimatableCard = React.forwardRef<
         width,
         height,
         position: "absolute",
+        // perspective: perspective,
         transform: [
           { translateX: "-50%" },
           { translateY: "-50%" },
@@ -194,8 +199,8 @@ const AnimatableCard = React.forwardRef<
           },
           {
             rotateY: rotateY.interpolate({
-              inputRange: [0, 180],
-              outputRange: ["0deg", "180deg"],
+              inputRange: [0, 90, 180],
+              outputRange: ["0deg", "90deg", "0deg"],
             }),
           },
           { scale: scale },
@@ -244,6 +249,7 @@ function createCardRefs(
       isFaceDown: () => true,
       ensureFaceUp: () => Promise.resolve(),
       ensureFaceDown: () => Promise.resolve(),
+      flip: () => Promise.resolve(),
     },
   }));
 }
@@ -254,7 +260,6 @@ function cardFlipAnimation(
 ): Promise<void> {
   const { rotateY, backOpacity, faceOpacity } = card;
   return new Promise<void>((resolve) => {
-    const finalRotateY = wasFaceDown ? 180 : 0;
     const finalBackOpacity = wasFaceDown ? 0 : 1;
     const finalFaceOpacity = wasFaceDown ? 1 : 0;
 
@@ -277,7 +282,7 @@ function cardFlipAnimation(
         }),
       ]),
       Animated.timing(rotateY, {
-        toValue: finalRotateY,
+        toValue: 0,
         duration: 150,
         useNativeDriver: true,
       }),

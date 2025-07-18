@@ -76,7 +76,7 @@ function AnimatedCardsInner() {
       if (!fromCard || !toCard) throw new Error("No cards to swap");
       playerHands.current[fromPlayerId] = toCard;
       playerHands.current[toPlayerId] = fromCard;
-      await staggerPromises(200, [
+      await staggerPromises(400, [
         () =>
           staggerPromises(100, [
             () => fromCard.ensureFaceDown(),
@@ -84,8 +84,8 @@ function AnimatedCardsInner() {
           ]),
         () =>
           staggerPromises(100, [
-            () => moveCardToPlayer(playerPositions[fromPlayerId], toCard),
             () => toCard.ensureFaceDown(),
+            () => moveCardToPlayer(playerPositions[fromPlayerId], toCard),
           ]),
       ]);
     },
@@ -126,7 +126,7 @@ function AnimatedCardsInner() {
     },
   });
 
-  return <AnimatableCardDeck ref={deck} cardWidth={40} numCards={52} />;
+  return <AnimatableCardDeck ref={deck} cardWidth={80} numCards={52} />;
 }
 
 async function moveCardToPlayer(
