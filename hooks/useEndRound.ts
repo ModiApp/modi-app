@@ -2,6 +2,7 @@ import { functions } from '@/config/firebase';
 import { EndRoundRequest, EndRoundResponse } from '@/functions/src/endRound';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { Alert } from '@/ui/components/AlertBanner';
 
 const endRoundFunction = httpsCallable<EndRoundRequest, EndRoundResponse>(functions, 'endRound');
 
@@ -22,13 +23,11 @@ const endRoundFunction = httpsCallable<EndRoundRequest, EndRoundResponse>(functi
  */
 export function useEndRound() {
   const [isEndingRound, setIsEndingRound] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const endRound = async () => {
     try {
       console.log("useEndRound: Ending round");
       setIsEndingRound(true);
-      setError(null);
 
       const result = await endRoundFunction({});
 
@@ -46,51 +45,45 @@ export function useEndRound() {
       
       // Handle different types of errors
       if (error.code === 'functions/not-found') {
-        setError("No active game found where you are the dealer.");
+        Alert.error({ message: "No active game found where you are the dealer." });
       } else if (error.code === 'functions/failed-precondition') {
         if (error.message?.includes('not active')) {
-          setError("Game is not active.");
+          Alert.error({ message: "Game is not active." });
         } else if (error.message?.includes('tallying')) {
-          setError("Round can only be ended in tallying state.");
+          Alert.error({ message: "Round can only be ended in tallying state." });
         } else if (error.message?.includes('No player hands found')) {
-          setError("No player hands found.");
+          Alert.error({ message: "No player hands found." });
         } else if (error.message?.includes('No valid player cards found')) {
-          setError("No valid player cards found.");
+          Alert.error({ message: "No valid player cards found." });
         } else if (error.message?.includes('No alive players found for new dealer')) {
-          setError("No alive players found for new dealer.");
+          Alert.error({ message: "No alive players found for new dealer." });
         } else if (error.message?.includes('No alive players found for new active player')) {
-          setError("No alive players found for new active player.");
+          Alert.error({ message: "No alive players found for new active player." });
         } else {
-          setError("Round cannot be ended right now.");
+          Alert.error({ message: "Round cannot be ended right now." });
         }
       } else if (error.code === 'functions/permission-denied') {
         if (error.message?.includes('dealer')) {
-          setError("Only the dealer can end the round.");
+          Alert.error({ message: "Only the dealer can end the round." });
         } else if (error.message?.includes('active player')) {
-          setError("Only the active player can end the round.");
+          Alert.error({ message: "Only the active player can end the round." });
         } else {
-          setError("You don't have permission to end the round.");
+          Alert.error({ message: "You don't have permission to end the round." });
         }
       } else if (error.code === 'functions/unauthenticated') {
-        setError("Please sign in to end the round.");
+        Alert.error({ message: "Please sign in to end the round." });
       } else if (error.code === 'functions/invalid-argument') {
-        setError("Invalid request.");
+        Alert.error({ message: "Invalid request." });
       } else {
-        setError("Failed to end round. Please try again.");
+        Alert.error({ message: "Failed to end round. Please try again." });
       }
     } finally {
       setIsEndingRound(false);
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
-
   return {
     endRound,
     isEndingRound,
-    error,
-    clearError,
   };
 }

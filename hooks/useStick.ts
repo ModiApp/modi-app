@@ -2,6 +2,7 @@ import { functions } from '@/config/firebase';
 import { StickRequest, StickResponse } from '@/functions/src/stick';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { Alert } from '@/ui/components/AlertBanner';
 
 const stickFunction = httpsCallable<StickRequest, StickResponse>(functions, 'stick');
 
@@ -18,13 +19,11 @@ const stickFunction = httpsCallable<StickRequest, StickResponse>(functions, 'sti
  */
 export function useStick() {
   const [isSticking, setIsSticking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const stick = async () => {
     try {
       console.log("useStick: Sticking (passing turn)");
       setIsSticking(true);
-      setError(null);
 
       const result = await stickFunction({});
 
@@ -39,33 +38,27 @@ export function useStick() {
       
       // Handle different types of errors
       if (error.code === 'functions/not-found') {
-        setError("No active game found where you are the active player during playing state.");
+        Alert.error({ message: 'No active game found where you are the active player during playing state.' });
       } else if (error.code === 'functions/failed-precondition') {
         if (error.message?.includes('No alive players')) {
-          setError("No alive players found to pass turn to.");
+          Alert.error({ message: 'No alive players found to pass turn to.' });
         } else {
-          setError("Cannot stick right now.");
+          Alert.error({ message: 'Cannot stick right now.' });
         }
       } else if (error.code === 'functions/unauthenticated') {
-        setError("Please sign in to stick.");
+        Alert.error({ message: 'Please sign in to stick.' });
       } else if (error.code === 'functions/invalid-argument') {
-        setError("Invalid request.");
+        Alert.error({ message: 'Invalid request.' });
       } else {
-        setError("Failed to stick. Please try again.");
+        Alert.error({ message: 'Failed to stick. Please try again.' });
       }
     } finally {
       setIsSticking(false);
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
-
   return {
     stick,
     isSticking,
-    error,
-    clearError,
   };
 }

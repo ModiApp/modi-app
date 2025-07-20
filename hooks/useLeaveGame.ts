@@ -3,6 +3,7 @@ import { LeaveGameRequest, LeaveGameResponse } from '@/functions/src/leaveGame';
 import { useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { Alert } from '@/ui/components/AlertBanner';
 
 const leaveGameFunction = httpsCallable<LeaveGameRequest, LeaveGameResponse>(functions, 'leaveGame');
 
@@ -15,13 +16,11 @@ const leaveGameFunction = httpsCallable<LeaveGameRequest, LeaveGameResponse>(fun
 export function useLeaveGame() {
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const leaveGame = async () => {
     try {
       console.log("useLeaveGame: Leaving game");
       setIsLeaving(true);
-      setError(null);
 
       const result = await leaveGameFunction({});
 
@@ -34,27 +33,21 @@ export function useLeaveGame() {
       
       // Handle different types of errors
       if (error.code === 'functions/failed-precondition') {
-        setError("You cannot leave this game. You may be the host or the game has already started.");
+        Alert.error({ message: 'You cannot leave this game. You may be the host or the game has already started.' });
       } else if (error.code === 'functions/unauthenticated') {
-        setError("Please sign in to leave a game.");
+        Alert.error({ message: 'Please sign in to leave a game.' });
       } else if (error.code === 'functions/not-found') {
-        setError("Game not found.");
+        Alert.error({ message: 'Game not found.' });
       } else {
-        setError("Failed to leave game. Please try again.");
+        Alert.error({ message: 'Failed to leave game. Please try again.' });
       }
     } finally {
       setIsLeaving(false);
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
-
   return {
     leaveGame,
     isLeaving,
-    error,
-    clearError,
   };
 }

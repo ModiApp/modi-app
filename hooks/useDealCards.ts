@@ -2,6 +2,7 @@ import { functions } from '@/config/firebase';
 import { DealCardsRequest, DealCardsResponse } from '@/functions/src/dealCards';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { Alert } from '@/ui/components/AlertBanner';
 
 const dealCardsFunction = httpsCallable<DealCardsRequest, DealCardsResponse>(functions, 'dealCards');
 
@@ -14,13 +15,11 @@ const dealCardsFunction = httpsCallable<DealCardsRequest, DealCardsResponse>(fun
  */
 export function useDealCards() {
   const [isDealing, setIsDealing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const dealCards = async () => {
     try {
       console.log("useDealCards: Dealing cards");
       setIsDealing(true);
-      setError(null);
 
       const result = await dealCardsFunction({});
 
@@ -35,41 +34,35 @@ export function useDealCards() {
       
       // Handle different types of errors
       if (error.code === 'functions/not-found') {
-        setError("No active game found where you are the dealer.");
+        Alert.error({ message: "No active game found where you are the dealer." });
       } else if (error.code === 'functions/failed-precondition') {
         if (error.message?.includes('not active')) {
-          setError("Game is not active.");
+          Alert.error({ message: "Game is not active." });
         } else if (error.message?.includes('pre-deal')) {
-          setError("Cards can only be dealt in pre-deal state.");
+          Alert.error({ message: "Cards can only be dealt in pre-deal state." });
         } else if (error.message?.includes('No cards left')) {
-          setError("No cards left in deck or trash.");
+          Alert.error({ message: "No cards left in deck or trash." });
         } else if (error.message?.includes('No players with lives')) {
-          setError("No players with lives remaining.");
+          Alert.error({ message: "No players with lives remaining." });
         } else {
-          setError("Game cannot be dealt right now.");
+          Alert.error({ message: "Game cannot be dealt right now." });
         }
       } else if (error.code === 'functions/permission-denied') {
-        setError("Only the dealer can deal cards.");
+        Alert.error({ message: "Only the dealer can deal cards." });
       } else if (error.code === 'functions/unauthenticated') {
-        setError("Please sign in to deal cards.");
+        Alert.error({ message: "Please sign in to deal cards." });
       } else if (error.code === 'functions/invalid-argument') {
-        setError("Invalid request.");
+        Alert.error({ message: "Invalid request." });
       } else {
-        setError("Failed to deal cards. Please try again.");
+        Alert.error({ message: "Failed to deal cards. Please try again." });
       }
     } finally {
       setIsDealing(false);
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
-
   return {
     dealCards,
     isDealing,
-    error,
-    clearError,
   };
 }
