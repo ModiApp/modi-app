@@ -17,7 +17,7 @@ initializeApp();
 
 // Get Firestore instance
 // const db = getFirestore();
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({ maxInstances: 10, minInstances: 1 });
 
 export { createGame } from "./createGame";
 export { dealCards } from "./dealCards";
