@@ -26,7 +26,7 @@ const BannerRef = createRef<BannerRefType>();
 export function AlertBanner() {
   const [config, setConfig] = useState<ShowBannerConfig | null>(null);
   const [layout, setLayout] = useState<LayoutRectangle | null>(null);
-  const animation = useRef(new Animated.Value(1)).current;
+  const animation = useRef(new Animated.Value(0)).current;
   const translateY = useMemo(() => {
     return animation.interpolate({
       inputRange: [0, 1],
