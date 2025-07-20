@@ -16,7 +16,7 @@ export const JoinLobbyContext =
 
 export default function JoinLobbyProvider(props: React.PropsWithChildren) {
   const router = useRouter();
-  const { joinLobby, isJoining, error, clearError } = useJoinLobby();
+  const { joinLobby, isJoining } = useJoinLobby();
 
   const handleLobbyIdSet = (lobbyId: string) => {
     joinLobby(lobbyId).then(() => {
@@ -25,7 +25,6 @@ export default function JoinLobbyProvider(props: React.PropsWithChildren) {
   };
 
   const handleCancel = () => {
-    clearError();
     router.replace("/");
   };
 
@@ -33,7 +32,7 @@ export default function JoinLobbyProvider(props: React.PropsWithChildren) {
     <JoinLobbyContext.Provider
       value={{
         isValidatingLobbyId: isJoining,
-        validationError: error ?? undefined,
+        validationError: undefined,
         isLobbyIdInvalid: false, // This will be handled by the error state
         onLobbyIdSet: handleLobbyIdSet,
         onCancel: handleCancel,

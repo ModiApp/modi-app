@@ -2,6 +2,7 @@ import { functions } from '@/config/firebase';
 import { SwapCardRequest, SwapCardResponse } from '@/functions/src/swapCard';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
+import { Alert } from '@/ui/components/AlertBanner';
 
 const swapCardFunction = httpsCallable<SwapCardRequest, SwapCardResponse>(functions, 'swapCard');
 
@@ -19,13 +20,11 @@ const swapCardFunction = httpsCallable<SwapCardRequest, SwapCardResponse>(functi
  */
 export function useSwapCards() {
   const [isSwapping, setIsSwapping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const swapCard = async () => {
     try {
       console.log("useSwapCards: Swapping cards");
       setIsSwapping(true);
-      setError(null);
 
       const result = await swapCardFunction({});
 
@@ -41,47 +40,41 @@ export function useSwapCards() {
       
       // Handle different types of errors
       if (error.code === 'functions/not-found') {
-        setError("No active game found where you are the active player.");
+        Alert.error({ message: 'No active game found where you are the active player.' });
       } else if (error.code === 'functions/failed-precondition') {
         if (error.message?.includes('not active')) {
-          setError("Game is not active.");
+          Alert.error({ message: 'Game is not active.' });
         } else if (error.message?.includes('playing')) {
-          setError("Cards can only be swapped during playing state.");
+          Alert.error({ message: 'Cards can only be swapped during playing state.' });
         } else if (error.message?.includes('No cards left')) {
-          setError("No cards left in deck or trash.");
+          Alert.error({ message: 'No cards left in deck or trash.' });
         } else if (error.message?.includes('No alive players')) {
-          setError("No alive players found to swap with.");
+          Alert.error({ message: 'No alive players found to swap with.' });
         } else if (error.message?.includes('no card to swap')) {
-          setError("You have no card to swap.");
+          Alert.error({ message: 'You have no card to swap.' });
         } else if (error.message?.includes('Next player has no card')) {
-          setError("The next player has no card to swap.");
+          Alert.error({ message: 'The next player has no card to swap.' });
         } else if (error.message?.includes('Players with Kings cannot swap')) {
-          setError("Players with Kings cannot swap cards.");
+          Alert.error({ message: 'Players with Kings cannot swap cards.' });
         } else {
-          setError("Cards cannot be swapped right now.");
+          Alert.error({ message: 'Cards cannot be swapped right now.' });
         }
       } else if (error.code === 'functions/permission-denied') {
-        setError("Only the active player can swap cards.");
+        Alert.error({ message: 'Only the active player can swap cards.' });
       } else if (error.code === 'functions/unauthenticated') {
-        setError("Please sign in to swap cards.");
+        Alert.error({ message: 'Please sign in to swap cards.' });
       } else if (error.code === 'functions/invalid-argument') {
-        setError("Invalid request.");
+        Alert.error({ message: 'Invalid request.' });
       } else {
-        setError("Failed to swap cards. Please try again.");
+        Alert.error({ message: 'Failed to swap cards. Please try again.' });
       }
     } finally {
       setIsSwapping(false);
     }
   };
 
-  const clearError = () => {
-    setError(null);
-  };
-
   return {
     swapCard,
     isSwapping,
-    error,
-    clearError,
   };
 }
