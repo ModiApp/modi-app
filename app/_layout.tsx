@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/providers/Auth";
 import { UsernameProvider } from "@/providers/Username";
+import { AlertBanner } from "@/ui/components/AlertBanner";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -15,6 +16,7 @@ export default function RootLayout() {
           <Stack.Screen name="playground" />
           <Stack.Screen name="+not-found" />
         </Stack>
+        <AlertBanner />
         <StatusBar style="auto" />
       </UsernameProvider>
     </AuthProvider>

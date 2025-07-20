@@ -7,7 +7,6 @@ import {
   Icon as BaseIconType,
 } from "@expo/vector-icons/build/createIconSet";
 
-type IconName = "back" | "home";
 interface IconProps extends BaseIconProps<IconName> {
   size?: number;
 }
@@ -21,7 +20,13 @@ console.log(Platform.OS);
 const iconNameMap = {
   back: "arrow-back",
   home: "home-sharp",
-} satisfies Record<IconName, IoniconIconName>;
+  "alert-circle": "alert-circle",
+  "checkmark-circle": "checkmark-circle",
+  warning: "warning",
+  "information-circle": "information-circle",
+} satisfies Record<string, IoniconIconName>;
+
+type IconName = keyof typeof iconNameMap;
 
 const Icon: React.FC<IconProps> = ({ name, ...props }) => {
   return <BaseIcon name={iconNameMap[name]} {...props} />;

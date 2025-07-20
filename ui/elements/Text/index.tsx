@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Text as RNText, StyleProp, TextStyle } from "react-native";
 
-import { ColorName, colors, fontFamilies } from "@/ui/styles";
+import { ColorName, colors, fontFamilies, FontFamily } from "@/ui/styles";
 
 interface TextProps extends React.PropsWithChildren {
   /** Defaults to 14 */
@@ -12,12 +12,20 @@ interface TextProps extends React.PropsWithChildren {
 
   /** Optional override styles */
   style?: StyleProp<TextStyle>;
+
+  fontFamily?: FontFamily;
 }
 
-const Text: React.FC<TextProps> = ({ size, children, style, color }) => {
+const Text: React.FC<TextProps> = ({
+  size,
+  children,
+  style,
+  color,
+  fontFamily,
+}) => {
   const styles = useRef<StyleProp<TextStyle>>({
     fontSize: size || 18,
-    fontFamily: fontFamilies.primary,
+    fontFamily: fontFamilies[fontFamily || "primary"],
     color: colors[color || "white"],
   }).current;
 
