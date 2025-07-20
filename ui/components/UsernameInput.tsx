@@ -1,7 +1,7 @@
 import React from "react";
 
+import { useUsername } from "@/providers/Username";
 import TextInput, { TextInputProps } from "@/ui/elements/TextInput";
-import { useUsername } from "@/ui/providers/Username";
 
 type UsernameInputProps = Exclude<
   TextInputProps,
