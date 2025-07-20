@@ -1,6 +1,6 @@
 import { functions } from '@/config/firebase';
 import { JoinGameRequest, JoinGameResponse } from '@/functions/src/joinGame';
-import { useUsername } from '@/ui/providers/Username';
+import { useUsername } from '@/providers/Username';
 import { usePathname, useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';

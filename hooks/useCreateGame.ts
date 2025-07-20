@@ -1,6 +1,6 @@
 import { functions } from '@/config/firebase';
 import { CreateGameRequest, CreateGameResponse } from '@/functions/src/createGame';
-import { useUsername } from '@/ui/providers/Username';
+import { useUsername } from '@/providers/Username';
 import { useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
