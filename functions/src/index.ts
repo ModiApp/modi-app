@@ -27,4 +27,5 @@ export { leaveGame } from "./leaveGame";
 export { startGame } from "./startGame";
 export { stick } from "./stick";
 export { swapCard } from "./swapCard";
+export { setPlayerOrder } from "./setPlayerOrder";
 
