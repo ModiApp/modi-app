@@ -2,12 +2,12 @@ import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createPlayerJoinedAction } from "./actionUtils";
 import { InitialGame } from "./types";
+import { getUsername } from "./util";
 
 const db = getFirestore();
 
 export interface JoinGameRequest {
   gameId: string;
-  username: string;
 }
 
 export interface JoinGameResponse {
@@ -22,16 +22,13 @@ export const joinGame = onCall<JoinGameRequest, Promise<JoinGameResponse>>(async
     throw new HttpsError("unauthenticated", "User is not authenticated");
   }
 
-  const { gameId, username } = request.data;
+  const { gameId } = request.data;
   if (!gameId) {
     console.error("JoinGame: Game ID is required");
     throw new HttpsError("invalid-argument", "Game ID is required");
   }
 
-  if (!username || username.trim().length === 0) {
-    console.error("JoinGame: Username is required");
-    throw new HttpsError("invalid-argument", "Username is required");
-  }
+  const username = await getUsername(userId);
 
   console.debug("JoinGame: User", userId, "attempting to join game", gameId, "with username", username);
 
@@ -69,12 +66,12 @@ export const joinGame = onCall<JoinGameRequest, Promise<JoinGameResponse>>(async
     // Update the game document
     const updateData: Partial<InitialGame> = {
       players: [...(gameData.players || []), userId],
-      usernames: { ...gameData.usernames, [userId]: username.trim() },
+      usernames: { ...gameData.usernames, [userId]: username },
     };
     batch.update(gameRef, updateData);
 
     // Add the player joined action to the batch
-    const playerJoinedAction = createPlayerJoinedAction(userId, username.trim());
+    const playerJoinedAction = createPlayerJoinedAction(userId, username);
     const currentActionCount = (gameData as any).actionCount || 0;
     addActionToBatch(batch, gameId, playerJoinedAction, currentActionCount);
 

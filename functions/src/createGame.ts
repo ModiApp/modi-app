@@ -1,11 +1,11 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { InitialGame } from "./types";
+import { getUsername } from "./util";
 
 const db = getFirestore();
 
 export interface CreateGameRequest {
-  username: string;
 }
 
 export interface CreateGameResponse {
@@ -19,6 +19,8 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
     throw new HttpsError("unauthenticated", "User is not authenticated");
   }
 
+  const username = await getUsername(userId);
+
   const gameId = await generateGameId();
   console.debug("CreateGame: Generated game id:", gameId);
 
@@ -27,7 +29,7 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
     status: "gathering-players",
     players: [userId],
     host: userId,
-    usernames: { [userId]: request.data.username },
+    usernames: { [userId]: username },
     actionCount: 0, // Initialize action count
   }
   

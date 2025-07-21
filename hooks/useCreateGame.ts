@@ -1,6 +1,5 @@
 import { functions } from '@/config/firebase';
 import { CreateGameRequest, CreateGameResponse } from '@/functions/src/createGame';
-import { useUsername } from '@/providers/Username';
 import { useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
@@ -16,12 +15,11 @@ const createGameFunction = httpsCallable<CreateGameRequest, CreateGameResponse>(
 export function useCreateGame() {
   const router = useRouter();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
-  const { value: username } = useUsername();
   const createGame = async () => {
     try {
       console.log("useCreateGame: Creating game");
       setIsCreatingGame(true);
-      const game = await createGameFunction({ username: username.trim() });
+      const game = await createGameFunction({});
       console.log("useCreateGame: Game created:", game);
       router.push(`/games/${game.data.gameId}`);
     } catch (error) {

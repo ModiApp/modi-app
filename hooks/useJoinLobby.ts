@@ -1,10 +1,9 @@
 import { functions } from '@/config/firebase';
 import { JoinGameRequest, JoinGameResponse } from '@/functions/src/joinGame';
-import { useUsername } from '@/providers/Username';
+import { Alert } from '@/ui/components/AlertBanner';
 import { usePathname, useRouter } from 'expo-router';
 import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
-import { Alert } from '@/ui/components/AlertBanner';
 
 const joinGameFunction = httpsCallable<JoinGameRequest, JoinGameResponse>(functions, 'joinGame');
 
@@ -17,28 +16,19 @@ const joinGameFunction = httpsCallable<JoinGameRequest, JoinGameResponse>(functi
 export function useJoinLobby() {
   const router = useRouter();
   const pathname = usePathname();
-  const { value: username } = useUsername();
   const [isJoining, setIsJoining] = useState(false);
 
   const joinLobby = async (gameId: string) => {
-    if (!username) {
-      Alert.error({ message: "Please set a username first" });
-      return;
-    }
-
     if (!gameId || gameId.trim().length === 0) {
       Alert.error({ message: "Please enter a valid game ID" });
       return;
     }
 
     try {
-      console.log("useJoinLobby: Joining game", { gameId, username });
+      console.log("useJoinLobby: Joining game", { gameId });
       setIsJoining(true);
 
-      const result = await joinGameFunction({
-        username: username.trim(),
-        gameId: gameId.trim(),
-      });
+      const result = await joinGameFunction({ gameId: gameId.trim() });
 
       console.log("useJoinLobby: Successfully joined game:", result.data);
       

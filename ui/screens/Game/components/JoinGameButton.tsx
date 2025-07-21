@@ -1,18 +1,21 @@
 import { useJoinLobby } from "@/hooks/useJoinLobby";
 import { useUsername } from "@/providers/Username";
 import { Button } from "@/ui/elements";
-import React from "react";
+import React, { useState } from "react";
 
 export function JoinGameButton(props: { gameId: string }) {
   const { gameId } = props;
-  const { joinLobby, isJoining } = useJoinLobby();
+  const { joinLobby } = useJoinLobby();
   const username = useUsername();
+  const [isJoining, setIsJoining] = useState(false);
 
-  function handleJoinGame() {
+  async function handleJoinGame() {
+    setIsJoining(true);
     if (!username.value) {
-      username.setValue(getUsername());
+      await username.setValue(getUsername());
     }
-    joinLobby(gameId);
+    await joinLobby(gameId);
+    setIsJoining(false);
   }
   return (
     <Button

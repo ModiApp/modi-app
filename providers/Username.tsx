@@ -10,10 +10,10 @@ import {
 
 const UsernameContext = createContext<{
   value: string;
-  setValue: (name: string) => void;
+  setValue: (name: string) => Promise<void>;
 }>({
   value: "",
-  setValue: () => {},
+  setValue: () => Promise.resolve(),
 });
 
 export function UsernameProvider(props: { children: React.ReactNode }) {
@@ -33,11 +33,11 @@ export function UsernameProvider(props: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const setUsername = useCallback((name: string) => {
+  const setUsername = useCallback(async (name: string) => {
     setUsernameState(name);
     const user = auth.currentUser;
     if (user) {
-      updateProfile(user, { displayName: name });
+      await updateProfile(user, { displayName: name });
     }
   }, []);
 
