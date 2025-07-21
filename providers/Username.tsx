@@ -1,4 +1,5 @@
-import { useAsyncStorage } from "@react-native-async-storage/async-storage";
+import { auth } from "@/config/firebase";
+import { updateProfile } from "firebase/auth";
 import {
   createContext,
   useCallback,
@@ -6,8 +7,6 @@ import {
   useEffect,
   useState,
 } from "react";
-
-const STORAGE_KEY = "@modi/username";
 
 const UsernameContext = createContext<{
   value: string;
@@ -19,23 +18,28 @@ const UsernameContext = createContext<{
 
 export function UsernameProvider(props: { children: React.ReactNode }) {
   const { children } = props;
-
-  const { getItem, setItem } = useAsyncStorage(STORAGE_KEY);
   const [username, setUsernameState] = useState("");
 
   useEffect(() => {
-    getItem().then((val) => {
-      if (val) setUsernameState(val);
+    // Get username from Firebase Auth's displayName
+    const user = auth.currentUser;
+    if (user && user.displayName) {
+      setUsernameState(user.displayName);
+    }
+    // Listen for auth state changes in case user logs in/out
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUsernameState(user?.displayName || "");
     });
-  }, [getItem]);
+    return unsubscribe;
+  }, []);
 
-  const setUsername = useCallback(
-    (name: string) => {
-      setUsernameState(name);
-      setItem(name);
-    },
-    [setItem]
-  );
+  const setUsername = useCallback((name: string) => {
+    setUsernameState(name);
+    const user = auth.currentUser;
+    if (user) {
+      updateProfile(user, { displayName: name });
+    }
+  }, []);
 
   return (
     <UsernameContext.Provider
