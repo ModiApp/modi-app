@@ -1,9 +1,9 @@
 import { ActiveGame } from "@/functions/src/types";
 import { useUserId } from "@/providers/Auth";
-import { CardTable } from "@/ui/components/CardTable";
-import { AnimatedCards } from "@/ui/components/CardTable/AnimatedCards";
-import { PlayerCircles } from "@/ui/components/CardTable/PlayerCircles";
 import { Container } from "@/ui/elements";
+import { CardTable } from "@/ui/screens/Game/components/CardTable";
+import { AnimatedCards } from "@/ui/screens/Game/components/CardTable/AnimatedCards";
+import { PlayerCircles } from "@/ui/screens/Game/components/CardTable/PlayerCircles";
 import React from "react";
 import { PlayerControls } from "./PlayerControls";
 import { PlayingProvider } from "./PlayingContext";
