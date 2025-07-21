@@ -40,3 +40,4 @@ yarn-error.*
 app-example
 .env
 .vercel
+.next
