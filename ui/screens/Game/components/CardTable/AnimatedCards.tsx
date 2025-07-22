@@ -1,9 +1,9 @@
-import { useGameActions } from "@/hooks/useGameActions";
 import {
   AnimatableCardDeck,
   AnimatableCardDeckRef,
   AnimatedCard,
 } from "@/ui/components/AnimatableCardDeck";
+import { useGameActions } from "@/ui/screens/Game/GameActionsProvider";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
 
