@@ -21,9 +21,11 @@ export interface ActiveGame extends GameBase {
   roundState: 'pre-deal' | 'playing' | 'tallying';
 }
 
-interface EndedGame extends Omit<ActiveGame, 'status'> {
+export interface EndedGame extends Omit<ActiveGame, 'status' | 'dealer' | 'activePlayer'> {
   status: 'ended';
   winners: string[];
+  dealer: null;
+  activePlayer: null;
 }
 
 // Separate document for internal game state (deck, trash)

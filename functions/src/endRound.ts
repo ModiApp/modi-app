@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createEndRoundAction } from "./actionUtils";
-import { ActiveGame, CardID, GameInternalState } from "./types";
+import { ActiveGame, CardID, EndedGame, GameInternalState } from "./types";
 
 const db = getFirestore();
 
@@ -106,7 +106,14 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
     const alivePlayers = Object.keys(gameData.playerLives).filter(playerId => gameData.playerLives[playerId] > 0);
     if (alivePlayers.length <= 1) {
       const winners = playerHandsSnapshot.docs.filter(doc => doc.data().card !== null).map(doc => doc.id);
-      await gameRef.update({ winners, status: 'ended' });
+      const endedGame: EndedGame = {
+        ...gameData,
+        winners,
+        status: 'ended',
+        dealer: null,
+        activePlayer: null
+      }
+      await gameRef.set(endedGame);
       return { success: true };
     }
 
