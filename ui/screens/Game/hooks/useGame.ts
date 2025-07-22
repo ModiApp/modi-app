@@ -1,17 +1,22 @@
 import { firestore } from "@/config/firebase";
 import { Game } from "@/functions/src/types";
+import { useRouter } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
-/** Exports a live subscription to a game */
-export function useGame(gameId: string): Game | null {
-  const [game, setGame] = useState<Game | null>(null);
+/** Exports a live subscription to a game. If the game is not found, it will redirect to the home screen. */
+export function useGame(gameId: string): Game | null | undefined {
+  const [game, setGame] = useState<Game | null | undefined>(undefined);
+  const router = useRouter();
+
   useEffect(() => {
     return subscribeToGame(gameId, (game) => {
-      console.log("Game updated:", game);
       setGame(game);
+      if (game === null) {
+        router.replace("/");
+      }
     });
-  }, [gameId]);
+  }, [gameId, router]);
 
   return game
 }
