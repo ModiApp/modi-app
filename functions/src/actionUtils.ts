@@ -15,7 +15,8 @@ import {
   RevealCardsAction,
   SpecialEventAction,
   StickAction,
-  SwapCardsAction
+  SwapCardsAction,
+  TallyingAction
 } from "./types/actions.types";
 
 const db = getFirestore();
@@ -308,5 +309,19 @@ export function createReceiveCardAction(
     playerId,
     card,
     timestamp: new Date() as any,
+  };
+} 
+
+/**
+ * Helper function to create a tallying action
+ */
+export function createTallyingAction(
+  playerId: string,
+  playersLost: string[]
+): Omit<TallyingAction, 'id' | 'timestamp'> {
+  return {
+    type: ActionType.TALLYING,
+    playerId,
+    playersLost
   };
 } 

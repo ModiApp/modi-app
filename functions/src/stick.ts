@@ -1,7 +1,8 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createRevealCardsAction, createStickAction } from "./actionUtils";
+import { addActionToBatch, createRevealCardsAction, createStickAction, createTallyingAction } from "./actionUtils";
 import { ActiveGame, CardID } from "./types";
+import { calculatePlayersLost } from "./util";
 
 const db = getFirestore();
 
@@ -128,6 +129,10 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
         // Add the reveal cards action
         const revealCardsAction = createRevealCardsAction(userId, playerCards);
         addActionToBatch(batch, gameId, revealCardsAction);
+
+        // Add the tallying action
+        const tallyingAction = createTallyingAction(userId, calculatePlayersLost(playerCards));
+        addActionToBatch(batch, gameId, tallyingAction);
       }
     }
 

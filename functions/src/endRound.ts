@@ -2,6 +2,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createEndRoundAction } from "./actionUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
+import { getCardRankValue } from "./util";
 
 const db = getFirestore();
 
@@ -36,18 +37,6 @@ function findNextAlivePlayerToLeft(
   }
 
   return null; // No alive players found
-}
-
-/**
- * Helper function to get the rank value of a card for comparison
- * Ace is lowest (1), King is highest (13)
- */
-function getCardRankValue(cardId: CardID): number {
-  const rank = cardId.slice(0, -1); // Remove suit
-  const rankValues: { [key: string]: number } = {
-    'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
-  };
-  return rankValues[rank] || 0;
 }
 
 export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async (request) => {

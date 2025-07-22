@@ -85,6 +85,11 @@ export interface PlayerLeftAction extends BaseGameAction {
   leaveEvent: true;
 }
 
+export interface TallyingAction extends BaseGameAction {
+  type: ActionType.TALLYING;
+  playersLost: string[];
+}
+
 // Union type for all actions
 export type GameAction = 
   | GameStartedAction
@@ -99,7 +104,8 @@ export type GameAction =
   | KungAction
   | PlayerJoinedAction
   | PlayerLeftAction
-  | ReceiveCardAction;
+  | ReceiveCardAction
+  | TallyingAction;
 
 export enum ActionType {
   GAME_STARTED = 'game-started',
@@ -116,4 +122,5 @@ export enum ActionType {
   RECEIVE_CARD = 'receive-card',
   /** @deprecated */
   SPECIAL_EVENT = 'special-event',
+  TALLYING = 'tallying',
 } 

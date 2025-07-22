@@ -5,6 +5,7 @@ import {
   DealerDrawAction,
   GameAction,
   KungAction,
+  TallyingAction,
 } from "@/functions/src/types/actions.types";
 import { useUserId } from "@/providers/Auth";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
@@ -26,6 +27,7 @@ interface GameActionHandlers {
   trashCards?(): Promise<void>;
   revealCards?(playerCards: { [playerId: string]: CardID }): Promise<void>;
   kung?(action: KungAction): Promise<void>;
+  tallying?(action: TallyingAction): Promise<void>;
 }
 
 type HandlerId = symbol;
@@ -122,6 +124,8 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
       case ActionType.PLAYER_LEFT:
         console.warn("Player left action without action handler", action);
         return;
+      case ActionType.TALLYING:
+        return handlers.tallying?.(action);
       default:
         const item: never = action;
         throw new Error(`Unknown action type: ${item}`);
