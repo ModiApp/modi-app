@@ -1,11 +1,11 @@
-import { Text } from "@/ui/elements";
+import { ScreenContainer, Text } from "@/ui/elements";
 import { Link, Stack } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function NotFoundScreen() {
   return (
-    <>
+    <ScreenContainer>
       <Stack.Screen options={{ title: "Oops!" }} />
       <View style={styles.container}>
         <Text size={24}>This screen does not exist.</Text>
@@ -13,7 +13,7 @@ export default function NotFoundScreen() {
           <Text size={24}>Go to home screen!</Text>
         </Link>
       </View>
-    </>
+    </ScreenContainer>
   );
 }
 

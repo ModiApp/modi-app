@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useMemo } from "react";
 import { Text as RNText, StyleProp, TextStyle } from "react-native";
 
 import { ColorName, colors, fontFamilies, FontFamily } from "@/ui/styles";
@@ -23,11 +23,14 @@ const Text: React.FC<TextProps> = ({
   color,
   fontFamily,
 }) => {
-  const styles = useRef<StyleProp<TextStyle>>({
-    fontSize: size || 18,
-    fontFamily: fontFamilies[fontFamily || "primary"],
-    color: colors[color || "white"],
-  }).current;
+  const styles = useMemo<StyleProp<TextStyle>>(
+    () => ({
+      fontSize: size || 18,
+      fontFamily: fontFamilies[fontFamily || "primary"],
+      color: colors[color || "white"],
+    }),
+    [size, fontFamily, color]
+  );
 
   return <RNText style={[styles, style]}>{children}</RNText>;
 };

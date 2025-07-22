@@ -1,13 +1,12 @@
 import { useUserId } from "@/providers/Auth";
 import { Container, Text } from "@/ui/elements";
-import { useActiveGame } from "@/ui/screens/Game/PlayingContext";
-import { colors } from "@/ui/styles";
+import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useEffect, useMemo } from "react";
 import { useCardTable } from "./context";
 import { calculatePlayerPositions } from "./utils";
 
 export function PlayerCircles() {
-  const { game } = useActiveGame();
+  const { game } = useCurrentGame();
   const currUserId = useUserId();
   const { radius, setPlayerPositions } = useCardTable();
 
@@ -29,18 +28,15 @@ export function PlayerCircles() {
   return (
     <>
       {playerCircles.map(({ playerId, x, y }) => {
-        const isActivePlayer = game.activePlayer === playerId;
-
         return (
           <Container
             key={playerId}
-            color={isActivePlayer ? "blue" : "gray"}
             style={{
               position: "absolute",
-              borderRadius: 999,
-              borderColor: colors.blue,
-              padding: 16,
-              aspectRatio: 1,
+              borderRadius: 2,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              paddingHorizontal: 4,
+              paddingVertical: 2,
               justifyContent: "center",
               alignItems: "center",
               transform: [
@@ -51,7 +47,7 @@ export function PlayerCircles() {
               ],
             }}
           >
-            <Text>{game.usernames[playerId].slice(0, 2)}</Text>
+            <Text size={10}>{game.usernames[playerId].slice(0, 2)}</Text>
           </Container>
         );
       })}

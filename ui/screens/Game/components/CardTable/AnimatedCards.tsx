@@ -4,7 +4,7 @@ import {
   AnimatableCardDeckRef,
   AnimatedCard,
 } from "@/ui/components/AnimatableCardDeck";
-import { useActiveGame } from "@/ui/screens/Game/PlayingContext";
+import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import { useCardTable } from "./context";
@@ -18,7 +18,7 @@ export function AnimatedCards() {
 }
 
 function AnimatedCardsInner() {
-  const { game } = useActiveGame();
+  const { game } = useCurrentGame();
   const deck = useRef<AnimatableCardDeckRef>(null);
   const { playerPositions } = useCardTable();
 

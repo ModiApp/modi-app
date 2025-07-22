@@ -1,14 +1,14 @@
-import { ActiveGame } from "@/functions/src/types";
+import { Game } from "@/functions/src/types";
 import { createContext, useContext } from "react";
 
-const PlayingContext = createContext<{ game: ActiveGame } | null>(null);
+const PlayingContext = createContext<{ game: Game } | null>(null);
 
 export function PlayingProvider({
   children,
   game,
 }: {
   children: React.ReactNode;
-  game: ActiveGame;
+  game: Game;
 }) {
   return (
     <PlayingContext.Provider value={{ game }}>
@@ -17,7 +17,7 @@ export function PlayingProvider({
   );
 }
 
-export function useActiveGame() {
+export function useCurrentGame() {
   const context = useContext(PlayingContext);
   if (!context) {
     throw new Error("useActiveGame must be used within a PlayingProvider");

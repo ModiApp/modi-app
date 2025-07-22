@@ -1,18 +1,49 @@
-import { ActiveGame } from "@/functions/src/types";
+import { ActiveGame, Game } from "@/functions/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
 import { useDealCards } from "@/hooks/useDealCards";
 import { useEndRound } from "@/hooks/useEndRound";
 import { useStick } from "@/hooks/useStick";
 import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
+import { JoinGameButton } from "./components/JoinGameButton";
+import { LeaveGameButton } from "./components/LeaveGameButton";
+import { StartGameButton } from "./components/StartGameButton";
 
-export function PlayerControls(props: {
-  game: ActiveGame;
-  currUserId: string;
-}) {
+export function PlayerControls(props: { game: Game; currUserId: string }) {
   const { game, currUserId } = props;
   const { dealCards, isDealing } = useDealCards();
   const currentCard = useCurrentCard(game.gameId);
+
+  if (game.status === "gathering-players") {
+    return (
+      <Container
+        style={{
+          flexDirection: "row",
+          minHeight: 24,
+          gap: 16,
+        }}
+      >
+        <LeaveGameButton />
+        <Container style={{ flex: 1, justifyContent: "center" }}>
+          {game.players.includes(currUserId) ? (
+            game.host === currUserId ? (
+              <StartGameButton gameId={game.gameId} />
+            ) : (
+              <Text>
+                Waiting for {game.usernames[game.host]} to start the game...
+              </Text>
+            )
+          ) : (
+            <JoinGameButton gameId={game.gameId} />
+          )}
+        </Container>
+      </Container>
+    );
+  }
+
+  if (game.status === "ended") {
+    return <LeaveGameButton />;
+  }
 
   if (game.roundState === "pre-deal") {
     if (game.dealer === currUserId && game.activePlayer === currUserId) {
