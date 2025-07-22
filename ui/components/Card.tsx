@@ -75,6 +75,11 @@ export function Card({ cardId, style, width = 80, height = 120 }: CardProps) {
             width,
             height,
             resizeMode: "contain",
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
           },
           style,
         ]}
