@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDealCardsAction, createDeckReshuffleAction, createReceiveCardAction } from "./actionUtils";
+import { addActionToBatch, createDealCardsAction, createReceiveCardAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -183,18 +183,8 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
     });
 
     // Add actions to the batch (ensuring atomicity)
-    let currentActionCount = gameData.actionCount || 0;
-
-    if (deckReshuffled) {
-      // Add deck reshuffle action if deck was recycled
-      const reshuffleAction = createDeckReshuffleAction(userId, currentTrash.length);
-      addActionToBatch(batch, gameId, reshuffleAction, currentActionCount);
-      currentActionCount++;
-    }
-
-    // Add deal cards action
     const dealCardsAction = createDealCardsAction(userId, dealingOrder);
-    addActionToBatch(batch, gameId, dealCardsAction, currentActionCount);
+    addActionToBatch(batch, gameId, dealCardsAction);
 
     // Commit the batch (all changes including actions happen atomically)
     await batch.commit();

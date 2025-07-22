@@ -77,7 +77,6 @@ export const startGame = onCall<StartGameRequest, Promise<StartGameResponse>>(as
       round: 1,
       activePlayer: gameData.host, // Host starts as active player
       roundState: "pre-deal",
-      actionCount: 0, // Initialize action count
     };
 
     // Create internal state document
@@ -111,7 +110,7 @@ export const startGame = onCall<StartGameRequest, Promise<StartGameResponse>>(as
 
     // Add the game started action to the batch
     const gameStartedAction = createGameStartedAction(userId, gameData.host);
-    addActionToBatch(batch, gameId, gameStartedAction, 0);
+    addActionToBatch(batch, gameId, gameStartedAction);
 
     // Commit the batch (all changes including action happen atomically)
     await batch.commit();

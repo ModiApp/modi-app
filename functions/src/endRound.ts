@@ -224,8 +224,7 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       lowestCard, 
       newDealer
     );
-    const currentActionCount = gameData.actionCount || 0;
-    addActionToBatch(batch, gameId, endRoundAction, currentActionCount);
+    addActionToBatch(batch, gameId, endRoundAction);
 
     // Commit the batch (all changes including action happen atomically)
     await batch.commit();

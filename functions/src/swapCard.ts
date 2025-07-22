@@ -274,20 +274,16 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
     }
 
     // Add actions to the batch (ensuring atomicity)
-    let currentActionCount = gameData.actionCount || 0;
-
     if (deckReshuffled) {
       // Add deck reshuffle action if deck was recycled
       const reshuffleAction = createDeckReshuffleAction(userId, internalState.trash.length);
-      addActionToBatch(batch, gameId, reshuffleAction, currentActionCount);
-      currentActionCount++;
+      addActionToBatch(batch, gameId, reshuffleAction);
     }
 
     if (isDealerDraw) {
       // Add dealer draw action
       const dealerDrawAction = createSwapCardsAction(userId, "", true, currentPlayerCard);
-      addActionToBatch(batch, gameId, dealerDrawAction, currentActionCount);
-      currentActionCount++;
+      addActionToBatch(batch, gameId, dealerDrawAction);
       
       // If the dealer drew, also add a reveal cards action
       // Get all player hands to reveal everyone's cards
@@ -316,16 +312,16 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
 
         // Add the reveal cards action
         const revealCardsAction = createRevealCardsAction(userId, playerCards);
-        addActionToBatch(batch, gameId, revealCardsAction, currentActionCount);
+        addActionToBatch(batch, gameId, revealCardsAction);
       }
     } else if (isKungEvent) {
       // Add Kung special event action
       const kungAction = createKungAction(userId, newActivePlayer!, currentPlayerCard);
-      addActionToBatch(batch, gameId, kungAction, currentActionCount);
+      addActionToBatch(batch, gameId, kungAction);
     } else {
       // Add regular swap action
       const swapAction = createSwapCardsAction(userId, newActivePlayer!);
-      addActionToBatch(batch, gameId, swapAction, currentActionCount);
+      addActionToBatch(batch, gameId, swapAction);
     }
 
     // Commit the batch (all changes including actions happen atomically)

@@ -104,8 +104,7 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
 
     // Add the stick action to the batch
     const stickAction = createStickAction(userId, isDealer);
-    const currentActionCount = gameData.actionCount || 0;
-    addActionToBatch(batch, gameId, stickAction, currentActionCount);
+    addActionToBatch(batch, gameId, stickAction);
 
     // If the dealer is sticking, also add a reveal cards action
     if (isDealer) {
@@ -128,7 +127,7 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
 
         // Add the reveal cards action
         const revealCardsAction = createRevealCardsAction(userId, playerCards);
-        addActionToBatch(batch, gameId, revealCardsAction, currentActionCount + 1);
+        addActionToBatch(batch, gameId, revealCardsAction);
       }
     }
 

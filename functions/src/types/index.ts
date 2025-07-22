@@ -19,9 +19,6 @@ export interface ActiveGame extends GameBase {
   round: number;
   activePlayer: string;
   roundState: 'pre-deal' | 'playing' | 'tallying';
-  // Action tracking fields
-  lastActionId?: string;
-  actionCount: number;
 }
 
 interface EndedGame extends Omit<ActiveGame, 'status'> {

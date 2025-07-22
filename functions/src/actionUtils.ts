@@ -46,12 +46,7 @@ export async function createAndStoreAction(
   const actionRef = db.collection("games").doc(gameId).collection("actions").doc(actionId);
   batch.set(actionRef, gameAction);
 
-  // Update the main game document with new action info
-  const gameRef = db.collection("games").doc(gameId);
-  batch.update(gameRef, {
-    lastActionId: actionId,
-    actionCount: (await getCurrentActionCount(gameId)) + 1
-  });
+  // No longer update the main game document with lastActionId or actionCount
 
   await batch.commit();
 
@@ -72,8 +67,7 @@ export async function createAndStoreAction(
 export function addActionToBatch(
   batch: FirebaseFirestore.WriteBatch,
   gameId: string,
-  action: Omit<GameAction, 'id' | 'timestamp'>,
-  currentActionCount: number
+  action: Omit<GameAction, 'id' | 'timestamp'>
 ): string {
   const actionId = generateActionId();
   const timestamp = new Date();
@@ -88,12 +82,7 @@ export function addActionToBatch(
   const actionRef = db.collection("games").doc(gameId).collection("actions").doc(actionId);
   batch.set(actionRef, gameAction);
 
-  // Update the main game document with new action info
-  const gameRef = db.collection("games").doc(gameId);
-  batch.update(gameRef, {
-    lastActionId: actionId,
-    actionCount: currentActionCount + 1
-  });
+  // No longer update the main game document with lastActionId or actionCount
 
   console.info("Action added to batch:", {
     gameId,

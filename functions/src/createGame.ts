@@ -24,13 +24,12 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
   const gameId = await generateGameId();
   console.debug("CreateGame: Generated game id:", gameId);
 
-  const game: InitialGame & { actionCount: number } = {
+  const game: InitialGame = {
     gameId,
     status: "gathering-players",
     players: [userId],
     host: userId,
     usernames: { [userId]: username },
-    actionCount: 0, // Initialize action count
   }
   
 return db.doc(`games/${gameId}`).set(game).then(() => {
