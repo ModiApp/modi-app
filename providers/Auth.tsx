@@ -8,6 +8,7 @@
  * We just need a persistent user id, so we can identify the user across sessions, and authorize them to access the game.
  */
 import { auth } from "@/config/firebase";
+import { ScreenContainer } from "@/ui/elements";
 import { signInAnonymously } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
 
   return (
     <AuthContext.Provider value={{ userId, isLoading, error }}>
-      {children}
+      {!userId && isLoading ? <ScreenContainer /> : children}
     </AuthContext.Provider>
   );
 }

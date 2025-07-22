@@ -8,18 +8,20 @@ import "react-native-reanimated";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <UsernameProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="join-lobby" />
-          <Stack.Screen name="playground" />
-          <Stack.Screen name="games/[gameId]" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <AlertBanner />
-        <StatusBar style="auto" />
-      </UsernameProvider>
-    </AuthProvider>
+    <>
+      <AuthProvider>
+        <UsernameProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="join-lobby" />
+            <Stack.Screen name="playground" />
+            <Stack.Screen name="games/[gameId]" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </UsernameProvider>
+      </AuthProvider>
+      <AlertBanner />
+      <StatusBar style="auto" />
+    </>
   );
 }
