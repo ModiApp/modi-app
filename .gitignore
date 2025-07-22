@@ -40,3 +40,6 @@ yarn-error.*
 app-example
 .env
 .vercel
+
+# Firebase emulator data
+emulator-data/
