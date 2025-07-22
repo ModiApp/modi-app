@@ -2,7 +2,6 @@ import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createEndRoundAction } from "./actionUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
-import { getCardRankValue } from "./util";
 
 const db = getFirestore();
 
@@ -96,7 +95,6 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       throw new HttpsError("failed-precondition", "Round can only be ended in tallying state");
     }
 
-    // Get all player hands to determine the lowest card(s)
     const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
     const playerHandsSnapshot = await playerHandsRef.get();
 
@@ -105,54 +103,22 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       throw new HttpsError("not-found", "No player hands found");
     }
 
-    // Collect all cards and find the lowest ranking card(s)
-    const playerCards: { playerId: string; card: CardID; rankValue: number }[] = [];
+    const alivePlayers = Object.keys(gameData.playerLives).filter(playerId => gameData.playerLives[playerId] > 0);
+    if (alivePlayers.length <= 1) {
+      const winners = playerHandsSnapshot.docs.filter(doc => doc.data().card !== null).map(doc => doc.id);
+      await gameRef.update({ winners, status: 'ended' });
+      return { success: true };
+    }
+
     const cardsToTrash: CardID[] = [];
 
     playerHandsSnapshot.forEach(doc => {
-      const playerId = doc.id;
       const handData = doc.data() as { card: CardID | null };
-      
-      // Only consider players with lives and cards
-      if (gameData.playerLives[playerId] > 0 && handData.card) {
-        const rankValue = getCardRankValue(handData.card);
-        playerCards.push({
-          playerId,
-          card: handData.card,
-          rankValue
-        });
+      if (handData.card) {
         cardsToTrash.push(handData.card);
       }
     });
 
-    if (playerCards.length === 0) {
-      console.error("EndRound: No valid player cards found");
-      throw new HttpsError("failed-precondition", "No valid player cards found");
-    }
-
-    // Find the lowest rank value
-    const lowestRankValue = Math.min(...playerCards.map(pc => pc.rankValue));
-    
-    // Find all players with the lowest ranking card
-    const playersWithLowestCard = playerCards
-      .filter(pc => pc.rankValue === lowestRankValue)
-      .map(pc => pc.playerId);
-
-    // Find the lowest card details for the action
-    const lowestCard = playerCards.find(pc => pc.rankValue === lowestRankValue)?.card || '';
-
-    console.info("EndRound: Players with lowest card", {
-      gameId,
-      lowestRankValue,
-      playersWithLowestCard,
-      cards: playerCards.map(pc => ({ playerId: pc.playerId, card: pc.card, rankValue: pc.rankValue }))
-    });
-
-    // Decrement lives for players with lowest card
-    const updatedPlayerLives = { ...gameData.playerLives };
-    playersWithLowestCard.forEach(playerId => {
-      updatedPlayerLives[playerId] = Math.max(0, updatedPlayerLives[playerId] - 1);
-    });
 
     // Get the internal state to update trash pile
     const internalStateRef = db.collection("games").doc(gameId).collection("internalState").doc("state");
@@ -169,7 +135,7 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
     const updatedTrash = [...internalState.trash, ...cardsToTrash];
 
     // Find the next alive player to the left of current dealer for new dealer
-    const newDealer = findNextAlivePlayerToLeft(gameData.players, updatedPlayerLives, gameData.dealer);
+    const newDealer = findNextAlivePlayerToLeft(gameData.players, gameData.playerLives, gameData.dealer);
     
     if (!newDealer) {
       console.error("EndRound: No alive players found for new dealer");
@@ -181,7 +147,6 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
 
     // Update the main game document
     batch.update(gameRef, {
-      playerLives: updatedPlayerLives,
       dealer: newDealer,
       activePlayer: newDealer,
       roundState: "pre-deal",
@@ -209,8 +174,6 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
     // Add the end round action to the batch
     const endRoundAction = createEndRoundAction(
       userId, 
-      playersWithLowestCard, 
-      lowestCard, 
       newDealer
     );
     addActionToBatch(batch, gameId, endRoundAction);
@@ -222,7 +185,6 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       gameId,
       oldDealer: gameData.dealer,
       newDealer,
-      playersLostLives: playersWithLowestCard,
       newRound: gameData.round + 1,
       cardsAddedToTrash: cardsToTrash.length,
       totalTrashSize: updatedTrash.length

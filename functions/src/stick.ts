@@ -131,8 +131,18 @@ export const stick = onCall<StickRequest, Promise<StickResponse>>(async (request
         addActionToBatch(batch, gameId, revealCardsAction);
 
         // Add the tallying action
-        const tallyingAction = createTallyingAction(userId, calculatePlayersLost(playerCards));
+        const playersLost = calculatePlayersLost(playerCards);
+        const tallyingAction = createTallyingAction(userId, playersLost);
         addActionToBatch(batch, gameId, tallyingAction);
+
+        // Decrement lives for players with lowest card
+        const updatedPlayerLives = { ...gameData.playerLives };
+        playersLost.forEach(playerId => {
+          updatedPlayerLives[playerId] = Math.max(0, updatedPlayerLives[playerId] - 1);
+        });
+
+        // Update player lives
+        batch.update(gameRef, { playerLives: updatedPlayerLives });
       }
     }
 

@@ -178,17 +178,12 @@ export function createStickAction(
  */
 export function createEndRoundAction(
   dealerId: string,
-  playersLost: string[],
-  lowestCard: string,
   newDealer: string
 ): Omit<EndRoundAction, 'id' | 'timestamp'> {
   return {
     type: ActionType.END_ROUND,
     playerId: dealerId,
-    playersLost,
-    lowestCard,
     newDealer,
-    roundEnded: true
   };
 }
 

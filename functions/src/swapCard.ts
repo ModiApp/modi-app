@@ -314,8 +314,18 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
         // Add the reveal cards action
         const revealCardsAction = createRevealCardsAction(userId, playerCards);
         addActionToBatch(batch, gameId, revealCardsAction);
-        const tallyingAction = createTallyingAction(userId, calculatePlayersLost(playerCards));
+        const playersLost = calculatePlayersLost(playerCards);
+        const tallyingAction = createTallyingAction(userId, playersLost);
         addActionToBatch(batch, gameId, tallyingAction);
+
+        // Decrement lives for players with lowest card
+        const updatedPlayerLives = { ...gameData.playerLives };
+        playersLost.forEach(playerId => {
+          updatedPlayerLives[playerId] = Math.max(0, updatedPlayerLives[playerId] - 1);
+        });
+
+        // Update player lives
+        batch.update(gameRef, { playerLives: updatedPlayerLives });
       }
     } else if (isKungEvent) {
       // Add Kung special event action

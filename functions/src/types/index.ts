@@ -23,7 +23,7 @@ export interface ActiveGame extends GameBase {
 
 interface EndedGame extends Omit<ActiveGame, 'status'> {
   status: 'ended';
-  winner: string;
+  winners: string[];
 }
 
 // Separate document for internal game state (deck, trash)

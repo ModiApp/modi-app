@@ -47,10 +47,7 @@ export interface ReceiveCardAction extends BaseGameAction {
 
 export interface EndRoundAction extends BaseGameAction {
   type: ActionType.END_ROUND;
-  playersLost: string[];
-  lowestCard: string;
   newDealer: string;
-  roundEnded: true;
 }
 
 export interface DeckReshuffleAction extends BaseGameAction {
