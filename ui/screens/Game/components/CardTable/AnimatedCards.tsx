@@ -6,7 +6,8 @@ import {
 } from "@/ui/components/AnimatableCardDeck";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
-import { Animated } from "react-native";
+
+import { withTiming } from "react-native-reanimated";
 import { useCardTable } from "./context";
 import { PlayerPosition } from "./types";
 
@@ -51,7 +52,7 @@ function AnimatedCardsInner() {
           0,
           cards.length - cardsOnTable.current.size - virtualTrash.current.length
         );
-        moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).start(() =>
+        moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).then(() =>
           resolve()
         );
       });
@@ -161,17 +162,16 @@ async function moveCardToPlayer(
     [card.scale, 1],
   ] as const;
 
-  return new Promise((resolve) => {
-    Animated.parallel(
-      pairs.map(([value, toValue]) =>
-        Animated.timing(value, {
-          toValue,
-          duration: 500,
-          useNativeDriver: true,
+  await Promise.all(
+    pairs.map(
+      ([value, toValue]) =>
+        new Promise<void>((resolve) => {
+          value.value = withTiming(toValue, { duration: 500 }, () => {
+            resolve();
+          });
         })
-      )
-    ).start(() => resolve());
-  });
+    )
+  );
 }
 
 /**
@@ -182,7 +182,6 @@ async function makeRoomForHitCard(
   card: AnimatedCard,
   playerPosition: PlayerPosition
 ) {
-  console.log("makeRoomForHitCard", card.x, card.y);
   // Calculate angle from center to player
   const angle = Math.atan2(playerPosition.y, playerPosition.x);
 
@@ -195,55 +194,52 @@ async function makeRoomForHitCard(
   const offsetX = offsetDistance * Math.cos(offsetAngle);
   const offsetY = offsetDistance * Math.sin(offsetAngle);
 
-  console.log("offsetX", offsetX, "offsetY", offsetY);
-
-  const newX = card.x._value + offsetX;
-  const newY = card.y._value + offsetY;
+  const newX = card.x.value + offsetX;
+  const newY = card.y.value + offsetY;
 
   const pairs = [
     [card.x, newX],
     [card.y, newY],
   ] as const;
 
-  return new Promise<void>((resolve) => {
-    Animated.parallel(
-      pairs.map(([value, toValue]) =>
-        Animated.timing(value, {
-          toValue,
-          duration: 300,
-          useNativeDriver: true,
+  await Promise.all(
+    pairs.map(
+      ([value, toValue]) =>
+        new Promise<void>((resolve) => {
+          value.value = withTiming(toValue, { duration: 300 }, () => {
+            resolve();
+          });
         })
-      )
-    ).start(() => resolve());
-  });
+    )
+  );
 }
 
 async function moveCardToTrash(card: AnimatedCard) {
-  return Promise.all([
-    card.ensureFaceDown(),
+  await card.ensureFaceDown();
+  await Promise.all([
     new Promise<void>((resolve) => {
-      Animated.parallel([
-        Animated.timing(card.x, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(card.y, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(card.rotation, {
-          toValue: Math.floor(Math.random() * 18) - 9,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(card.scale, {
-          toValue: 0.3,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => resolve());
+      card.x.value = withTiming(0, { duration: 300 }, () => {
+        resolve();
+      });
+    }),
+    new Promise<void>((resolve) => {
+      card.y.value = withTiming(0, { duration: 300 }, () => {
+        resolve();
+      });
+    }),
+    new Promise<void>((resolve) => {
+      card.rotation.value = withTiming(
+        Math.floor(Math.random() * 18) - 9,
+        { duration: 300 },
+        () => {
+          resolve();
+        }
+      );
+    }),
+    new Promise<void>((resolve) => {
+      card.scale.value = withTiming(0.3, { duration: 300 }, () => {
+        resolve();
+      });
     }),
   ]);
 }
@@ -264,7 +260,7 @@ function staggerPromises(
 function moveDeckNextToPlayer(
   deck: AnimatedCard[],
   playerPosition: PlayerPosition
-): Animated.CompositeAnimation {
+): Promise<void[]> {
   // position the deck 60px diagonal from the center of the player's circle
   const centerX = playerPosition.x;
   const centerY = playerPosition.y;
@@ -273,7 +269,7 @@ function moveDeckNextToPlayer(
   const x = centerX + diagonalDistance * Math.cos(angle);
   const y = centerY + diagonalDistance * Math.sin(angle);
 
-  function moveCard(card: AnimatedCard): Animated.CompositeAnimation {
+  function moveCard(card: AnimatedCard): Promise<void> {
     const pairs = [
       [card.x, x],
       [card.y, y],
@@ -284,16 +280,17 @@ function moveDeckNextToPlayer(
       [card.scale, 0.3],
     ] as const;
 
-    return Animated.parallel(
-      pairs.map(([value, toValue]) =>
-        Animated.timing(value, {
-          toValue,
-          duration: 300,
-          useNativeDriver: true,
-        })
+    return Promise.all(
+      pairs.map(
+        ([value, toValue]) =>
+          new Promise<void>((resolve) => {
+            value.value = withTiming(toValue, { duration: 300 }, () => {
+              resolve();
+            });
+          })
       )
-    );
+    ).then(() => undefined);
   }
 
-  return Animated.parallel(deck.map(moveCard));
+  return Promise.all(deck.map(moveCard));
 }

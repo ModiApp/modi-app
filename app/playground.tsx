@@ -4,7 +4,7 @@ import {
 } from "@/ui/components/AnimatableCardDeck";
 import { Button, ScreenContainer } from "@/ui/elements";
 import React, { useRef } from "react";
-import { Animated } from "react-native";
+import { useSharedValue } from "react-native-reanimated";
 
 export default function PlaygroundScreen() {
   const cardRef = useRef<AnimatableCardRef>(null);
@@ -13,13 +13,13 @@ export default function PlaygroundScreen() {
     <ScreenContainer>
       <AnimatableCard
         cardWidth={80}
-        x={new Animated.Value(100)}
-        y={new Animated.Value(100)}
-        rotation={new Animated.Value(0)}
-        backOpacity={new Animated.Value(1)}
-        faceOpacity={new Animated.Value(0)}
-        rotateY={new Animated.Value(0)}
-        scale={new Animated.Value(1)}
+        x={useSharedValue(100)}
+        y={useSharedValue(100)}
+        rotation={useSharedValue(0)}
+        backOpacity={useSharedValue(1)}
+        faceOpacity={useSharedValue(0)}
+        rotateY={useSharedValue(0)}
+        scale={useSharedValue(1)}
         ref={cardRef}
         zIndex={0}
       />
