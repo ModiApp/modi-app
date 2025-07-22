@@ -38,23 +38,22 @@ const auth = getAuth(app);
 // Connect to emulators in development
 const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
 
+// Pass in computer's LAN IP to connect to emulators from other devices on the network
+const EMULATOR_HOST = process.env.EXPO_PUBLIC_EMULATOR_HOST || '127.0.0.1';
+
 if (isDevelopment && isFirebaseConfigured) {
   try {
     // Connect to Firestore emulator
-    connectFirestoreEmulator(firestore, '127.0.0.1', config.emulators.firestore.port);
-    console.log(`🔗 Connected to Firestore emulator on localhost:${config.emulators.firestore.port}`);
+    connectFirestoreEmulator(firestore, EMULATOR_HOST, config.emulators.firestore.port);
+    console.log(`🔗 Connected to Firestore emulator on ${EMULATOR_HOST}:${config.emulators.firestore.port}`);
     
     // Connect to Functions emulator
-    connectFunctionsEmulator(functions, '127.0.0.1', config.emulators.functions.port);
-    console.log(`🔗 Connected to Functions emulator on http://127.0.0.1:${config.emulators.functions.port}`);
+    connectFunctionsEmulator(functions, EMULATOR_HOST, config.emulators.functions.port);
+    console.log(`🔗 Connected to Functions emulator on http://${EMULATOR_HOST}:${config.emulators.functions.port}`);
 
     // Connect to Auth emulator
-    connectAuthEmulator(auth, `http://127.0.0.1:${config.emulators.auth.port}`, { disableWarnings: true });
-    console.log(`🔗 Connected to Auth emulator on http://127.0.0.1:${config.emulators.auth.port}`);
-    
-    // Connect to Realtime Database emulator (if needed)
-    // connectDatabaseEmulator(database, 'localhost', 9000);
-    // console.log('🔗 Connected to Realtime Database emulator on localhost:9000');
+    connectAuthEmulator(auth, `http://${EMULATOR_HOST}:${config.emulators.auth.port}`, { disableWarnings: true });
+    console.log(`🔗 Connected to Auth emulator on http://${EMULATOR_HOST}:${config.emulators.auth.port}`);
   } catch (error) {
     console.log('⚠️ Emulator connection failed (this is normal if emulators are not running):', error);
   }
