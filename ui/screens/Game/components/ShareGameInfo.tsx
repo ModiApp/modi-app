@@ -12,11 +12,6 @@ export function ShareGameInfo() {
     <Container
       style={{
         alignItems: "center",
-        paddingTop: 32,
-        position: "absolute",
-        left: 0,
-        right: 0,
-        top: 0,
       }}
     >
       <Text size={24}>Game PIN:</Text>

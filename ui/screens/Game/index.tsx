@@ -22,14 +22,26 @@ const GameScreen: React.FC = () => {
     <ScreenContainer>
       <PlayingProvider game={game}>
         <Container style={{ flex: 1, justifyContent: "space-between" }}>
-          <Container style={{ justifyContent: "center" }}>
+          <Container
+            style={{
+              justifyContent: "center",
+              paddingVertical: 32,
+              paddingBottom: 16,
+            }}
+          >
             <ShareGameInfo />
           </Container>
-          <CardTable>
-            <PlayerCircles />
-            <AnimatedCards />
-          </CardTable>
-          <Container style={{ padding: 16 }}>
+          <Container style={{ flex: 1, marginBottom: 16 }}>
+            <CardTable>
+              <PlayerCircles />
+              {game.status !== "gathering-players" && <AnimatedCards />}
+            </CardTable>
+          </Container>
+          <Container
+            style={{
+              justifyContent: "flex-end",
+            }}
+          >
             <PlayerControls game={game} currUserId={currentUserId} />
           </Container>
         </Container>

@@ -19,13 +19,12 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
       <Container
         style={{
           flexDirection: "row",
-          alignItems: "center",
           minHeight: 24,
           gap: 16,
         }}
       >
         <LeaveGameButton />
-        <Container style={{ flex: 1 }}>
+        <Container style={{ flex: 1, justifyContent: "center" }}>
           {game.players.includes(currUserId) ? (
             game.host === currUserId ? (
               <StartGameButton gameId={game.gameId} />
