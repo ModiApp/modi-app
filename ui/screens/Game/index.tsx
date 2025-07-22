@@ -1,6 +1,7 @@
 import { useUserId } from "@/providers/Auth";
 import { Container } from "@/ui/elements";
 import ScreenContainer from "@/ui/elements/Screen";
+import { GameActionProvider } from "@/ui/screens/Game/GameActionsProvider";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { CardTable } from "./components/CardTable";
@@ -21,30 +22,32 @@ const GameScreen: React.FC = () => {
   return (
     <ScreenContainer>
       <PlayingProvider game={game}>
-        <Container style={{ flex: 1, justifyContent: "space-between" }}>
-          <Container
-            style={{
-              justifyContent: "center",
-              paddingVertical: 32,
-              paddingBottom: 16,
-            }}
-          >
-            <ShareGameInfo />
+        <GameActionProvider>
+          <Container style={{ flex: 1, justifyContent: "space-between" }}>
+            <Container
+              style={{
+                justifyContent: "center",
+                paddingVertical: 32,
+                paddingBottom: 16,
+              }}
+            >
+              <ShareGameInfo />
+            </Container>
+            <Container style={{ flex: 1, marginBottom: 16 }}>
+              <CardTable>
+                <PlayerCircles />
+                {game.status !== "gathering-players" && <AnimatedCards />}
+              </CardTable>
+            </Container>
+            <Container
+              style={{
+                justifyContent: "flex-end",
+              }}
+            >
+              <PlayerControls game={game} currUserId={currentUserId} />
+            </Container>
           </Container>
-          <Container style={{ flex: 1, marginBottom: 16 }}>
-            <CardTable>
-              <PlayerCircles />
-              {game.status !== "gathering-players" && <AnimatedCards />}
-            </CardTable>
-          </Container>
-          <Container
-            style={{
-              justifyContent: "flex-end",
-            }}
-          >
-            <PlayerControls game={game} currUserId={currentUserId} />
-          </Container>
-        </Container>
+        </GameActionProvider>
       </PlayingProvider>
     </ScreenContainer>
   );

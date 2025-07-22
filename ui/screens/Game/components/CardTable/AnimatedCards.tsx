@@ -4,7 +4,6 @@ import {
   AnimatedCard,
 } from "@/ui/components/AnimatableCardDeck";
 import { useGameActions } from "@/ui/screens/Game/GameActionsProvider";
-import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
 
 import { withTiming } from "react-native-reanimated";
@@ -19,7 +18,6 @@ export function AnimatedCards() {
 }
 
 function AnimatedCardsInner() {
-  const { game } = useCurrentGame();
   const deck = useRef<AnimatableCardDeckRef>(null);
   const { playerPositions } = useCardTable();
 
@@ -42,7 +40,7 @@ function AnimatedCardsInner() {
   }
 
   // Hook into live game actions
-  useGameActions(game.gameId, {
+  useGameActions({
     moveDeck: (toDealerId) => {
       return new Promise((resolve) => {
         const cards = deck.current?.getCards();
