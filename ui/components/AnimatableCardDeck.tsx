@@ -176,8 +176,6 @@ export const AnimatableCard = React.forwardRef<
     [setValue, setZIndex, ensureFaceUp, ensureFaceDown, flip]
   );
 
-  const perspective = useRef(new Animated.Value(1000)).current;
-
   return (
     <Animated.View
       style={{
@@ -185,7 +183,6 @@ export const AnimatableCard = React.forwardRef<
         width,
         height,
         position: "absolute",
-        // perspective: perspective,
         transform: [
           { translateX: "-50%" },
           { translateY: "-50%" },
