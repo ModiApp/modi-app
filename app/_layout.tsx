@@ -14,6 +14,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="join-lobby" />
           <Stack.Screen name="playground" />
+          <Stack.Screen name="games/[gameId]" />
           <Stack.Screen name="+not-found" />
         </Stack>
         <AlertBanner />
