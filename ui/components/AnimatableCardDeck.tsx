@@ -6,50 +6,25 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import Animated, {
+  SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 export interface AnimatableCardDeckRef {
   getCards(): readonly AnimatedCard[];
 }
 
-export interface AnimatedCard extends CardAnimatableProps, AnimatableCardRef {
-  // no extra props
-}
+export interface AnimatedCard extends CardAnimatableProps, AnimatableCardRef {}
 
 interface AnimatableCardDeckProps {
   cardWidth: number;
   numCards?: number;
 }
 
-/**
- * A deck of cards that can be animated however you want.
- * ```tsx
- * const deckRef = useRef<AnimatableCardDeckRef>(null);
- * <AnimatableCardDeck ref={deckRef} cardWidth={60} />
- * ```
- *
- * You can then use the ref to access the cards and control them individually:
- * ```tsx
- * const cards = deckRef.current?.getCards();
- * if (!cards) return;
- * // Set the value of the first four cards
- * cards[0].setValue("10H");
- * cards[1].setValue("10D");
- * cards[2].setValue("10C");
- * cards[3].setValue("10S");
- * ```
- *
- * You can also access the animated values of each card to animate them as you please:
- * ```tsx
- * const cards = deckRef.current?.getCards();
- * if (!cards) return;
- * Animated.stagger(10, cards.map((card) => Animated.timing(card.x, {
- *   toValue: 100,
- *   duration: 20,
- *   useNativeDriver: true,
- * }))).start();
- * ```
- */
 export const AnimatableCardDeck = React.forwardRef<
   AnimatableCardDeckRef,
   AnimatableCardDeckProps
@@ -87,13 +62,13 @@ export const AnimatableCardDeck = React.forwardRef<
 });
 
 export interface CardAnimatableProps {
-  x: Animated.Value;
-  y: Animated.Value;
-  rotation: Animated.Value;
-  backOpacity: Animated.Value;
-  faceOpacity: Animated.Value;
-  rotateY: Animated.Value;
-  scale: Animated.Value;
+  x: SharedValue<number>;
+  y: SharedValue<number>;
+  rotation: SharedValue<number>;
+  backOpacity: SharedValue<number>;
+  faceOpacity: SharedValue<number>;
+  rotateY: SharedValue<number>;
+  scale: SharedValue<number>;
 }
 
 interface AnimatableCardProps extends CardAnimatableProps {
@@ -130,11 +105,37 @@ export const AnimatableCard = React.forwardRef<
   const width = cardWidth;
   const height = cardWidth * 1.4;
 
+  // Animated styles
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      zIndex,
+      width,
+      height,
+      position: "absolute",
+      transform: [
+        { translateX: -width / 2 },
+        { translateY: -height / 2 },
+        { translateX: x.value },
+        { translateY: y.value },
+        { rotate: `${rotation.value}deg` },
+        { rotateY: `${rotateY.value}deg` },
+        { scale: scale.value },
+      ],
+    }),
+    [zIndex, width, height]
+  );
+
+  const backOpacityStyle = useAnimatedStyle(() => ({
+    opacity: backOpacity.value,
+  }));
+  const faceOpacityStyle = useAnimatedStyle(() => ({
+    opacity: faceOpacity.value,
+  }));
+
   const flip = useCallback(
     function flip() {
       const wasFaceDown = isFaceDownRef.current;
       isFaceDownRef.current = !isFaceDownRef.current;
-
       return cardFlipAnimation(
         { rotateY, backOpacity, faceOpacity },
         wasFaceDown
@@ -176,45 +177,12 @@ export const AnimatableCard = React.forwardRef<
     [setValue, setZIndex, ensureFaceUp, ensureFaceDown, flip]
   );
 
-  const perspective = useRef(new Animated.Value(1000)).current;
-
   return (
-    <Animated.View
-      style={{
-        zIndex,
-        width,
-        height,
-        position: "absolute",
-        // perspective: perspective,
-        transform: [
-          { translateX: "-50%" },
-          { translateY: "-50%" },
-          { translateX: x },
-          { translateY: y },
-          {
-            rotate: rotation.interpolate({
-              inputRange: [0, 360],
-              outputRange: ["0deg", "360deg"],
-            }),
-          },
-          {
-            rotateY: rotateY.interpolate({
-              inputRange: [0, 90, 180],
-              outputRange: ["0deg", "90deg", "0deg"],
-            }),
-          },
-          { scale: scale },
-        ],
-      }}
-    >
-      <Animated.View
-        style={[{ opacity: backOpacity }, StyleSheet.absoluteFill]}
-      >
+    <Animated.View style={animatedStyle}>
+      <Animated.View style={[backOpacityStyle, StyleSheet.absoluteFill]}>
         <CardBack width={width} height={height} />
       </Animated.View>
-      <Animated.View
-        style={[{ opacity: faceOpacity }, StyleSheet.absoluteFill]}
-      >
+      <Animated.View style={[faceOpacityStyle, StyleSheet.absoluteFill]}>
         {value && <Card cardId={value} width={width} height={height} />}
       </Animated.View>
     </Animated.View>
@@ -227,13 +195,13 @@ function createInitialCardDeck(
   return Object.freeze(
     Array.from({ length: numCards }, () =>
       Object.freeze({
-        x: new Animated.Value(0),
-        y: new Animated.Value(0),
-        rotation: new Animated.Value(Math.floor(Math.random() * 4)),
-        backOpacity: new Animated.Value(1),
-        faceOpacity: new Animated.Value(0),
-        rotateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
+        x: useSharedValue(0),
+        y: useSharedValue(0),
+        rotation: useSharedValue(Math.floor(Math.random() * 4)),
+        backOpacity: useSharedValue(1),
+        faceOpacity: useSharedValue(0),
+        rotateY: useSharedValue(0),
+        scale: useSharedValue(1),
       })
     )
   );
@@ -262,30 +230,13 @@ function cardFlipAnimation(
   return new Promise<void>((resolve) => {
     const finalBackOpacity = wasFaceDown ? 0 : 1;
     const finalFaceOpacity = wasFaceDown ? 1 : 0;
-
-    Animated.sequence([
-      Animated.timing(rotateY, {
-        toValue: 90,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.parallel([
-        Animated.timing(backOpacity, {
-          toValue: finalBackOpacity,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-        Animated.timing(faceOpacity, {
-          toValue: finalFaceOpacity,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.timing(rotateY, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => resolve());
+    // Animate rotateY to 90, swap opacities, then animate back to 0
+    rotateY.value = withTiming(90, { duration: 150 }, () => {
+      backOpacity.value = finalBackOpacity;
+      faceOpacity.value = finalFaceOpacity;
+      rotateY.value = withTiming(0, { duration: 150 }, () => {
+        resolve();
+      });
+    });
   });
 }

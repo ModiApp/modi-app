@@ -6,7 +6,8 @@ import {
 } from "@/ui/components/AnimatableCardDeck";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useRef } from "react";
-import { Animated } from "react-native";
+
+import { withTiming } from "react-native-reanimated";
 import { useCardTable } from "./context";
 import { PlayerPosition } from "./types";
 
@@ -51,7 +52,7 @@ function AnimatedCardsInner() {
           0,
           cards.length - cardsOnTable.current.size - virtualTrash.current.length
         );
-        moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).start(() =>
+        moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).then(() =>
           resolve()
         );
       });
@@ -96,6 +97,7 @@ function AnimatedCardsInner() {
       const card = playerHands.current[playerId]!;
       card.setValue(previousCard);
       await card.ensureFaceUp();
+      await makeRoomForHitCard(card, playerPositions[playerId]);
       await moveCardToPlayer(playerPositions[playerId], nextCard);
       playerHands.current[playerId] = nextCard;
     },
@@ -149,7 +151,7 @@ async function moveCardToPlayer(
   // the card should be 40px closer to the center of the table than the player's circle
   const centerX = playerPosition.x;
   const centerY = playerPosition.y;
-  const diagonalDistance = 40;
+  const diagonalDistance = 80;
   const angle = Math.atan2(centerY, centerX);
   const x = centerX - diagonalDistance * Math.cos(angle);
   const y = centerY - diagonalDistance * Math.sin(angle);
@@ -157,42 +159,87 @@ async function moveCardToPlayer(
     [card.x, x],
     [card.y, y],
     [card.rotation, rotation],
+    [card.scale, 1],
   ] as const;
 
-  return new Promise((resolve) => {
-    Animated.parallel(
-      pairs.map(([value, toValue]) =>
-        Animated.timing(value, {
-          toValue,
-          duration: 500,
-          useNativeDriver: true,
+  await Promise.all(
+    pairs.map(
+      ([value, toValue]) =>
+        new Promise<void>((resolve) => {
+          value.value = withTiming(toValue, { duration: 500 }, () => {
+            resolve();
+          });
         })
-      )
-    ).start(() => resolve());
-  });
+    )
+  );
+}
+
+/**
+ * Move the card to the left of its current position, relative to the player's perspective.
+ * This makes room for the hit card to be placed in the original position.
+ */
+async function makeRoomForHitCard(
+  card: AnimatedCard,
+  playerPosition: PlayerPosition
+) {
+  // Calculate angle from center to player
+  const angle = Math.atan2(playerPosition.y, playerPosition.x);
+
+  // Calculate offset perpendicular to player angle (90 degrees = PI/2)
+  // This gives us the "left" direction from the player's perspective
+  const offsetAngle = angle + Math.PI / 2;
+
+  // Move card 40px in that direction
+  const offsetDistance = 20;
+  const offsetX = offsetDistance * Math.cos(offsetAngle);
+  const offsetY = offsetDistance * Math.sin(offsetAngle);
+
+  const newX = card.x.value + offsetX;
+  const newY = card.y.value + offsetY;
+
+  const pairs = [
+    [card.x, newX],
+    [card.y, newY],
+  ] as const;
+
+  await Promise.all(
+    pairs.map(
+      ([value, toValue]) =>
+        new Promise<void>((resolve) => {
+          value.value = withTiming(toValue, { duration: 300 }, () => {
+            resolve();
+          });
+        })
+    )
+  );
 }
 
 async function moveCardToTrash(card: AnimatedCard) {
-  return Promise.all([
-    card.ensureFaceDown(),
+  await card.ensureFaceDown();
+  await Promise.all([
     new Promise<void>((resolve) => {
-      Animated.parallel([
-        Animated.timing(card.x, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(card.y, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(card.rotation, {
-          toValue: Math.floor(Math.random() * 4) - 2,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => resolve());
+      card.x.value = withTiming(0, { duration: 300 }, () => {
+        resolve();
+      });
+    }),
+    new Promise<void>((resolve) => {
+      card.y.value = withTiming(0, { duration: 300 }, () => {
+        resolve();
+      });
+    }),
+    new Promise<void>((resolve) => {
+      card.rotation.value = withTiming(
+        Math.floor(Math.random() * 18) - 9,
+        { duration: 300 },
+        () => {
+          resolve();
+        }
+      );
+    }),
+    new Promise<void>((resolve) => {
+      card.scale.value = withTiming(0.3, { duration: 300 }, () => {
+        resolve();
+      });
     }),
   ]);
 }
@@ -213,34 +260,37 @@ function staggerPromises(
 function moveDeckNextToPlayer(
   deck: AnimatedCard[],
   playerPosition: PlayerPosition
-): Animated.CompositeAnimation {
+): Promise<void[]> {
   // position the deck 60px diagonal from the center of the player's circle
   const centerX = playerPosition.x;
   const centerY = playerPosition.y;
-  const diagonalDistance = 40;
+  const diagonalDistance = 30;
   const angle = Math.atan2(centerY, centerX) - Math.PI / 2;
   const x = centerX + diagonalDistance * Math.cos(angle);
   const y = centerY + diagonalDistance * Math.sin(angle);
 
-  function moveCard(card: AnimatedCard): Animated.CompositeAnimation {
-    return Animated.parallel([
-      Animated.timing(card.x, {
-        toValue: x,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card.y, {
-        toValue: y,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card.rotation, {
-        toValue: playerPosition.rotation + Math.floor(Math.random() * 4) - 2,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]);
+  function moveCard(card: AnimatedCard): Promise<void> {
+    const pairs = [
+      [card.x, x],
+      [card.y, y],
+      [
+        card.rotation,
+        playerPosition.rotation + Math.floor(Math.random() * 4) - 2,
+      ],
+      [card.scale, 0.3],
+    ] as const;
+
+    return Promise.all(
+      pairs.map(
+        ([value, toValue]) =>
+          new Promise<void>((resolve) => {
+            value.value = withTiming(toValue, { duration: 300 }, () => {
+              resolve();
+            });
+          })
+      )
+    ).then(() => undefined);
   }
 
-  return Animated.parallel(deck.map(moveCard));
+  return Promise.all(deck.map(moveCard));
 }
