@@ -8,6 +8,7 @@ import {
   EndRoundAction,
   GameAction,
   GameStartedAction,
+  KungAction,
   PlayerJoinedAction,
   PlayerLeftAction,
   ReceiveCardAction,
@@ -221,7 +222,7 @@ export function createDeckReshuffleAction(
  */
 export function createSpecialEventAction(
   playerId: string,
-  eventType: 'modi' | 'dirty-dan' | 'kung',
+  eventType: 'modi' | 'dirty-dan',
   targetPlayerId?: string
 ): Omit<SpecialEventAction, 'id' | 'timestamp'> {
   return {
@@ -230,6 +231,19 @@ export function createSpecialEventAction(
     targetPlayerId,
     eventType,
     specialEvent: true
+  };
+}
+
+export function createKungAction(
+  playerId: string,
+  playerIdWithKing: string,
+  cardId: CardID
+): Omit<KungAction, 'id' | 'timestamp'> {
+  return {
+    type: ActionType.KUNG,
+    playerId,
+    playerIdWithKing,
+    cardId
   };
 }
 

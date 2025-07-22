@@ -124,6 +124,18 @@ function AnimatedCardsInner() {
         })
       );
     },
+    kung: async ({ playerId, playerIdWithKing, cardId }) => {
+      const player = playerPositions[playerId];
+      const king = playerPositions[playerIdWithKing];
+      const card = playerHands.current[playerId]!;
+      const kingCard = playerHands.current[playerIdWithKing]!;
+      kingCard.setValue(cardId);
+      await moveCardToPlayer(king, card);
+      await staggerPromises(200, [
+        () => kingCard.ensureFaceUp(),
+        () => moveCardToPlayer(player, card),
+      ]);
+    },
   });
 
   return <AnimatableCardDeck ref={deck} cardWidth={80} numCards={52} />;

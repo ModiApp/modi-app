@@ -59,10 +59,17 @@ export interface DeckReshuffleAction extends BaseGameAction {
   trigger: 'deck-empty';
 }
 
+export interface KungAction extends BaseGameAction {
+  type: ActionType.KUNG;
+  playerIdWithKing: string;
+  cardId: CardID;
+}
+
+/** @deprecated */
 export interface SpecialEventAction extends BaseGameAction {
   type: ActionType.SPECIAL_EVENT;
   targetPlayerId?: string;
-  eventType: 'modi' | 'dirty-dan' | 'kung';
+  eventType: 'modi' | 'dirty-dan';
   specialEvent: true;
 }
 
@@ -89,6 +96,7 @@ export type GameAction =
   | EndRoundAction
   | DeckReshuffleAction
   | SpecialEventAction
+  | KungAction
   | PlayerJoinedAction
   | PlayerLeftAction
   | ReceiveCardAction;
@@ -102,8 +110,10 @@ export enum ActionType {
   REVEAL_CARDS = 'reveal-cards',
   END_ROUND = 'end-round',
   DECK_RESHUFFLE = 'deck-reshuffle',
-  SPECIAL_EVENT = 'special-event',
+  KUNG = 'kung',
   PLAYER_JOINED = 'player-joined',
   PLAYER_LEFT = 'player-left',
-  RECEIVE_CARD = 'receive-card'
+  RECEIVE_CARD = 'receive-card',
+  /** @deprecated */
+  SPECIAL_EVENT = 'special-event',
 } 

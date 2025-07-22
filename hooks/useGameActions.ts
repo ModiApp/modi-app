@@ -1,6 +1,6 @@
 import { firestore } from "@/config/firebase";
 import { CardID } from "@/functions/src/types";
-import { ActionType, DealerDrawAction, GameAction } from "@/functions/src/types/actions.types";
+import { ActionType, DealerDrawAction, GameAction, KungAction } from "@/functions/src/types/actions.types";
 import { useUserId } from "@/providers/Auth";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useRef } from "react";
@@ -12,6 +12,7 @@ interface GameActionHandlers {
   hitDeck?(action: DealerDrawAction): Promise<void>;
   trashCards?(): Promise<void>;
   revealCards?(playerCards: { [playerId: string]: CardID }): Promise<void>;
+  kung?(action: KungAction): Promise<void>;
 }
 
 
@@ -96,6 +97,9 @@ export function useGameActions(gameId: string, handlers: GameActionHandlers) {
       case ActionType.STICK:
         console.warn("Stick action without action handler", action);
         return Promise.resolve();
+
+      case ActionType.KUNG:
+        return handlers.kung?.(action);
 
       case ActionType.SPECIAL_EVENT:
         console.warn("Special event action without action handler", action);

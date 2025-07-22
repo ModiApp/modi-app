@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDeckReshuffleAction, createReceiveCardAction, createRevealCardsAction, createSpecialEventAction, createSwapCardsAction } from "./actionUtils";
+import { addActionToBatch, createDeckReshuffleAction, createKungAction, createReceiveCardAction, createRevealCardsAction, createSwapCardsAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -320,7 +320,7 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       }
     } else if (isKungEvent) {
       // Add Kung special event action
-      const kungAction = createSpecialEventAction(userId, 'kung', newActivePlayer);
+      const kungAction = createKungAction(userId, newActivePlayer!, currentPlayerCard);
       addActionToBatch(batch, gameId, kungAction, currentActionCount);
     } else {
       // Add regular swap action
