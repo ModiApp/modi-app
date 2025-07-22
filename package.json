@@ -6,13 +6,14 @@
     "functions"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"firebase emulators:start\" \"yarn workspace functions build:watch\"",
+    "dev": "concurrently \"yarn start\" \"firebase emulators:start\" \"yarn functions:build:watch\"",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "expo export --platform web",
     "lint": "expo lint",
+    "test": "tsc",
     "functions:build": "yarn workspace functions build",
     "functions:build:watch": "yarn workspace functions build:watch",
     "functions:lint": "yarn workspace functions lint"
