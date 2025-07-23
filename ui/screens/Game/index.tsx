@@ -31,6 +31,7 @@ const GameScreen: React.FC = () => {
                 justifyContent: "center",
                 paddingVertical: 32,
                 paddingBottom: 16,
+                alignItems: "center",
               }}
             >
               <ShareGameInfo />
