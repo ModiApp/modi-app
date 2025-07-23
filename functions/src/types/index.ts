@@ -6,6 +6,7 @@ interface GameBase {
   players: string[];
   host: string;
   usernames: { [playerId: string]: string };
+  initialLives: number;
 }
 
 export interface InitialGame extends GameBase {

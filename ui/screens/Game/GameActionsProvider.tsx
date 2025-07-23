@@ -1,11 +1,8 @@
 import { firestore } from "@/config/firebase";
-import { CardID } from "@/functions/src/types";
 import {
-  ActionType,
-  DealerDrawAction,
   GameAction,
-  KungAction,
-  TallyingAction,
+  GameActions,
+  GameActionType,
 } from "@/functions/src/types/actions.types";
 import { useUserId } from "@/providers/Auth";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
@@ -19,16 +16,11 @@ import React, {
   useRef,
 } from "react";
 
-interface GameActionHandlers {
-  moveDeck?(toDealerId: string): Promise<void>;
-  dealCards?(toPlayers: string[]): Promise<void>;
-  swapCards?(fromPlayerId: string, toPlayerId: string): Promise<void>;
-  hitDeck?(action: DealerDrawAction): Promise<void>;
-  trashCards?(): Promise<void>;
-  revealCards?(playerCards: { [playerId: string]: CardID }): Promise<void>;
-  kung?(action: KungAction): Promise<void>;
-  tallying?(action: TallyingAction): Promise<void>;
-}
+type GameActionHandlers = {
+  [HandlerKey in GameActionType]?: (
+    action: GameAction<HandlerKey>
+  ) => Promise<void>;
+};
 
 type HandlerId = symbol;
 
@@ -50,7 +42,7 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
   } = useCurrentGame();
   const userId = useUserId();
   const handlerEntries = useRef<HandlerEntry[]>([]);
-  const actionQueue = useRef<GameAction[]>([]).current;
+  const actionQueue = useRef<GameActions[]>([]).current;
   const processing = useRef(false);
 
   // Register/unregister API
@@ -79,57 +71,14 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
   }
 
   // Call all registered handlers for each action
-  const processAction = async (action: GameAction) => {
+  const processAction = async (action: GameActions) => {
+    console.log("Processing action:", action);
     await Promise.all(
       handlerEntries.current.map(async ({ handlers }) => {
-        return handleAction(action, handlers);
+        // @ts-expect-error too complex for typescript
+        return handlers[action.type]?.(action);
       })
     );
-  };
-
-  const handleAction = (action: GameAction, handlers: GameActionHandlers) => {
-    switch (action.type) {
-      case ActionType.GAME_STARTED:
-        return handlers.moveDeck?.(action.initialDealer);
-      case ActionType.DEAL_CARDS:
-        return handlers.dealCards?.(action.dealingOrder);
-      case ActionType.SWAP_CARDS:
-        return handlers.swapCards?.(action.playerId, action.targetPlayerId);
-      case ActionType.REVEAL_CARDS:
-        return handlers.revealCards?.(action.playerCards);
-      case ActionType.DEALER_DRAW:
-        return handlers.hitDeck?.(action);
-      case ActionType.END_ROUND:
-        // Run both trashCards and moveDeck in parallel for each handler
-        return Promise.all([
-          handlers.trashCards?.(),
-          handlers.moveDeck?.(action.newDealer),
-        ]);
-      case ActionType.RECEIVE_CARD:
-        return handlers.revealCards?.({ [action.playerId]: action.card });
-      case ActionType.DECK_RESHUFFLE:
-        console.warn("Deck reshuffled without action handler", action);
-        return;
-      case ActionType.STICK:
-        console.warn("Stick action without action handler", action);
-        return;
-      case ActionType.KUNG:
-        return handlers.kung?.(action);
-      case ActionType.SPECIAL_EVENT:
-        console.warn("Special event action without action handler", action);
-        return;
-      case ActionType.PLAYER_JOINED:
-        console.warn("Player joined action without action handler", action);
-        return;
-      case ActionType.PLAYER_LEFT:
-        console.warn("Player left action without action handler", action);
-        return;
-      case ActionType.TALLYING:
-        return handlers.tallying?.(action);
-      default:
-        const item: never = action;
-        throw new Error(`Unknown action type: ${item}`);
-    }
   };
 
   // Firestore subscription
@@ -148,7 +97,7 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
     const actionsQuery = query(actionsRef, orderBy("timestamp"));
     const privateActionsQuery = query(privateActionsRef, orderBy("timestamp"));
 
-    function addActionToQueue(action: GameAction) {
+    function addActionToQueue(action: GameActions) {
       actionQueue.push(action);
       actionQueue.sort(
         (a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()
@@ -161,7 +110,7 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
         .docChanges()
         .filter((change) => change.type === "added")
         .forEach((change) => {
-          const action = change.doc.data() as GameAction;
+          const action = change.doc.data() as GameActions;
           addActionToQueue(action);
         });
     });
@@ -173,7 +122,7 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
           .docChanges()
           .filter((change) => change.type === "added")
           .forEach((change) => {
-            const action = change.doc.data() as GameAction;
+            const action = change.doc.data() as GameActions;
             addActionToQueue(action);
           });
       }

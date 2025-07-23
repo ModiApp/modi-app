@@ -9,86 +9,78 @@ interface BaseGameAction {
 
 // Specific action types
 export interface GameStartedAction extends BaseGameAction {
-  type: ActionType.GAME_STARTED;
+  type: GameActionType.GAME_STARTED;
   initialDealer: string;
 }
 
 export interface DealCardsAction extends BaseGameAction {
-  type: ActionType.DEAL_CARDS;
+  type: GameActionType.DEAL_CARDS;
   dealingOrder: string[];
 }
 
 export interface SwapCardsAction extends BaseGameAction {
-  type: ActionType.SWAP_CARDS;
+  type: GameActionType.SWAP_CARDS;
   targetPlayerId: string;
 }
 
 export interface DealerDrawAction extends BaseGameAction {
-  type: ActionType.DEALER_DRAW;
+  type: GameActionType.DEALER_DRAW;
   previousCard: CardID;
 }
 
 export interface StickAction extends BaseGameAction {
-  type: ActionType.STICK;
+  type: GameActionType.STICK;
   isDealer: boolean;
   action: 'dealer-stick' | 'player-stick';
 }
 
 export interface RevealCardsAction extends BaseGameAction {
-  type: ActionType.REVEAL_CARDS;
+  type: GameActionType.REVEAL_CARDS;
   playerCards: { [playerId: string]: CardID }; // playerId -> cardId
   revealEvent: true;
 }
 
 export interface ReceiveCardAction extends BaseGameAction {
-  type: ActionType.RECEIVE_CARD;
+  type: GameActionType.RECEIVE_CARD;
   card: CardID;
 }
 
 export interface EndRoundAction extends BaseGameAction {
-  type: ActionType.END_ROUND;
+  type: GameActionType.END_ROUND;
   newDealer: string;
 }
 
 export interface DeckReshuffleAction extends BaseGameAction {
-  type: ActionType.DECK_RESHUFFLE;
+  type: GameActionType.DECK_RESHUFFLE;
   cardsShuffled: number;
   trigger: 'deck-empty';
 }
 
 export interface KungAction extends BaseGameAction {
-  type: ActionType.KUNG;
+  type: GameActionType.KUNG;
   playerIdWithKing: string;
   cardId: CardID;
 }
 
-/** @deprecated */
-export interface SpecialEventAction extends BaseGameAction {
-  type: ActionType.SPECIAL_EVENT;
-  targetPlayerId?: string;
-  eventType: 'modi' | 'dirty-dan';
-  specialEvent: true;
-}
-
 export interface PlayerJoinedAction extends BaseGameAction {
-  type: ActionType.PLAYER_JOINED;
+  type: GameActionType.PLAYER_JOINED;
   username: string;
   joinEvent: true;
 }
 
 export interface PlayerLeftAction extends BaseGameAction {
-  type: ActionType.PLAYER_LEFT;
+  type: GameActionType.PLAYER_LEFT;
   username: string;
   leaveEvent: true;
 }
 
 export interface TallyingAction extends BaseGameAction {
-  type: ActionType.TALLYING;
+  type: GameActionType.TALLYING;
   playersLost: string[];
 }
 
 // Union type for all actions
-export type GameAction = 
+export type GameActions = 
   | GameStartedAction
   | DealCardsAction
   | SwapCardsAction
@@ -97,27 +89,26 @@ export type GameAction =
   | RevealCardsAction
   | EndRoundAction
   | DeckReshuffleAction
-  | SpecialEventAction
   | KungAction
   | PlayerJoinedAction
   | PlayerLeftAction
   | ReceiveCardAction
   | TallyingAction;
 
-export enum ActionType {
-  GAME_STARTED = 'game-started',
-  DEAL_CARDS = 'deal-cards',
-  SWAP_CARDS = 'swap-cards',
-  DEALER_DRAW = 'dealer-draw',
+export type GameAction<T extends GameActionType> = GameActions & { type: T };
+
+export enum GameActionType {
+  GAME_STARTED = 'gameStarted',
+  DEAL_CARDS = 'dealCards',
+  SWAP_CARDS = 'swapCards',
+  DEALER_DRAW = 'dealerDraw',
   STICK = 'stick',
-  REVEAL_CARDS = 'reveal-cards',
-  END_ROUND = 'end-round',
-  DECK_RESHUFFLE = 'deck-reshuffle',
+  REVEAL_CARDS = 'revealCards',
+  END_ROUND = 'endRound',
+  DECK_RESHUFFLE = 'deckReshuffle',
   KUNG = 'kung',
-  PLAYER_JOINED = 'player-joined',
-  PLAYER_LEFT = 'player-left',
-  RECEIVE_CARD = 'receive-card',
-  /** @deprecated */
-  SPECIAL_EVENT = 'special-event',
+  PLAYER_JOINED = 'playerJoined',
+  PLAYER_LEFT = 'playerLeft',
+  RECEIVE_CARD = 'receiveCard',
   TALLYING = 'tallying',
 } 

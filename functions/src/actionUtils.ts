@@ -1,19 +1,18 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { CardID } from "./types";
 import {
-  ActionType,
   DealCardsAction,
   DealerDrawAction,
   DeckReshuffleAction,
   EndRoundAction,
-  GameAction,
+  GameActions,
+  GameActionType,
   GameStartedAction,
   KungAction,
   PlayerJoinedAction,
   PlayerLeftAction,
   ReceiveCardAction,
   RevealCardsAction,
-  SpecialEventAction,
   StickAction,
   SwapCardsAction,
   TallyingAction
@@ -29,16 +28,16 @@ const db = getFirestore();
  */
 export async function createAndStoreAction(
   gameId: string,
-  action: Omit<GameAction, 'id' | 'timestamp'>
+  action: Omit<GameActions, 'id' | 'timestamp'>
 ): Promise<string> {
   const actionId = generateActionId();
   const timestamp = new Date();
   
-  const gameAction: GameAction = {
+  const gameAction: GameActions = {
     ...action,
     id: actionId,
     timestamp: timestamp as any, // Firebase Timestamp
-  } as GameAction;
+  } as GameActions;
 
   // Use a batch write to ensure atomic updates
   const batch = db.batch();
@@ -68,17 +67,17 @@ export async function createAndStoreAction(
 export function addActionToBatch(
   batch: FirebaseFirestore.WriteBatch,
   gameId: string,
-  action: Omit<GameAction, 'id' | 'timestamp'>,
+  action: Omit<GameActions, 'id' | 'timestamp'>,
   timestamp?: Date
 ): string {
   const actionId = generateActionId();
   const actionTimestamp = timestamp || new Date();
   
-  const gameAction: GameAction = {
+  const gameAction: GameActions = {
     ...action,
     id: actionId,
     timestamp: actionTimestamp as any, // Firebase Timestamp
-  } as GameAction;
+  } as GameActions;
 
   // Add the action to the actions subcollection
   const actionRef = db.collection("games").doc(gameId).collection("actions").doc(actionId);
@@ -112,7 +111,7 @@ export function createDealCardsAction(
   dealingOrder: string[]
 ): Omit<DealCardsAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.DEAL_CARDS,
+    type: GameActionType.DEAL_CARDS,
     playerId: dealerId,
     dealingOrder
   };
@@ -132,13 +131,13 @@ export function createSwapCardsAction(
       throw new Error('previousCard is required for dealer draw actions');
     }
     return {
-      type: ActionType.DEALER_DRAW,
+      type: GameActionType.DEALER_DRAW,
       playerId,
       previousCard
     } as Omit<DealerDrawAction, 'id' | 'timestamp'>;
   } else {
     return {
-      type: ActionType.SWAP_CARDS,
+      type: GameActionType.SWAP_CARDS,
       playerId,
       targetPlayerId
     } as Omit<SwapCardsAction, 'id' | 'timestamp'>;
@@ -153,7 +152,7 @@ export function createStickAction(
   isDealer: boolean
 ): Omit<StickAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.STICK,
+    type: GameActionType.STICK,
     playerId,
     isDealer,
     action: isDealer ? 'dealer-stick' : 'player-stick'
@@ -168,7 +167,7 @@ export function createEndRoundAction(
   newDealer: string
 ): Omit<EndRoundAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.END_ROUND,
+    type: GameActionType.END_ROUND,
     playerId: dealerId,
     newDealer,
   };
@@ -182,29 +181,13 @@ export function createDeckReshuffleAction(
   cardsShuffled: number
 ): Omit<DeckReshuffleAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.DECK_RESHUFFLE,
+    type: GameActionType.DECK_RESHUFFLE,
     playerId: triggerPlayerId,
     cardsShuffled,
     trigger: 'deck-empty'
   };
 }
 
-/**
- * Helper function to create a special event action
- */
-export function createSpecialEventAction(
-  playerId: string,
-  eventType: 'modi' | 'dirty-dan',
-  targetPlayerId?: string
-): Omit<SpecialEventAction, 'id' | 'timestamp'> {
-  return {
-    type: ActionType.SPECIAL_EVENT,
-    playerId,
-    targetPlayerId,
-    eventType,
-    specialEvent: true
-  };
-}
 
 export function createKungAction(
   playerId: string,
@@ -212,7 +195,7 @@ export function createKungAction(
   cardId: CardID
 ): Omit<KungAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.KUNG,
+    type: GameActionType.KUNG,
     playerId,
     playerIdWithKing,
     cardId
@@ -227,7 +210,7 @@ export function createGameStartedAction(
   initialDealer: string
 ): Omit<GameStartedAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.GAME_STARTED,
+    type: GameActionType.GAME_STARTED,
     playerId: hostId,
     initialDealer
   };
@@ -241,7 +224,7 @@ export function createPlayerJoinedAction(
   username: string
 ): Omit<PlayerJoinedAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.PLAYER_JOINED,
+    type: GameActionType.PLAYER_JOINED,
     playerId,
     username,
     joinEvent: true
@@ -256,7 +239,7 @@ export function createRevealCardsAction(
   playerCards: { [playerId: string]: CardID }
 ): Omit<RevealCardsAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.REVEAL_CARDS,
+    type: GameActionType.REVEAL_CARDS,
     playerId: dealerId,
     playerCards,
     revealEvent: true
@@ -271,7 +254,7 @@ export function createPlayerLeftAction(
   username: string
 ): Omit<PlayerLeftAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.PLAYER_LEFT,
+    type: GameActionType.PLAYER_LEFT,
     playerId,
     username,
     leaveEvent: true
@@ -287,7 +270,7 @@ export function createReceiveCardAction(
 ): ReceiveCardAction {
   return {
     id: `private-${generateActionId()}`,
-    type: ActionType.RECEIVE_CARD,
+    type: GameActionType.RECEIVE_CARD,
     playerId,
     card,
     timestamp: new Date() as any,
@@ -302,7 +285,7 @@ export function createTallyingAction(
   playersLost: string[]
 ): Omit<TallyingAction, 'id' | 'timestamp'> {
   return {
-    type: ActionType.TALLYING,
+    type: GameActionType.TALLYING,
     playerId,
     playersLost
   };

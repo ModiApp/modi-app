@@ -6,8 +6,10 @@ import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { CardTable } from "./components/CardTable";
 import { AnimatedCards } from "./components/CardTable/AnimatedCards";
+import { LiveCounts } from "./components/CardTable/LiveCounts";
 import { PlayerCircles } from "./components/CardTable/PlayerCircles";
 import { ShareGameInfo } from "./components/ShareGameInfo";
+import { WinnerInfo } from "./components/WinnerInfo";
 import { useGame } from "./hooks/useGame";
 import { PlayerControls } from "./PlayerControls";
 import { PlayingProvider } from "./PlayingContext";
@@ -32,11 +34,13 @@ const GameScreen: React.FC = () => {
               }}
             >
               <ShareGameInfo />
+              <WinnerInfo />
             </Container>
             <Container style={{ flex: 1, marginBottom: 16 }}>
               <CardTable>
                 <PlayerCircles />
                 {game.status !== "gathering-players" && <AnimatedCards />}
+                {game.status !== "gathering-players" && <LiveCounts />}
               </CardTable>
             </Container>
             <Container

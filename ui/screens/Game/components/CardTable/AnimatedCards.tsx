@@ -27,37 +27,37 @@ function AnimatedCardsInner() {
   }>({});
   const cardsOnTable = useRef(new Set<AnimatedCard>());
 
-  function getNextCardFromDeck(): AnimatedCard {
+  function getDeck(): AnimatedCard[] {
     const cards = deck.current?.getCards();
     if (!cards) throw new Error("No cards in deck");
-    const totalCards = cards.length;
-    const trashSize = virtualTrash.current.length;
-    const cardsOnTableSize = cardsOnTable.current.size;
-    const nextCardIndex = totalCards - cardsOnTableSize - trashSize - 1;
-    const nextCard = cards[nextCardIndex];
+    return cards.slice(
+      0,
+      cards.length - cardsOnTable.current.size - virtualTrash.current.length
+    );
+  }
+
+  function getNextCardFromDeck(): AnimatedCard {
+    const cards = getDeck();
+    const nextCard = cards.pop();
+    if (!nextCard) throw new Error("No cards in deck");
     cardsOnTable.current.add(nextCard);
     return nextCard;
   }
 
   // Hook into live game actions
   useGameActions({
-    moveDeck: (toDealerId) => {
+    gameStarted: ({ initialDealer }) => {
       return new Promise((resolve) => {
-        const cards = deck.current?.getCards();
-        if (!cards) throw new Error("No cards in deck");
-        const dealerPosition = playerPositions[toDealerId];
-        const cardsLeftInDeck = cards.slice(
-          0,
-          cards.length - cardsOnTable.current.size - virtualTrash.current.length
-        );
+        const cardsLeftInDeck = getDeck();
+        const dealerPosition = playerPositions[initialDealer];
         moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).then(() =>
           resolve()
         );
       });
     },
-    dealCards: async (toPlayers) => {
+    dealCards: async ({ dealingOrder }) => {
       const zIndexes: { [zIndex: number]: AnimatedCard } = {};
-      const animations = toPlayers.map((playerId) => {
+      const animations = dealingOrder.map((playerId) => {
         const nextCard = getNextCardFromDeck();
         playerHands.current[playerId] = nextCard;
         const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
@@ -69,26 +69,26 @@ function AnimatedCardsInner() {
         card.setZIndex(Number(zIndex));
       });
     },
-    swapCards: async (fromPlayerId, toPlayerId) => {
-      const fromCard = playerHands.current[fromPlayerId];
-      const toCard = playerHands.current[toPlayerId];
+    swapCards: async ({ playerId, targetPlayerId }) => {
+      const fromCard = playerHands.current[playerId];
+      const toCard = playerHands.current[targetPlayerId];
       if (!fromCard || !toCard) throw new Error("No cards to swap");
-      playerHands.current[fromPlayerId] = toCard;
-      playerHands.current[toPlayerId] = fromCard;
+      playerHands.current[playerId] = toCard;
+      playerHands.current[targetPlayerId] = fromCard;
       await staggerPromises(400, [
         () =>
           staggerPromises(100, [
             () => fromCard.ensureFaceDown(),
-            () => moveCardToPlayer(playerPositions[toPlayerId], fromCard),
+            () => moveCardToPlayer(playerPositions[targetPlayerId], fromCard),
           ]),
         () =>
           staggerPromises(100, [
             () => toCard.ensureFaceDown(),
-            () => moveCardToPlayer(playerPositions[fromPlayerId], toCard),
+            () => moveCardToPlayer(playerPositions[playerId], toCard),
           ]),
       ]);
     },
-    hitDeck: async ({ playerId, previousCard }) => {
+    dealerDraw: async ({ playerId, previousCard }) => {
       const nextCard = getNextCardFromDeck();
       const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
       nextCard.setZIndex(zIndex);
@@ -99,7 +99,7 @@ function AnimatedCardsInner() {
       await moveCardToPlayer(playerPositions[playerId], nextCard);
       playerHands.current[playerId] = nextCard;
     },
-    trashCards: async () => {
+    endRound: async ({ newDealer }) => {
       const cards = Array.from(cardsOnTable.current);
       cards.forEach((card) => virtualTrash.current.push(card));
       cardsOnTable.current.clear();
@@ -108,8 +108,15 @@ function AnimatedCardsInner() {
         200,
         cards.map((card) => () => moveCardToTrash(card))
       );
+      await moveDeckNextToPlayer(getDeck(), playerPositions[newDealer]);
     },
-    revealCards: async (playerCards) => {
+    receiveCard: async ({ playerId, card: cardId }) => {
+      const card = playerHands.current[playerId]!;
+      card.setValue(cardId);
+      await card.ensureFaceUp();
+      await moveCardToPlayer(playerPositions[playerId], card);
+    },
+    revealCards: async ({ playerCards }) => {
       const cards = deck.current?.getCards();
       if (!cards) throw new Error("No cards in deck");
 

@@ -30,6 +30,7 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
     players: [userId],
     host: userId,
     usernames: { [userId]: username },
+    initialLives: 3,
   }
   
 return db.doc(`games/${gameId}`).set(game).then(() => {

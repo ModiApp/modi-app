@@ -1,9 +1,16 @@
 import React, { useMemo } from "react";
-import { Text as RNText, StyleProp, TextStyle } from "react-native";
+import {
+  Text as RNText,
+  TextProps as RNTextProps,
+  StyleProp,
+  StyleSheet,
+  TextStyle,
+} from "react-native";
+import Animated from "react-native-reanimated";
 
 import { ColorName, colors, fontFamilies, FontFamily } from "@/ui/styles";
 
-interface TextProps extends React.PropsWithChildren {
+interface TextProps extends RNTextProps {
   /** Defaults to 14 */
   size?: number;
 
@@ -22,6 +29,7 @@ const Text: React.FC<TextProps> = ({
   style,
   color,
   fontFamily,
+  ...textProps
 }) => {
   const styles = useMemo<StyleProp<TextStyle>>(
     () => ({
@@ -32,7 +40,13 @@ const Text: React.FC<TextProps> = ({
     [size, fontFamily, color]
   );
 
-  return <RNText style={[styles, style]}>{children}</RNText>;
+  return (
+    <RNText {...textProps} style={StyleSheet.flatten([styles, style])}>
+      {children}
+    </RNText>
+  );
 };
 
-export default Text;
+export default Object.assign(Text, {
+  Animated: Animated.createAnimatedComponent(Text),
+});
