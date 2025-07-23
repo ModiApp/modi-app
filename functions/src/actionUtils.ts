@@ -68,15 +68,16 @@ export async function createAndStoreAction(
 export function addActionToBatch(
   batch: FirebaseFirestore.WriteBatch,
   gameId: string,
-  action: Omit<GameAction, 'id' | 'timestamp'>
+  action: Omit<GameAction, 'id' | 'timestamp'>,
+  timestamp?: Date
 ): string {
   const actionId = generateActionId();
-  const timestamp = new Date();
+  const actionTimestamp = timestamp || new Date();
   
   const gameAction: GameAction = {
     ...action,
     id: actionId,
-    timestamp: timestamp as any, // Firebase Timestamp
+    timestamp: actionTimestamp as any, // Firebase Timestamp
   } as GameAction;
 
   // Add the action to the actions subcollection
@@ -95,20 +96,6 @@ export function addActionToBatch(
   return actionId;
 }
 
-/**
- * Gets the current action count for a game
- */
-async function getCurrentActionCount(gameId: string): Promise<number> {
-  const gameRef = db.collection("games").doc(gameId);
-  const gameDoc = await gameRef.get();
-  
-  if (!gameDoc.exists) {
-    throw new Error(`Game ${gameId} not found`);
-  }
-  
-  const gameData = gameDoc.data();
-  return gameData?.actionCount || 0;
-}
 
 /**
  * Generates a unique action ID

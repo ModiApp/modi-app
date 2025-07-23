@@ -313,10 +313,13 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
 
         // Add the reveal cards action
         const revealCardsAction = createRevealCardsAction(userId, playerCards);
-        addActionToBatch(batch, gameId, revealCardsAction);
+        const revealTimestamp = new Date();
+        addActionToBatch(batch, gameId, revealCardsAction, revealTimestamp);
+        
         const playersLost = calculatePlayersLost(playerCards);
         const tallyingAction = createTallyingAction(userId, playersLost);
-        addActionToBatch(batch, gameId, tallyingAction);
+        const tallyingTimestamp = new Date(revealTimestamp.getTime() + 1); // Ensure different timestamp
+        addActionToBatch(batch, gameId, tallyingAction, tallyingTimestamp);
 
         // Decrement lives for players with lowest card
         const updatedPlayerLives = { ...gameData.playerLives };
