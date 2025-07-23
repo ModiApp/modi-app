@@ -103,9 +103,10 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       throw new HttpsError("not-found", "No player hands found");
     }
 
+    // TODO come up with plan for double game
     const alivePlayers = Object.keys(gameData.playerLives).filter(playerId => gameData.playerLives[playerId] > 0);
     if (alivePlayers.length <= 1) {
-      const winners = playerHandsSnapshot.docs.filter(doc => doc.data().card !== null).map(doc => doc.id);
+      const winners = alivePlayers.length === 1 ? alivePlayers : playerHandsSnapshot.docs.filter(doc => doc.data().card !== null).map(doc => doc.id);
       const endedGame: EndedGame = {
         ...gameData,
         winners,

@@ -45,7 +45,9 @@ const GameScreen: React.FC = () => {
             </Container>
             <Container
               style={{
-                justifyContent: "flex-end",
+                flexDirection: "row",
+                minHeight: 24,
+                gap: 16,
               }}
             >
               <PlayerControls game={game} currUserId={currentUserId} />

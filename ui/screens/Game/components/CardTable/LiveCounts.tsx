@@ -39,7 +39,6 @@ function PlayerLiveCount(props: { playerId: string; initialLives: number }) {
   const { playerId, initialLives } = props;
   const [lives, setLives] = useState(initialLives ?? 3);
 
-  // Animated opacity
   const opacity = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -47,11 +46,11 @@ function PlayerLiveCount(props: { playerId: string; initialLives: number }) {
 
   useGameActions({
     async dealCards() {
-      // animate live count opacity to 0
-      opacity.value = withTiming(0, { duration: 300 });
+      if (lives > 0) {
+        opacity.value = withTiming(0, { duration: 300 });
+      }
     },
     async tallying({ playersLost }) {
-      // animate live count opacity to 1
       await new Promise<void>((resolve) => {
         opacity.value = withTiming(1, { duration: 300 }, () => resolve());
       });

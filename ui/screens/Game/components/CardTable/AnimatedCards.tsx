@@ -46,14 +46,8 @@ function AnimatedCardsInner() {
 
   // Hook into live game actions
   useGameActions({
-    gameStarted: ({ initialDealer }) => {
-      return new Promise((resolve) => {
-        const cardsLeftInDeck = getDeck();
-        const dealerPosition = playerPositions[initialDealer];
-        moveDeckNextToPlayer(cardsLeftInDeck, dealerPosition).then(() =>
-          resolve()
-        );
-      });
+    gameStarted: async ({ initialDealer }) => {
+      await moveDeckNextToPlayer(getDeck(), playerPositions[initialDealer]);
     },
     dealCards: async ({ dealingOrder }) => {
       const zIndexes: { [zIndex: number]: AnimatedCard } = {};

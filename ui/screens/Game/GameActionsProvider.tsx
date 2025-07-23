@@ -72,7 +72,13 @@ export function GameActionProvider({ children }: { children: ReactNode }) {
 
   // Call all registered handlers for each action
   const processAction = async (action: GameActions) => {
-    console.log("Processing action:", action);
+    console.log(
+      "Processing action:",
+      action,
+      "listeners:",
+      handlerEntries.current.filter(({ handlers }) => handlers[action.type])
+        .length
+    );
     await Promise.all(
       handlerEntries.current.map(async ({ handlers }) => {
         // @ts-expect-error too complex for typescript

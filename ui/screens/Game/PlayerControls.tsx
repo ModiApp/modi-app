@@ -16,13 +16,7 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
 
   if (game.status === "gathering-players") {
     return (
-      <Container
-        style={{
-          flexDirection: "row",
-          minHeight: 24,
-          gap: 16,
-        }}
-      >
+      <>
         <LeaveGameButton />
         <Container style={{ flex: 1, justifyContent: "center" }}>
           {game.players.includes(currUserId) ? (
@@ -37,12 +31,12 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
             <JoinGameButton gameId={game.gameId} />
           )}
         </Container>
-      </Container>
+      </>
     );
   }
 
   if (game.status === "ended") {
-    return <LeaveGameButton />;
+    return <LeaveGameButton variant="large" />;
   }
 
   if (game.roundState === "pre-deal") {
@@ -61,12 +55,12 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
   if (game.roundState === "playing") {
     if (game.activePlayer === currUserId) {
       return (
-        <Container style={{ flexDirection: "row", gap: 16, width: "100%" }}>
+        <>
           {!currentCard?.startsWith("K") && (
             <SwapCardsButton game={game} currUserId={currUserId} />
           )}
           <StickButton />
-        </Container>
+        </>
       );
     }
     return (

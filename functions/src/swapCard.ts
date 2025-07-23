@@ -135,6 +135,7 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
     let deckReshuffled = false;
     let isDealerDraw = false;
     let isKungEvent = false;
+    let nextPlayerCard: CardID | null = null;
 
     // Check if the current player is the dealer
     if (gameData.dealer === userId) {
@@ -205,12 +206,13 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       }
 
       const nextPlayerHand = nextPlayerHandDoc.data() as { card: CardID | null };
-      const nextPlayerCard = nextPlayerHand.card;
 
-      if (!nextPlayerCard) {
+      if (!nextPlayerHand.card) {
         console.error("SwapCard: Next player has no card", nextPlayerId);
         throw new HttpsError("failed-precondition", "Next player has no card to swap");
       }
+
+      nextPlayerCard = nextPlayerHand.card;
 
       // Rule 5: Check if the next player has a king
       if (nextPlayerCard.startsWith('K')) {
@@ -226,7 +228,6 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
         updatedInternalState = internalState; // No changes to deck/trash
         updatedPlayerHands = {}; // No changes to hands
         isKungEvent = true;
-
       } else {
         // Rule 2: Swap cards between current player and next player
         console.info("SwapCard: Swapping cards between players", {
@@ -332,7 +333,7 @@ export const swapCard = onCall<SwapCardRequest, Promise<SwapCardResponse>>(async
       }
     } else if (isKungEvent) {
       // Add Kung special event action
-      const kungAction = createKungAction(userId, newActivePlayer!, currentPlayerCard);
+      const kungAction = createKungAction(userId, newActivePlayer!, nextPlayerCard!);
       addActionToBatch(batch, gameId, kungAction);
     } else {
       // Add regular swap action
