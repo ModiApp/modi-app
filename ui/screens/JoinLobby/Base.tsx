@@ -54,8 +54,9 @@ const JoinLobbyScreenBase: React.FC<JoinLobbyScreenProps> = ({
         <TextInput
           style={{ fontSize: 24 }}
           placeholder="Game PIN"
-          onSubmitEditing={(e) => onLobbyIdSet(e.nativeEvent.text)}
+          onChangeText={(text) => text.length === 4 && onLobbyIdSet(text)}
           autoFocus
+          keyboardType="number-pad"
         />
       </View>
     </KeyboardAvoidingView>
