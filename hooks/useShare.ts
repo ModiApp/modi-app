@@ -11,7 +11,7 @@ export function useShare() {
     try {
       const url = Linking.createURL(`/games/${gameId}`);
       await Share.share({
-        message: `Join my Modi game!\n${url}`,
+        message: 'Join my Modi game!',
         url,
       });
     } catch (err) {
