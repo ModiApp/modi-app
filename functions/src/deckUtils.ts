@@ -17,7 +17,7 @@ export function generateDeck(): CardID[] {
 }
 
 /**
- * a function to shuffle a deck of cards
+ * a function to shuffle a deck of cards in place.
  */
 
 export function shuffleDeck(deck: CardID[]): CardID[] {

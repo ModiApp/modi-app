@@ -178,13 +178,12 @@ export function createEndRoundAction(
  */
 export function createDeckReshuffleAction(
   triggerPlayerId: string,
-  cardsShuffled: number
+  currentDealer: string
 ): Omit<DeckReshuffleAction, 'id' | 'timestamp'> {
   return {
     type: GameActionType.DECK_RESHUFFLE,
     playerId: triggerPlayerId,
-    cardsShuffled,
-    trigger: 'deck-empty'
+    currentDealer
   };
 }
 

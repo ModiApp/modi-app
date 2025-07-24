@@ -52,8 +52,7 @@ export interface EndRoundAction extends BaseGameAction {
 
 export interface DeckReshuffleAction extends BaseGameAction {
   type: GameActionType.DECK_RESHUFFLE;
-  cardsShuffled: number;
-  trigger: 'deck-empty';
+  currentDealer: string;
 }
 
 export interface KungAction extends BaseGameAction {

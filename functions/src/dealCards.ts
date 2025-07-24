@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { addActionToBatch, createDealCardsAction, createReceiveCardAction } from "./actionUtils";
+import { addActionToBatch, createDealCardsAction, createDeckReshuffleAction, createReceiveCardAction } from "./actionUtils";
 import { shuffleDeck } from "./deckUtils";
 import { ActiveGame, CardID, GameInternalState } from "./types";
 
@@ -76,25 +76,10 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
 
     const internalState = internalStateDoc.data() as GameInternalState;
 
-    // Check if deck is empty and recycle trash if needed
-    let currentDeck = [...internalState.deck];
-    let currentTrash = [...internalState.trash];
-    let deckReshuffled = false;
-    
-    if (currentDeck.length === 0) {
-      if (currentTrash.length === 0) {
-        console.error("DealCards: No cards left in deck or trash");
-        throw new HttpsError("failed-precondition", "No cards left in deck or trash");
-      }
-      
-      // Shuffle trash into new deck
-      currentDeck = shuffleDeck(currentTrash);
-      currentTrash = [];
-      deckReshuffled = true;
-      console.info("DealCards: Recycled trash into new deck", { 
-        newDeckSize: currentDeck.length 
-      });
-    }
+    // Use the new logic below:
+    let deck = [...internalState.deck];
+    let trash = [...internalState.trash];
+    // deckReshuffled is not needed anymore
 
     // Get players with lives remaining
     const playersWithLives = gameData.players.filter(playerId => gameData.playerLives[playerId] > 0);
@@ -121,70 +106,56 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
       }
     }
 
-    // Deal one card to each player in order
-    const updatedPlayerHands: { [playerId: string]: CardID } = {};
-
-    dealingOrder.forEach((playerId) => {
-      // Check if deck is empty and recycle trash if needed
-      if (currentDeck.length === 0) {
-        if (currentTrash.length === 0) {
-          console.error("DealCards: No cards left in deck or trash during dealing");
-          throw new HttpsError("failed-precondition", "No cards left in deck or trash");
-        }
-        
-        // Shuffle trash into new deck
-        currentDeck = shuffleDeck(currentTrash);
-        currentTrash = [];
-        deckReshuffled = true;
-        console.info("DealCards: Recycled trash into new deck during dealing", { 
-          newDeckSize: currentDeck.length 
-        });
-      }
-      
-      // Deal the card
-      const card = currentDeck.pop()!;
-      updatedPlayerHands[playerId] = card;
-    });
-
-    // Find the first player to the left of dealer with lives (for active player)
-    let newActivePlayer = gameData.dealer;
-    for (let i = 1; i <= gameData.players.length; i++) {
-      const playerIndex = (dealerIndex + i) % gameData.players.length;
-      const playerId = gameData.players[playerIndex];
-      if (gameData.playerLives[playerId] > 0) {
-        newActivePlayer = playerId;
-        break;
-      }
-    }
-
-    // Update the internal state with the remaining deck and trash
-    const newInternalState: GameInternalState = {
-      deck: currentDeck,
-      trash: currentTrash,
-    };
-
     // Use a batch write to ensure all updates are atomic
     const batch = db.batch();
+    const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
+    let updatedPlayerHands: { [playerId: string]: CardID } = {};
+
+
+    let playerIndexOfReshuffle = 0;
+    const now = Date.now();
+    // Deal one card to each player in order, handling mid-deal reshuffle
+    dealingOrder.forEach((playerId, i) => {
+      if (deck.length === 0) {
+        if (trash.length === 0) {
+          // Should not happen, but just in case
+          throw new HttpsError("failed-precondition", "No cards left in deck or trash");
+        }
+        // If we dealt cards already, emit dealCards action for players dealt so far
+        if (i > 1) {
+          // we need to subtract 1 from i because we haven't yet dealt this (i-th) player!
+          const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(0, i - 1));
+          addActionToBatch(batch, gameId, dealCardsAction, new Date(now));
+          playerIndexOfReshuffle = i;
+        }
+        // Emit reshuffle action
+        const reshuffleAction = createDeckReshuffleAction(userId, gameData.dealer);
+        addActionToBatch(batch, gameId, reshuffleAction, new Date(now + 1));
+        deck = shuffleDeck(trash);
+        trash = [];
+      }
+      // Deal the card
+      updatedPlayerHands[playerId] = deck.pop()!;
+    });
+
+    // Emit dealCards actions for players dealt before reshuffle
+    const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(playerIndexOfReshuffle));
+    addActionToBatch(batch, gameId, dealCardsAction, new Date(now + 2));
 
     // Update the main game document - update roundState and activePlayer
-    batch.update(gameRef, { 
+    batch.update(gameRef, {
       roundState: "playing",
-      activePlayer: newActivePlayer,
+      activePlayer: dealingOrder[0],
     });
 
     // Update the internal state
-    batch.set(internalStateRef, newInternalState);
+    batch.set(internalStateRef, { deck, trash });
 
     // Update player hands
-    const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
     Object.entries(updatedPlayerHands).forEach(([playerId, card]) => {
       const playerHandRef = playerHandsRef.doc(playerId);
       batch.set(playerHandRef, { card });
     });
-
-    // Add actions to the batch (ensuring atomicity)
-    const dealCardsAction = createDealCardsAction(userId, dealingOrder);
-    addActionToBatch(batch, gameId, dealCardsAction);
 
     // Commit the batch (all changes including actions happen atomically)
     await batch.commit();
@@ -203,9 +174,8 @@ export const dealCards = onCall<DealCardsRequest, Promise<DealCardsResponse>>(as
       gameId,
       dealer: gameData.dealer,
       playersDealt: dealingOrder.length,
-      cardsRemaining: currentDeck.length,
-      newActivePlayer,
-      deckReshuffled,
+      cardsRemaining: deck.length,
+      newActivePlayer: dealingOrder[0],
     });
 
     return { success: true };

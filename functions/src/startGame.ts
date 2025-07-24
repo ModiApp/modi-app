@@ -65,7 +65,7 @@ export const startGame = onCall<StartGameRequest, Promise<StartGameResponse>>(as
     // Initialize player lives (everyone starts with 3 lives)
     const playerLives: { [playerId: string]: number } = {};
     gameData.players.forEach(playerId => {
-      playerLives[playerId] = 3;
+      playerLives[playerId] = gameData.initialLives;
     });
 
     // Create the active game state (without playerHands and internalState)

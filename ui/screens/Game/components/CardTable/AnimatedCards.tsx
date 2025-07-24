@@ -137,6 +137,15 @@ function AnimatedCardsInner() {
         () => moveCardToPlayer(player, card),
       ]);
     },
+    deckReshuffle: async ({ currentDealer }) => {
+      const trash = [...virtualTrash.current];
+      virtualTrash.current = [];
+      await moveDeckNextToPlayer(trash, playerPositions[currentDealer], true);
+      trash.forEach((card, index) => {
+        card.setZIndex(index - trash.length);
+        card.setValue(null);
+      });
+    },
   });
 
   return <AnimatableCardDeck ref={deck} cardWidth={80} numCards={52} />;
@@ -243,13 +252,13 @@ async function moveCardToTrash(card: AnimatedCard) {
   ]);
 }
 
-function staggerPromises(
+function staggerPromises<T>(
   delay: number,
-  promises: (() => Promise<unknown>)[]
-): Promise<unknown[]> {
+  promises: (() => Promise<T>)[]
+): Promise<T[]> {
   return Promise.all(
     promises.map((promise, index) => {
-      return new Promise<unknown>((resolve) => {
+      return new Promise<T>((resolve) => {
         setTimeout(() => promise().then(resolve), index * delay);
       });
     })
@@ -258,7 +267,8 @@ function staggerPromises(
 
 function moveDeckNextToPlayer(
   deck: AnimatedCard[],
-  playerPosition: PlayerPosition
+  playerPosition: PlayerPosition,
+  stagger: boolean = false
 ): Promise<void[]> {
   // position the deck 60px diagonal from the center of the player's circle
   const centerX = playerPosition.x;
@@ -291,5 +301,10 @@ function moveDeckNextToPlayer(
     ).then(() => undefined);
   }
 
-  return Promise.all(deck.map(moveCard));
+  return stagger
+    ? staggerPromises<void>(
+        20,
+        deck.map((card) => () => moveCard(card))
+      )
+    : Promise.all(deck.map(moveCard));
 }
