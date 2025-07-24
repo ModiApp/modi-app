@@ -24,7 +24,9 @@ export function calculatePlayersLost(playerCards: { [playerId: string]: CardID }
 }
 
 export function deleteGame(gameId: string) {
+  console.info("Deleting game", gameId, process.env.GCLOUD_PROJECT);
   return FirebaseTools.firestore.delete(`games/${gameId}`, {
+    project: process.env.GCLOUD_PROJECT || "",
     recursive: true,
     force: true,
   });
