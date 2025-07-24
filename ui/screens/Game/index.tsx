@@ -29,8 +29,8 @@ const GameScreen: React.FC = () => {
             <Container
               style={{
                 justifyContent: "center",
+                paddingTop: 28,
                 paddingVertical: 32,
-                paddingBottom: 16,
                 alignItems: "center",
               }}
             >
@@ -40,7 +40,7 @@ const GameScreen: React.FC = () => {
             <Container style={{ flex: 1, marginBottom: 16 }}>
               <CardTable>
                 <PlayerCircles />
-                {game.status !== "gathering-players" && <AnimatedCards />}
+                <AnimatedCards />
                 {game.status !== "gathering-players" && <LiveCounts />}
               </CardTable>
             </Container>
@@ -49,6 +49,7 @@ const GameScreen: React.FC = () => {
                 flexDirection: "row",
                 minHeight: 24,
                 gap: 16,
+                width: "100%",
               }}
             >
               <PlayerControls game={game} currUserId={currentUserId} />

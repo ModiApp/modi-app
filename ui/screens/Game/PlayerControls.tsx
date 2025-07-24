@@ -1,17 +1,16 @@
 import { ActiveGame, Game } from "@/functions/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
-import { useDealCards } from "@/hooks/useDealCards";
 import { useEndRound } from "@/hooks/useEndRound";
 import { useStick } from "@/hooks/useStick";
 import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
+import { DealCardsButton } from "./components/DealCardsButton";
 import { JoinGameButton } from "./components/JoinGameButton";
 import { LeaveGameButton } from "./components/LeaveGameButton";
 import { StartGameButton } from "./components/StartGameButton";
 
 export function PlayerControls(props: { game: Game; currUserId: string }) {
   const { game, currUserId } = props;
-  const { dealCards, isDealing } = useDealCards();
   const currentCard = useCurrentCard(game.gameId);
 
   if (game.status === "gathering-players") {
@@ -41,11 +40,7 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
 
   if (game.roundState === "pre-deal") {
     if (game.dealer === currUserId && game.activePlayer === currUserId) {
-      return (
-        <Button color="blue" onPress={dealCards} loading={isDealing}>
-          <Text>Deal Cards</Text>
-        </Button>
-      );
+      return <DealCardsButton />;
     }
     return (
       <Text>Waiting for {game.usernames[game.dealer]} to deal cards...</Text>
