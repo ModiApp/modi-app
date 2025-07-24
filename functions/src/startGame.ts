@@ -2,7 +2,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createGameStartedAction } from "./actionUtils";
 import { generateDeck, shuffleDeck } from "./deckUtils";
-import { ActiveGame, CardID, GameInternalState, InitialGame } from "./types";
+import { ActiveGame, CardID, GameInternalState, GameStatus, InitialGame } from "./types";
 
 const db = getFirestore();
 
@@ -71,7 +71,7 @@ export const startGame = onCall<StartGameRequest, Promise<StartGameResponse>>(as
     // Create the active game state (without playerHands and internalState)
     const activeGame: ActiveGame = {
       ...gameData,
-      status: "active",
+      status: GameStatus.Active,
       playerLives,
       dealer: gameData.host, // Host starts as dealer
       round: 1,

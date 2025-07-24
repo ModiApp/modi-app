@@ -1,5 +1,6 @@
 import { auth } from "firebase-admin";
-import { CardID } from "./types";
+import FirebaseTools from 'firebase-tools';
+import type { CardID } from "./types";
 
 const adminAuth = auth();
 
@@ -20,4 +21,11 @@ export function getCardRankValue(cardId: string): number {
 export function calculatePlayersLost(playerCards: { [playerId: string]: CardID }): string[] {
   const lowestRankValue = Math.min(...Object.values(playerCards).map(pc => getCardRankValue(pc)));
   return Object.keys(playerCards).filter(pc => getCardRankValue(playerCards[pc]) === lowestRankValue);
+}
+
+export function deleteGame(gameId: string) {
+  return FirebaseTools.firestore.delete(`games/${gameId}`, {
+    recursive: true,
+    force: true,
+  });
 }

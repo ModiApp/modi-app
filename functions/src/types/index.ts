@@ -1,4 +1,4 @@
-import { CardID } from "./card.types";
+import type { CardID } from "./card.types";
 export * from "./card.types";
 
 interface GameBase {
@@ -9,12 +9,20 @@ interface GameBase {
   initialLives: number;
 }
 
+export const test = 'test';
+
+export enum GameStatus {
+  GatheringPlayers = 'gathering-players',
+  Active = 'active',
+  Ended = 'ended',
+}
+
 export interface InitialGame extends GameBase {
-  status: 'gathering-players';
+  status: GameStatus.GatheringPlayers;
 }
 
 export interface ActiveGame extends GameBase {
-  status: 'active';
+  status: GameStatus.Active;
   playerLives: { [playerId: string]: number };
   dealer: string;
   round: number;
@@ -23,7 +31,7 @@ export interface ActiveGame extends GameBase {
 }
 
 export interface EndedGame extends Omit<ActiveGame, 'status' | 'dealer' | 'activePlayer'> {
-  status: 'ended';
+  status: GameStatus.Ended;
   winners: string[];
   dealer: null;
   activePlayer: null;
@@ -46,13 +54,13 @@ export interface PlayerHand {
 export type Game = InitialGame | ActiveGame | EndedGame;
 
 export function isWaitingForPlayers(game: Game): game is InitialGame {
-  return game.status === 'gathering-players';
+  return game.status === GameStatus.GatheringPlayers;
 }
 
 export function isActive(game: Game): game is ActiveGame {
-  return game.status === 'active';
+  return game.status === GameStatus.Active;
 }
 
 export function isEnded(game: Game): game is EndedGame {
-  return game.status === 'ended';
+  return game.status === GameStatus.Ended;
 }

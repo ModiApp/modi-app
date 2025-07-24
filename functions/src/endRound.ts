@@ -1,7 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createEndRoundAction } from "./actionUtils";
-import { ActiveGame, CardID, EndedGame, GameInternalState } from "./types";
+import { ActiveGame, CardID, EndedGame, GameInternalState, GameStatus } from "./types";
 
 const db = getFirestore();
 
@@ -110,7 +110,7 @@ export const endRound = onCall<EndRoundRequest, Promise<EndRoundResponse>>(async
       const endedGame: EndedGame = {
         ...gameData,
         winners,
-        status: 'ended',
+        status: GameStatus.Ended,
         dealer: null,
         activePlayer: null
       }

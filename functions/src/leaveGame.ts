@@ -1,7 +1,8 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { addActionToBatch, createPlayerLeftAction } from "./actionUtils";
-import { InitialGame } from "./types";
+import { Game, GameStatus } from "./types";
+import { deleteGame } from "./util";
 
 const db = getFirestore();
 
@@ -23,24 +24,22 @@ export const leaveGame = onCall<LeaveGameRequest, Promise<LeaveGameResponse>>(as
 
   try {
     // Find which game the user is currently in by searching games collection
+    // Assumption: user is only one game lobby at a time
     const gamesRef = db.collection("games");
-    const snapshot = await gamesRef.where("players", "array-contains", userId).get();
+    const snapshot = await gamesRef
+      .where("status", "==", GameStatus.GatheringPlayers)
+      .where("players", "array-contains", userId)
+      .get();
 
     if (snapshot.empty) {
-      console.warn("LeaveGame: User not in any game", { userId });
+      console.warn("LeaveGame: User not in any game where status is gathering players", { userId });
       return { success: true, gameId: "" };
     }
 
     // Get the first (and should be only) game the user is in
     const gameDoc = snapshot.docs[0];
     const gameId = gameDoc.id;
-    const gameData = gameDoc.data() as InitialGame;
-
-    // Check if user is the host
-    if (gameData.host === userId) {
-      console.error("LeaveGame: Host cannot leave game", { userId, gameId });
-      throw new HttpsError("failed-precondition", "Host cannot leave the game. Transfer host or end the game instead.");
-    }
+    const gameData = gameDoc.data() as Game;
 
     // Get the username before removing it
     const username = gameData.usernames?.[userId] || "Unknown Player";
@@ -50,9 +49,19 @@ export const leaveGame = onCall<LeaveGameRequest, Promise<LeaveGameResponse>>(as
 
     // Remove user from the game
     const updatedPlayers = gameData.players.filter((playerId: string) => playerId !== userId);
-    const updateData: Partial<InitialGame> = {
+    if (updatedPlayers.length === 0) {
+      // Game is empty, delete the game
+      await deleteGame(gameId);
+      return { success: true, gameId: "" };
+    }
+
+    const updateData: Partial<Game> = {
       players: updatedPlayers,
     };
+
+    if (userId === gameData.host) {
+      updateData.host = updatedPlayers[0];
+    }
 
     // Remove player info
     if (gameData.usernames && gameData.usernames[userId]) {

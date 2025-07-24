@@ -1,4 +1,4 @@
-import { CardID } from "./card.types";
+import type { CardID } from "./card.types";
 
 // Base action interface
 interface BaseGameAction {

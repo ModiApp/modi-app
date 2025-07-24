@@ -1,6 +1,6 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { InitialGame } from "./types";
+import { GameStatus, InitialGame } from "./types";
 import { getUsername } from "./util";
 
 const db = getFirestore();
@@ -26,7 +26,7 @@ export const createGame = onCall<CreateGameRequest, Promise<CreateGameResponse>>
 
   const game: InitialGame = {
     gameId,
-    status: "gathering-players",
+    status: GameStatus.GatheringPlayers,
     players: [userId],
     host: userId,
     usernames: { [userId]: username },

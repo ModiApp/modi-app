@@ -1,5 +1,4 @@
 import { getFirestore } from "firebase-admin/firestore";
-import { CardID } from "./types";
 import {
   DealCardsAction,
   DealerDrawAction,
@@ -17,6 +16,7 @@ import {
   SwapCardsAction,
   TallyingAction
 } from "./types/actions.types";
+import type { CardID } from "./types/card.types";
 
 const db = getFirestore();
 
