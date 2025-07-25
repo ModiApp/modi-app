@@ -25,14 +25,14 @@ function AnimatedCardsInner() {
   const playerHands = useRef<{
     [playerId: string]: AnimatedCard | null;
   }>({});
-  const cardsOnTable = useRef(new Set<AnimatedCard>());
+  const cardsOnTable = useRef<AnimatedCard[]>([]);
 
   function getDeck(): AnimatedCard[] {
     const cards = deck.current?.getCards();
     if (!cards) throw new Error("No cards in deck");
     return cards.slice(
       0,
-      cards.length - cardsOnTable.current.size - virtualTrash.current.length
+      cards.length - cardsOnTable.current.length - virtualTrash.current.length
     );
   }
 
@@ -40,7 +40,7 @@ function AnimatedCardsInner() {
     const cards = getDeck();
     const nextCard = cards.pop();
     if (!nextCard) throw new Error("No cards in deck");
-    cardsOnTable.current.add(nextCard);
+    cardsOnTable.current.push(nextCard);
     return nextCard;
   }
 
@@ -54,7 +54,8 @@ function AnimatedCardsInner() {
       const animations = dealingOrder.map((playerId) => {
         const nextCard = getNextCardFromDeck();
         playerHands.current[playerId] = nextCard;
-        const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
+        const zIndex =
+          virtualTrash.current.length + cardsOnTable.current.length;
         zIndexes[zIndex] = nextCard;
         return () => moveCardToPlayer(playerPositions[playerId], nextCard);
       });
@@ -84,7 +85,7 @@ function AnimatedCardsInner() {
     },
     dealerDraw: async ({ playerId, previousCard }) => {
       const nextCard = getNextCardFromDeck();
-      const zIndex = virtualTrash.current.length + cardsOnTable.current.size;
+      const zIndex = virtualTrash.current.length + cardsOnTable.current.length;
       nextCard.setZIndex(zIndex);
       const card = playerHands.current[playerId]!;
       card.setValue(previousCard);
@@ -96,7 +97,7 @@ function AnimatedCardsInner() {
     endRound: async ({ newDealer }) => {
       const cards = Array.from(cardsOnTable.current);
       cards.forEach((card) => virtualTrash.current.push(card));
-      cardsOnTable.current.clear();
+      cardsOnTable.current = [];
       playerHands.current = {};
       await staggerPromises(
         200,
