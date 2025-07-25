@@ -26,6 +26,11 @@ function AnimatedCardsInner() {
     [playerId: string]: AnimatedCard | null;
   }>({});
   const cardsOnTable = useRef<AnimatedCard[]>([]);
+  // Keep track of the next available z-index for any card that appears on the
+  // table (i.e. cards in players' hands, hit cards, etc.).
+  // This is monotonically increasing so that newer cards always appear above
+  // older ones, satisfying the "hit card above original card" requirement.
+  const nextTableZIndex = useRef<number>(1);
 
   function getDeck(): AnimatedCard[] {
     const cards = deck.current?.getCards();
@@ -54,8 +59,7 @@ function AnimatedCardsInner() {
       const animations = dealingOrder.map((playerId) => {
         const nextCard = getNextCardFromDeck();
         playerHands.current[playerId] = nextCard;
-        const zIndex =
-          virtualTrash.current.length + cardsOnTable.current.length;
+        const zIndex = nextTableZIndex.current++;
         zIndexes[zIndex] = nextCard;
         return () => moveCardToPlayer(playerPositions[playerId], nextCard);
       });
@@ -85,7 +89,7 @@ function AnimatedCardsInner() {
     },
     dealerDraw: async ({ playerId, previousCard }) => {
       const nextCard = getNextCardFromDeck();
-      const zIndex = virtualTrash.current.length + cardsOnTable.current.length;
+      const zIndex = nextTableZIndex.current++;
       nextCard.setZIndex(zIndex);
       const card = playerHands.current[playerId]!;
       card.setValue(previousCard);
@@ -101,7 +105,7 @@ function AnimatedCardsInner() {
       playerHands.current = {};
       await staggerPromises(
         200,
-        cards.map((card) => () => moveCardToTrash(card))
+        cards.map((card, idx) => () => moveCardToTrash(card, idx))
       );
       await moveDeckNextToPlayer(getDeck(), playerPositions[newDealer]);
     },
@@ -142,8 +146,18 @@ function AnimatedCardsInner() {
       const trash = [...virtualTrash.current];
       virtualTrash.current = [];
       await moveDeckNextToPlayer(trash, playerPositions[currentDealer], true);
-      trash.forEach((card, index) => {
-        card.setZIndex(index - trash.length);
+      // After reshuffling, place the former trash back into the deck and reset
+      // their z-indices so the top of the deck is always the highest within
+      // the deck group (but still below any table cards).
+      const deckCards = deck.current?.getCards() ?? [];
+      deckCards.forEach((card, index) => {
+        // This will give the deck a contiguous range like -N … -1, ensuring
+        // it always sits above the trash (which we push further negative in
+        // moveCardToTrash) but below any positive table z-indices.
+        card.setZIndex(index - deckCards.length);
+      });
+
+      trash.forEach((card) => {
         card.setValue(null);
       });
     },
@@ -223,7 +237,7 @@ async function makeRoomForHitCard(
   );
 }
 
-async function moveCardToTrash(card: AnimatedCard) {
+async function moveCardToTrash(card: AnimatedCard, index: number) {
   await card.ensureFaceDown();
   await Promise.all([
     new Promise<void>((resolve) => {
@@ -251,6 +265,10 @@ async function moveCardToTrash(card: AnimatedCard) {
       });
     }),
   ]);
+  // After the animation completes (i.e., once the card has visually joined the
+  // discard pile), push its z-index far below the deck so it never covers any
+  // in-play card.
+  card.setZIndex(-1000 - index);
 }
 
 function staggerPromises<T>(
