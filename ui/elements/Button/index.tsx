@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import _ from "lodash";
+import React, { useMemo, useRef } from "react";
 import {
   StyleProp,
   TextStyle,
@@ -26,6 +27,8 @@ interface ButtonProps {
 
   /** Shows a loading spinner instead of children when true. Also disables the button. */
   loading?: boolean;
+
+  onPress(): void;
 }
 
 const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
@@ -53,10 +56,17 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
     [color, thin, fullWidth]
   );
 
+  const onPressRef = useRef(onPress);
+  onPressRef.current = onPress;
+  const handlePress = useMemo(() => {
+    return _.throttle(() => onPressRef.current?.(), 600);
+  }, []);
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       style={[defaultStyles, style]}
+      disabled={loading}
       {...props}
     >
       {loading ? (
