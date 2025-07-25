@@ -8,6 +8,7 @@ import { DealCardsButton } from "./components/DealCardsButton";
 import { JoinGameButton } from "./components/JoinGameButton";
 import { LeaveGameButton } from "./components/LeaveGameButton";
 import { StartGameButton } from "./components/StartGameButton";
+import { PlayAgainButton } from "./components/PlayAgainButton";
 
 export function PlayerControls(props: { game: Game; currUserId: string }) {
   const { game, currUserId } = props;
@@ -35,7 +36,12 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
   }
 
   if (game.status === "ended") {
-    return <LeaveGameButton variant="large" />;
+    return (
+      <>
+        <LeaveGameButton variant="large" />
+        <PlayAgainButton gameId={game.gameId} />
+      </>
+    );
   }
 
   if (game.roundState === "pre-deal") {
