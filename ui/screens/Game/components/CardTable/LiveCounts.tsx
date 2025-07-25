@@ -23,6 +23,11 @@ export function LiveCounts() {
             position: "absolute",
             top: playerPositions[playerId]?.y,
             left: playerPositions[playerId]?.x,
+            transform: [
+              playerPositions[playerId]?.x > 0
+                ? { translateX: "-100%" }
+                : undefined,
+            ].filter(Boolean) as any,
           }}
         >
           <PlayerLiveCount
