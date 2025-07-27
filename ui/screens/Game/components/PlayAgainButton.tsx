@@ -1,5 +1,5 @@
 import { usePlayAgain } from '@/hooks/usePlayAgain';
-import { Button, Text } from '@/ui/elements';
+import { Button, Icon } from '@/ui/elements';
 import React from 'react';
 
 export function PlayAgainButton(props: { gameId: string }) {
@@ -11,10 +11,9 @@ export function PlayAgainButton(props: { gameId: string }) {
       color="blue"
       onPress={() => playAgain(gameId)}
       loading={isPlayingAgain}
-      fullWidth
-      style={{ flexDirection: 'row', gap: 8 }}
+      style={{ height: '100%', aspectRatio: 1, borderRadius: 100 }}
     >
-      <Text>Play Again</Text>
+      <Icon name="refresh" size={22} color="white" />
     </Button>
   );
 }

@@ -20,6 +20,7 @@ console.log(Platform.OS);
 const iconNameMap = {
   back: "arrow-back",
   home: "home-sharp",
+  refresh: "refresh",
   "alert-circle": "alert-circle",
   "checkmark-circle": "checkmark-circle",
   warning: "warning",

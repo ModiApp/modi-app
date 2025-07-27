@@ -1,5 +1,5 @@
 import { useLeaveGame } from "@/hooks/useLeaveGame";
-import { Button, Icon, Text } from "@/ui/elements";
+import { Button, Icon } from "@/ui/elements";
 import React from "react";
 import { StyleProp, ViewStyle } from "react-native";
 
@@ -11,9 +11,9 @@ export function LeaveGameButton(props: { variant?: "small" | "large" }) {
   const { variant = "small" } = props;
 
   const styles: StyleProp<ViewStyle> =
-    variant === "small"
-      ? { height: "100%", aspectRatio: 1, borderRadius: 100 }
-      : { flexDirection: "row", gap: 8 };
+    variant === "small" ? { height: "100%", aspectRatio: 1, borderRadius: 100 } : undefined;
+
+  const icon = variant === "large" ? "home" : "back";
 
   return (
     <Button
@@ -23,8 +23,7 @@ export function LeaveGameButton(props: { variant?: "small" | "large" }) {
       style={styles}
       fullWidth={variant === "large"}
     >
-      <Icon name="back" size={22} color="white" />
-      {variant === "large" && <Text>Leave Game</Text>}
+      <Icon name={icon} size={22} color="white" />
     </Button>
   );
 }
