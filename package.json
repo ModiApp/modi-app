@@ -2,11 +2,8 @@
   "name": "modi-again",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "workspaces": [
-    "functions"
-  ],
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\"",
+    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\" \"yarn api:dev\"",
     "dev:prod": "EXPO_PUBLIC_CONNECT_TO_PROD=true yarn start",
     "start": "expo start",
     "android": "expo start --android",
@@ -19,7 +16,9 @@
     "functions:build": "yarn workspace functions build",
     "functions:build:watch": "yarn workspace functions build:watch",
     "functions:lint": "yarn workspace functions lint",
-    "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts"
+    "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts",
+    "api:dev": "tsx api/src/index.ts",
+    "api:build": "tsc -p api/tsconfig.json"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -46,11 +45,16 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
     "concurrently": "^9.2.0",
     "dotenv": "^17.2.1",
     "eslint": "^9.25.0",
