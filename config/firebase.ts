@@ -41,7 +41,7 @@ const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;
 // Pass in computer's LAN IP to connect to emulators from other devices on the network
 const EMULATOR_HOST = process.env.EXPO_PUBLIC_EMULATOR_HOST || '127.0.0.1';
 
-if (isDevelopment && isFirebaseConfigured) {
+if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO_PROD) {
   try {
     // Connect to Firestore emulator
     connectFirestoreEmulator(firestore, EMULATOR_HOST, config.emulators.firestore.port);
@@ -57,8 +57,10 @@ if (isDevelopment && isFirebaseConfigured) {
   } catch (error) {
     console.log('⚠️ Emulator connection failed (this is normal if emulators are not running):', error);
   }
+} else {
+  console.log('🔗 Connected to Firebase in production mode');
 }
 
 
-export { auth, database, firestore, functions, isFirebaseConfigured };
+export { auth, database, firestore, functions };
 

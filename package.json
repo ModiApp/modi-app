@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\"",
+    "dev:prod": "EXPO_PUBLIC_CONNECT_TO_PROD=true yarn start",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
