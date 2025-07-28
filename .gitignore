@@ -37,9 +37,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-app-example
 .env
 .vercel
 
 # Firebase emulator data
 emulator-data/
+
+# Service account keys
+google-service-account.json
