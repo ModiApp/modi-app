@@ -1,8 +1,10 @@
-import { initializeApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FirebaseError, initializeApp } from 'firebase/app';
+import { connectAuthEmulator, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+import { Platform } from 'react-native';
 import config from '../firebase.json';
 
 // Your Firebase configuration
@@ -17,6 +19,7 @@ const firebaseConfig = {
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "your-messaging-sender-id",
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "your-app-id"
 };
+
 
 // Check if Firebase is properly configured
 const isFirebaseConfigured = firebaseConfig.apiKey !== "your-api-key";
@@ -33,7 +36,21 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const firestore = getFirestore(app);
 const functions = getFunctions(app);
-const auth = getAuth(app);
+
+const auth = (() => {
+  try {
+    return initializeAuth(app, {
+      persistence: Platform.OS === 'web' ? undefined : getReactNativePersistence(AsyncStorage)
+    })
+  } catch (error: unknown) {
+    if (error instanceof FirebaseError && error.code === 'auth/already-initialized') {
+      console.log('Auth already initialized, returning existing instance');
+      return getAuth(app);
+    }
+    throw error;
+  }
+})();
+
 
 // Connect to emulators in development
 const isDevelopment = process.env.NODE_ENV === 'development' || __DEV__;

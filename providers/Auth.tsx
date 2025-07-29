@@ -9,7 +9,7 @@
  */
 import { auth } from "@/config/firebase";
 import { ScreenContainer } from "@/ui/elements";
-import { signInAnonymously } from "firebase/auth";
+import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextValue {
@@ -34,21 +34,31 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    signInAnonymously(auth)
-      .then((result) => {
-        console.debug("Signed in anonymously", result.user.uid);
-        setUserId(result.user.uid);
-      })
-      .catch((err) => {
-        console.error("Error signing in anonymously", err);
-        setError(err);
-      })
-      .finally(() => {
+    // Listen for auth state changes first
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.debug("User is already signed in", user.uid);
+        setUserId(user.uid);
         setIsLoading(false);
-      });
+      } else {
+        // No user is signed in, try to sign in anonymously
+        signInAnonymously(auth)
+          .then((result) => {
+            console.debug("Signed in anonymously", result.user.uid);
+            setUserId(result.user.uid);
+          })
+          .catch((err) => {
+            console.error("Error signing in anonymously", err);
+            setError(err);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
+    });
 
     return () => {
-      // Cleanup if needed
+      unsubscribe();
     };
   }, []);
 
