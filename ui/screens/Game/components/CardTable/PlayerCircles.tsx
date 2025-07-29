@@ -214,8 +214,6 @@ export function PlayerCircles() {
       </Container>
     );
 
-    console.log("rendering circle", game.usernames[playerId], canDrag);
-
     // Only wrap in GestureDetector if draggable
     if (!canDrag) {
       return circleContent;
@@ -263,8 +261,6 @@ export function PlayerCircles() {
   if (!isGatheringPlayers || !isHost) {
     return <>{playerCircles.map(renderPlayerCircle)}</>;
   }
-
-  console.log("rendering draggable circles");
 
   return (
     <>
