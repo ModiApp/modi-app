@@ -12,14 +12,17 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "NODE_ENV=production expo export --platform web",
+    "build:web": "NODE_ENV=production expo export --platform web",
     "lint": "expo lint",
     "test": "tsc",
     "emulators:start": "firebase emulators:start --import=./emulator-data --export-on-exit",
     "functions:build": "yarn workspace functions build",
     "functions:build:watch": "yarn workspace functions build:watch",
     "functions:lint": "yarn workspace functions lint",
-    "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts"
+    "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts",
+    "build:mobile": "eas build --profile production --platform all",
+    "build:ios": "eas build --profile production --platform ios",
+    "build:android": "eas build --profile production --platform android"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
