@@ -4,6 +4,21 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "local": {
+      "ios": {
+        "buildConfiguration": "Release",
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "local-simulator": {
+      "ios": {
+        "buildConfiguration": "Debug",
+        "simulator": true
+      }
+    },
     "production": {
       "autoIncrement": true,
       "ios": {

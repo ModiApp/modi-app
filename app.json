@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "modi-again",
-    "slug": "modi-again",
+    "name": "modi",
+    "slug": "modi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./ui/assets/images/icon.png",
@@ -27,7 +27,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./ui/assets/images/favicon.png",
+      "favicon": "./ui/assets/images/icon.png",
       "build": {
         "babel": {
           "include": [
@@ -41,9 +41,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./ui/assets/images/splash-image.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
+          "resizeMode": "center",
           "backgroundColor": "#35654D"
         }
       ]
