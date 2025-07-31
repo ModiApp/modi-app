@@ -1,11 +1,12 @@
 import { fontFamilies } from "@/ui/styles";
 import { useFonts } from "expo-font";
-import { SplashScreen } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useUsername } from "./Username";
 
 // prevent splash screen from hiding itself automatically
 SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ fade: true });
 
 /**
  *
