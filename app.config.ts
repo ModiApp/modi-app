@@ -4,6 +4,7 @@ const BUNDLE_IDENTIFIER = "com.ikeybenz.modiii";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  platforms: ["ios", "android", "web"],
   name: "Modi",
   slug: "modi",
   scheme: "modi",
@@ -32,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   web: {
     bundler: "metro",
+    themeColor: "#35654D",
     output: "static",
     favicon: "./ui/assets/images/icon.png",
     build: {
