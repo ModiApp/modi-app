@@ -1,5 +1,5 @@
 import React from "react";
-import { KeyboardAvoidingView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 
 import UsernameInput from "@/ui/components/UsernameInput";
 import { Button, LoadingSpinner, ScreenContainer, Text } from "@/ui/elements";
@@ -21,8 +21,8 @@ function HomeScreenBase({
     <ScreenContainer>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={56}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 72 : 16}
       >
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
