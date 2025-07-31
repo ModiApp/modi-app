@@ -1,5 +1,5 @@
 {
-  "buildCommand": "yarn build",
+  "buildCommand": "yarn build:web",
   "outputDirectory": "dist",
   "rewrites": [
     {

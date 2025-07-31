@@ -12,7 +12,6 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:web": "NODE_ENV=production expo export --platform web",
     "lint": "expo lint",
     "test": "tsc",
     "emulators:start": "firebase emulators:start --import=./emulator-data --export-on-exit",
@@ -20,6 +19,7 @@
     "functions:build:watch": "yarn workspace functions build:watch",
     "functions:lint": "yarn workspace functions lint",
     "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts",
+    "build:web": "expo export --platform web",
     "build:mobile": "eas build --profile production --platform all"
   },
   "dependencies": {
