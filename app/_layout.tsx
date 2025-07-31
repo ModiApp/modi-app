@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/providers/Auth";
+import { SplashScreenProvider } from "@/providers/SplashScreen";
 import { UsernameProvider } from "@/providers/Username";
 import { AlertBanner } from "@/ui/components/AlertBanner";
 import { Stack } from "expo-router";
@@ -11,6 +12,7 @@ export default function RootLayout() {
     <>
       <AuthProvider>
         <UsernameProvider>
+          <SplashScreenProvider />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="join-lobby" />
