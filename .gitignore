@@ -45,3 +45,7 @@ emulator-data/
 
 # Service account keys
 google-service-account.json
+
+# Mobile builds
+ios/
+android/
