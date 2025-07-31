@@ -11,7 +11,7 @@
     "owner": "ikeybenz",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ikeybenz.modi",
+      "bundleIdentifier": "com.ikeybenz.modiii",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -22,7 +22,7 @@
         "backgroundColor": "#35654D"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ikeybenz.modi"
+      "package": "com.ikeybenz.modiii"
     },
     "web": {
       "bundler": "metro",
