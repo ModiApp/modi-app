@@ -1,5 +1,4 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
-import { colors } from './ui/styles';
 
 const BUNDLE_IDENTIFIER = "com.ikeybenz.modiii";
 
@@ -13,8 +12,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./ui/assets/images/icon.png",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
-  primaryColor: colors.feltGreen,
-  backgroundColor: colors.feltGreen,
+  primaryColor: "#35654D",
+  backgroundColor: "#35654D",
   owner: "ikeybenz",
   ios: {
     supportsTablet: true,
@@ -26,7 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       foregroundImage: "./ui/assets/images/adaptive-icon.png",
-      backgroundColor: colors.feltGreen,
+      backgroundColor: "#35654D",
     },
     edgeToEdgeEnabled: true,
     package: BUNDLE_IDENTIFIER,
@@ -49,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./ui/assets/images/splash-image.png",
         imageWidth: 200,
         resizeMode: "center",
-        backgroundColor: colors.feltGreen,
+        backgroundColor: "#35654D",
       },
     ],
   ],
