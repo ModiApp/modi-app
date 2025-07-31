@@ -39,10 +39,12 @@ const functions = getFunctions(app);
 
 const auth = (() => {
   try {
-    return initializeAuth(app, {
-      persistence: Platform.OS === 'web' ? undefined : getReactNativePersistence(AsyncStorage)
+    // on mobile we need to configure persistence manually, on web it defaults to localStorage which is what we want
+    return Platform.OS === 'web' ? getAuth(app) : initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
     })
   } catch (error: unknown) {
+    // when hot reloading on mobile, we get an error about auth already initialized, so we return the existing instance
     if (error instanceof FirebaseError && error.code === 'auth/already-initialized') {
       console.log('Auth already initialized, returning existing instance');
       return getAuth(app);
