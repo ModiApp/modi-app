@@ -11,14 +11,19 @@ import {
 const UsernameContext = createContext<{
   value: string;
   setValue: (name: string) => Promise<void>;
+  isLoading: boolean;
 }>({
   value: "",
   setValue: () => Promise.resolve(),
+  isLoading: true,
 });
 
 export function UsernameProvider(props: { children: React.ReactNode }) {
   const { children } = props;
-  const [username, setUsernameState] = useState("");
+  const [username, setUsernameState] = useState(
+    auth.currentUser?.displayName || ""
+  );
+  const [isLoading, setIsLoading] = useState(!auth.currentUser);
 
   useEffect(() => {
     // Get username from Firebase Auth's displayName
@@ -29,6 +34,7 @@ export function UsernameProvider(props: { children: React.ReactNode }) {
     // Listen for auth state changes in case user logs in/out
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUsernameState(user?.displayName || "");
+      setIsLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -43,7 +49,7 @@ export function UsernameProvider(props: { children: React.ReactNode }) {
 
   return (
     <UsernameContext.Provider
-      value={{ value: username, setValue: setUsername }}
+      value={{ value: username, setValue: setUsername, isLoading }}
     >
       {children}
     </UsernameContext.Provider>

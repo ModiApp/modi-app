@@ -48,6 +48,12 @@
         }
       ]
     ],
+    "fonts": [
+      {
+        "asset": "./ui/assets/fonts/Chalkduster.ttf",
+        "family": "Chalkduster"
+      }
+    ],
     "experiments": {
       "typedRoutes": true
     },

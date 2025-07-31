@@ -36,6 +36,7 @@ const Text: React.FC<TextProps> = ({
       fontSize: size || 18,
       fontFamily: fontFamilies[fontFamily || "primary"],
       color: colors[color || "white"],
+      includeFontPadding: false,
     }),
     [size, fontFamily, color]
   );
