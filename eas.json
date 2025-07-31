@@ -4,29 +4,15 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "local": {
-      "ios": {
-        "buildConfiguration": "Release",
-        "simulator": true
-      },
-      "android": {
-        "buildType": "apk"
-      }
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
     },
-    "local-simulator": {
-      "ios": {
-        "buildConfiguration": "Debug",
-        "simulator": true
-      }
+    "preview": {
+      "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "ios": {
-        "resourceClass": "m-medium"
-      },
-      "android": {
-        "resourceClass": "medium"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
