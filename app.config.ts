@@ -1,19 +1,24 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
+import { colors } from './ui/styles';
+
+const BUNDLE_IDENTIFIER = "com.ikeybenz.modiii";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Modi",
   slug: "modi",
+  scheme: "modi",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./ui/assets/images/icon.png",
-  scheme: "modi",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  primaryColor: colors.feltGreen,
+  backgroundColor: colors.feltGreen,
   owner: "ikeybenz",
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.ikeybenz.modiii",
+    bundleIdentifier: BUNDLE_IDENTIFIER,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -21,10 +26,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       foregroundImage: "./ui/assets/images/adaptive-icon.png",
-      backgroundColor: "#35654D",
+      backgroundColor: colors.feltGreen,
     },
     edgeToEdgeEnabled: true,
-    package: "com.ikeybenz.modiii",
+    package: BUNDLE_IDENTIFIER,
   },
   web: {
     bundler: "metro",
@@ -44,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./ui/assets/images/splash-image.png",
         imageWidth: 200,
         resizeMode: "center",
-        backgroundColor: "#35654D",
+        backgroundColor: colors.feltGreen,
       },
     ],
   ],
