@@ -3,7 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "workspaces": [
-    "functions"
+    "functions",
+    "api"
   ],
   "scripts": {
     "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\"",

@@ -1,0 +1,22 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "The api for Modi",
+  "main": "dist/index.js",
+  "repository": "https://github.com/ModiApp/modi-app",
+  "author": "Isaac J. Benzaken",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "prestart": "yarn build",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.1.0"
+  }
+}
