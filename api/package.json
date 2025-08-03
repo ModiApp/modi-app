@@ -6,6 +6,10 @@
   "repository": "https://github.com/ModiApp/modi-app",
   "author": "Isaac J. Benzaken",
   "license": "MIT",
+  "engines": {
+    "node": "20.x",
+    "yarn": "1.22.x"
+  },
   "scripts": {
     "start": "node ./dist/index.js",
     "prestart": "yarn build",
