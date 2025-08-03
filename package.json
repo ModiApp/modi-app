@@ -7,7 +7,7 @@
     "api"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\"",
+    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\" \"yarn api:dev\"",
     "dev:prod": "EXPO_PUBLIC_CONNECT_TO_PROD=true yarn start",
     "start": "expo start",
     "android": "expo run:android",
@@ -19,6 +19,8 @@
     "functions:build": "yarn workspace functions build",
     "functions:build:watch": "yarn workspace functions build:watch",
     "functions:lint": "yarn workspace functions lint",
+    "api:dev": "yarn workspace api dev",
+    "api:dev:prod": "yarn workspace api dev:prod",
     "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts",
     "build:web": "expo export --platform web",
     "build:mobile": "eas build --profile production --platform all"

@@ -15,6 +15,7 @@ export interface AuthenticatedRequest {
  * Get the authenticated user from firebase auth
  */
 const authenticate: RequestHandler = async function authenticate(req, res, next) {
+  console.log("authenticate: Authenticating request", req.headers);
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     res.status(401).json({ error: "Unauthorized" });
