@@ -1,10 +1,12 @@
+import admin from 'firebase-admin';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin SDK
 const app = initializeApp({
-  projectId: process.env.FIREBASE_PROJECT_ID
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIAL)
 });
 
 export const db = getFirestore(app);
