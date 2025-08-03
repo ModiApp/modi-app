@@ -1,19 +1,27 @@
-import admin from 'firebase-admin';
+import admin, { AppOptions } from 'firebase-admin';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin SDK
-const app = initializeApp({
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIAL)
-});
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Initialize Firebase Admin SDK
+const appConfig: AppOptions = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+}
+if (!isDevelopment) {
+  appConfig.credential = admin.credential.cert(
+    JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIAL_BASE64, 'base64').toString())
+  )
+}
+
+const app = initializeApp(appConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 // Connect to emulators in development
-const isDevelopment = process.env.NODE_ENV === 'development';
+
 
 if (isDevelopment && !process.env.CONNECT_TO_PROD) {
   // Connect to Firestore emulator

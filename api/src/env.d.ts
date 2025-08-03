@@ -5,6 +5,6 @@ declare namespace NodeJS {
     PORT: string;
     HOST: string;
     FIREBASE_PROJECT_ID: string;
-    GOOGLE_APPLICATION_CREDENTIAL: string;
+    GOOGLE_APPLICATION_CREDENTIAL_BASE64: string;
   }
 }
