@@ -9,6 +9,16 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'functions/lib/*'],
   },
   {
+    files: ['api/**/*'],
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './api/tsconfig.json',
+        },
+      },
+    },
+  },
+  {
     rules: {
       'no-restricted-imports': [
         'error',
@@ -18,6 +28,7 @@ module.exports = defineConfig([
           ],
         },
       ],
+      '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
   {
