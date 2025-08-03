@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 async function createGameFunction() {
-  const response = await fetch('http://localhost:3000/games', {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

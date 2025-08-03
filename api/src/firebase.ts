@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin SDK
 const app = initializeApp({
-  projectId: 'modi-again-b0b21', // Use a consistent project ID for development
+  projectId: process.env.FIREBASE_PROJECT_ID
 });
 
 export const db = getFirestore(app);
