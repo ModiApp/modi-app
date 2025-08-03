@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseError, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 import { Platform } from 'react-native';
@@ -33,7 +32,6 @@ if (!isFirebaseConfigured) {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
 const firestore = getFirestore(app);
 const functions = getFunctions(app);
 
@@ -81,5 +79,5 @@ if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO
 }
 
 
-export { auth, database, firestore, functions };
+export { auth, firestore, functions };
 
