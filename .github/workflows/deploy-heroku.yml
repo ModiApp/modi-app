@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cloud-functions-are-a-ripoff
 
 jobs:
   deploy:
