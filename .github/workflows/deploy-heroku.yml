@@ -27,6 +27,11 @@ jobs:
 
       - name: Deploy to Heroku (if changed)
         if: steps.check-api.outputs.api_changed == 'true'
-        run: git push heroku `git subtree split --prefix=api HEAD`:refs/heads/main
+        run: |
+          # Add Heroku remote
+          git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+          
+          # Deploy using subtree split
+          git push heroku `git subtree split --prefix=api HEAD`:refs/heads/main --force
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }} 
