@@ -28,7 +28,6 @@ export async function generateRandomIdForRef(ref: FirebaseFirestore.CollectionRe
 //   return rankValues[rank] || 0;
 // }
 
-
 // export function calculatePlayersLost(playerCards: { [playerId: string]: CardID }): string[] {
 //   const lowestRankValue = Math.min(...Object.values(playerCards).map(pc => getCardRankValue(pc)));
 //   return Object.keys(playerCards).filter(pc => getCardRankValue(playerCards[pc]) === lowestRankValue);
