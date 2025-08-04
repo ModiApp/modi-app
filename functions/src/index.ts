@@ -19,14 +19,14 @@ initializeApp();
 // const db = getFirestore();
 setGlobalOptions({ maxInstances: 10 });
 
-export { createGame } from "./createGame";
+// export { createGame } from "./createGame";
 export { dealCards } from "./dealCards";
 export { endRound } from "./endRound";
 export { joinGame } from "./joinGame";
 export { leaveGame } from "./leaveGame";
+export { playAgain } from "./playAgain";
+export { setPlayerOrder } from "./setPlayerOrder";
 export { startGame } from "./startGame";
 export { stick } from "./stick";
 export { swapCard } from "./swapCard";
-export { setPlayerOrder } from "./setPlayerOrder";
-export { playAgain } from "./playAgain";
 

@@ -1,0 +1,32 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "The api for Modi",
+  "main": "dist/index.js",
+  "repository": "https://github.com/ModiApp/modi-app",
+  "author": "Isaac J. Benzaken",
+  "license": "MIT",
+  "engines": {
+    "node": "20.x",
+    "yarn": "1.22.x"
+  },
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "prestart": "yarn build",
+    "build": "tsc && tsc-alias",
+    "dev": "NODE_ENV=development tsx watch src/index.ts",
+    "dev:prod": "CONNECT_TO_PROD=true tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "firebase-admin": "^13.4.0",
+    "typescript": "^5.9.2",
+    "dotenv": "^17.2.1",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.1.0",
+    "tsc-alias": "^1.8.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3"
+  }
+}

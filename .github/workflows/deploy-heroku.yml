@@ -1,0 +1,40 @@
+name: Deploy API to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Needed to compare with previous commit
+
+      - name: Check for changes in api directory
+        id: check-api
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q "^api/"; then
+            echo "api_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "api_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Heroku (if changed)
+        if: steps.check-api.outputs.api_changed == 'true'
+        run: |
+          # Configure Git for Heroku
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          # Add Heroku remote with API key embedded in URL
+          git remote add heroku https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+          
+          # Deploy using subtree split
+          git push heroku `git subtree split --prefix=api HEAD`:refs/heads/main --force
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }} 
