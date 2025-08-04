@@ -20,8 +20,6 @@ const app = initializeApp(appConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// Connect to emulators in development
-
 
 if (isDevelopment && !process.env.CONNECT_TO_PROD) {
   // Connect to Firestore emulator

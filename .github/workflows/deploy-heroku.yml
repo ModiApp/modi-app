@@ -25,31 +25,8 @@ jobs:
             echo "api_changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Node.js and install dependencies (if needed)
-        if: steps.check-api.outputs.api_changed == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies (if needed)
-        if: steps.check-api.outputs.api_changed == 'true'
-        working-directory: ./api
-        run: yarn install --frozen-lockfile
-
-      - name: Build API (if needed)
-        if: steps.check-api.outputs.api_changed == 'true'
-        working-directory: ./api
-        run: yarn build
-
       - name: Deploy to Heroku (if changed)
         if: steps.check-api.outputs.api_changed == 'true'
-        uses: akhileshns/heroku-deploy@v3.12.14
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          appdir: "api"
-          branch: "HEAD"
-          usedocker: false
-          docker_heroku_process_type: "web" 
+        run: git push heroku `git subtree split --prefix=api HEAD`:refs/heads/main
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }} 
