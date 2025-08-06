@@ -6,5 +6,6 @@ declare namespace NodeJS {
     HOST: string;
     FIREBASE_PROJECT_ID: string;
     GOOGLE_APPLICATION_CREDENTIAL_BASE64: string;
+    ALLOWED_ORIGINS: string;
   }
 }
