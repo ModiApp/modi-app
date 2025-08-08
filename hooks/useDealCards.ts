@@ -1,10 +1,22 @@
-import { functions } from '@/config/firebase';
-import { DealCardsRequest, DealCardsResponse } from '@/functions/src/dealCards';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useState } from 'react';
 
-const dealCardsFunction = httpsCallable<DealCardsRequest, DealCardsResponse>(functions, 'dealCards');
+async function dealCardsApi() {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/deal`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to deal cards: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean }>;
+}
 
 /**
  * A hook to deal cards to all players in a game.
@@ -21,9 +33,8 @@ export function useDealCards() {
       console.log("useDealCards: Dealing cards");
       setIsDealing(true);
 
-      const result = await dealCardsFunction({});
-
-      console.log("useDealCards: Cards dealt successfully:", result.data);
+      const result = await dealCardsApi();
+      console.log("useDealCards: Cards dealt successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // The round state will change from "pre-deal" to "playing"
@@ -32,30 +43,7 @@ export function useDealCards() {
     } catch (error: any) {
       console.error("useDealCards: Error dealing cards:", error);
       
-      // Handle different types of errors
-      if (error.code === 'functions/not-found') {
-        Alert.error({ message: "No active game found where you are the dealer." });
-      } else if (error.code === 'functions/failed-precondition') {
-        if (error.message?.includes('not active')) {
-          Alert.error({ message: "Game is not active." });
-        } else if (error.message?.includes('pre-deal')) {
-          Alert.error({ message: "Cards can only be dealt in pre-deal state." });
-        } else if (error.message?.includes('No cards left')) {
-          Alert.error({ message: "No cards left in deck or trash." });
-        } else if (error.message?.includes('No players with lives')) {
-          Alert.error({ message: "No players with lives remaining." });
-        } else {
-          Alert.error({ message: "Game cannot be dealt right now." });
-        }
-      } else if (error.code === 'functions/permission-denied') {
-        Alert.error({ message: "Only the dealer can deal cards." });
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: "Please sign in to deal cards." });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: "Invalid request." });
-      } else {
-        Alert.error({ message: "Failed to deal cards. Please try again." });
-      }
+      Alert.error({ message: 'Failed to deal cards. Please try again.' });
     } finally {
       setIsDealing(false);
     }

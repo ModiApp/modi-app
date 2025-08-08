@@ -1,5 +1,5 @@
+import type { Game } from "@/api/src/types";
 import { firestore } from "@/config/firebase";
-import { Game } from "@/functions/src/types";
 import { useRouter } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";

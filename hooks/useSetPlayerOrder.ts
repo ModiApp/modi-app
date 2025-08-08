@@ -1,10 +1,22 @@
-import { functions } from '@/config/firebase';
-import { SetPlayerOrderRequest, SetPlayerOrderResponse } from '@/functions/src/setPlayerOrder';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useState } from 'react';
 
-const setPlayerOrderFunction = httpsCallable<SetPlayerOrderRequest, SetPlayerOrderResponse>(functions, 'setPlayerOrder');
+async function setPlayerOrderApi(gameId: string, players: string[]) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/set-player-order`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({ gameId, players }),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to reorder players: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean }>;
+}
 
 export function useSetPlayerOrder() {
   const [isSettingOrder, setIsSettingOrder] = useState(false);
@@ -16,22 +28,10 @@ export function useSetPlayerOrder() {
     }
     try {
       setIsSettingOrder(true);
-      await setPlayerOrderFunction({ gameId, players });
+      await setPlayerOrderApi(gameId, players);
     } catch (error: any) {
       console.error('useSetPlayerOrder: Error setting player order:', error);
-      if (error.code === 'functions/permission-denied') {
-        Alert.error({ message: 'Only the host can reorder players.' });
-      } else if (error.code === 'functions/failed-precondition') {
-        Alert.error({ message: 'Players can only be reordered before the game starts.' });
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: 'Please sign in to reorder players.' });
-      } else if (error.code === 'functions/not-found') {
-        Alert.error({ message: 'Game not found.' });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: 'Invalid request.' });
-      } else {
-        Alert.error({ message: 'Failed to reorder players.' });
-      }
+      Alert.error({ message: 'Failed to reorder players.' });
     } finally {
       setIsSettingOrder(false);
     }

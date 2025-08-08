@@ -1,8 +1,9 @@
 import { auth } from '@/config/firebase';
-import { CreateGameResponse } from '@/functions/src/createGame';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+
+type CreateGameResponse = { gameId: string };
 
 async function createGameFunction() {
   const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games`, {

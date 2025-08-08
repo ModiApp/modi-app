@@ -1,10 +1,22 @@
-import { functions } from '@/config/firebase';
-import { StickRequest, StickResponse } from '@/functions/src/stick';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useState } from 'react';
 
-const stickFunction = httpsCallable<StickRequest, StickResponse>(functions, 'stick');
+async function stickApi() {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/stick`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to stick: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean }>;
+}
 
 /**
  * A hook to stick (pass turn) for the active player.
@@ -25,9 +37,8 @@ export function useStick() {
       console.log("useStick: Sticking (passing turn)");
       setIsSticking(true);
 
-      const result = await stickFunction({});
-
-      console.log("useStick: Successfully stuck:", result.data);
+      const result = await stickApi();
+      console.log("useStick: Successfully stuck:", result);
       
       // The game state will automatically update via Firestore listeners
       // If the player was the dealer, the round state will change to "tallying"
@@ -36,22 +47,7 @@ export function useStick() {
     } catch (error: any) {
       console.error("useStick: Error sticking:", error);
       
-      // Handle different types of errors
-      if (error.code === 'functions/not-found') {
-        Alert.error({ message: 'No active game found where you are the active player during playing state.' });
-      } else if (error.code === 'functions/failed-precondition') {
-        if (error.message?.includes('No alive players')) {
-          Alert.error({ message: 'No alive players found to pass turn to.' });
-        } else {
-          Alert.error({ message: 'Cannot stick right now.' });
-        }
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: 'Please sign in to stick.' });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: 'Invalid request.' });
-      } else {
-        Alert.error({ message: 'Failed to stick. Please try again.' });
-      }
+      Alert.error({ message: 'Failed to stick. Please try again.' });
     } finally {
       setIsSticking(false);
     }

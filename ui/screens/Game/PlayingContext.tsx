@@ -1,4 +1,4 @@
-import { Game } from "@/functions/src/types";
+import type { Game } from "@/api/src/types";
 import { createContext, useContext } from "react";
 
 const PlayingContext = createContext<{ game: Game } | null>(null);

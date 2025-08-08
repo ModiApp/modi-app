@@ -1,4 +1,4 @@
-import { CardID } from "@/functions/src/types";
+import type { CardID } from "@/api/src/types/card.types";
 import { Card, CardBack } from "@/ui/components/Card";
 import React, {
   useCallback,

@@ -1,4 +1,4 @@
-import { ActiveGame, Game } from "@/functions/src/types";
+import type { ActiveGame, Game } from "@/api/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
 import { useEndRound } from "@/hooks/useEndRound";
 import { useStick } from "@/hooks/useStick";
@@ -7,8 +7,8 @@ import { Button, Container, Text } from "@/ui/elements";
 import { DealCardsButton } from "./components/DealCardsButton";
 import { JoinGameButton } from "./components/JoinGameButton";
 import { LeaveGameButton } from "./components/LeaveGameButton";
-import { StartGameButton } from "./components/StartGameButton";
 import { PlayAgainButton } from "./components/PlayAgainButton";
+import { StartGameButton } from "./components/StartGameButton";
 
 export function PlayerControls(props: { game: Game; currUserId: string }) {
   const { game, currUserId } = props;

@@ -1,9 +1,9 @@
-import { firestore } from "@/config/firebase";
 import {
   GameAction,
   GameActions,
   GameActionType,
-} from "@/functions/src/types/actions.types";
+} from "@/api/src/types/actions.types";
+import { firestore } from "@/config/firebase";
 import { useUserId } from "@/providers/Auth";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";

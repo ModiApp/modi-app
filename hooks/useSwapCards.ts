@@ -1,10 +1,22 @@
-import { functions } from '@/config/firebase';
-import { SwapCardRequest, SwapCardResponse } from '@/functions/src/swapCard';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useState } from 'react';
 
-const swapCardFunction = httpsCallable<SwapCardRequest, SwapCardResponse>(functions, 'swapCard');
+async function swapCardApi() {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/swap`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to swap cards: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean }>;
+}
 
 /**
  * A hook to swap cards between the active player and the next alive player to their left.
@@ -26,9 +38,8 @@ export function useSwapCards() {
       console.log("useSwapCards: Swapping cards");
       setIsSwapping(true);
 
-      const result = await swapCardFunction({});
-
-      console.log("useSwapCards: Cards swapped successfully:", result.data);
+      const result = await swapCardApi();
+      console.log("useSwapCards: Cards swapped successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // Player hands will be updated with their new cards
@@ -38,36 +49,7 @@ export function useSwapCards() {
     } catch (error: any) {
       console.error("useSwapCards: Error swapping cards:", error);
       
-      // Handle different types of errors
-      if (error.code === 'functions/not-found') {
-        Alert.error({ message: 'No active game found where you are the active player.' });
-      } else if (error.code === 'functions/failed-precondition') {
-        if (error.message?.includes('not active')) {
-          Alert.error({ message: 'Game is not active.' });
-        } else if (error.message?.includes('playing')) {
-          Alert.error({ message: 'Cards can only be swapped during playing state.' });
-        } else if (error.message?.includes('No cards left')) {
-          Alert.error({ message: 'No cards left in deck or trash.' });
-        } else if (error.message?.includes('No alive players')) {
-          Alert.error({ message: 'No alive players found to swap with.' });
-        } else if (error.message?.includes('no card to swap')) {
-          Alert.error({ message: 'You have no card to swap.' });
-        } else if (error.message?.includes('Next player has no card')) {
-          Alert.error({ message: 'The next player has no card to swap.' });
-        } else if (error.message?.includes('Players with Kings cannot swap')) {
-          Alert.error({ message: 'Players with Kings cannot swap cards.' });
-        } else {
-          Alert.error({ message: 'Cards cannot be swapped right now.' });
-        }
-      } else if (error.code === 'functions/permission-denied') {
-        Alert.error({ message: 'Only the active player can swap cards.' });
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: 'Please sign in to swap cards.' });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: 'Invalid request.' });
-      } else {
-        Alert.error({ message: 'Failed to swap cards. Please try again.' });
-      }
+      Alert.error({ message: 'Failed to swap cards. Please try again.' });
     } finally {
       setIsSwapping(false);
     }

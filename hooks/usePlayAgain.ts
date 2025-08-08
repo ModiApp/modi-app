@@ -1,11 +1,23 @@
-import { functions } from '@/config/firebase';
-import { PlayAgainRequest, PlayAgainResponse } from '@/functions/src/playAgain';
-import { useRouter } from 'expo-router';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 
-const playAgainFunction = httpsCallable<PlayAgainRequest, PlayAgainResponse>(functions, 'playAgain');
+async function playAgainApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/play-again`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({ gameId }),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to start a new game: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ gameId: string }>;
+}
 
 export function usePlayAgain() {
   const router = useRouter();
@@ -14,8 +26,8 @@ export function usePlayAgain() {
   const playAgain = async (gameId: string) => {
     try {
       setIsLoading(true);
-      const result = await playAgainFunction({ gameId });
-      router.push(`/games/${result.data.gameId}`);
+      const result = await playAgainApi(gameId);
+      router.push(`/games/${result.gameId}`);
     } catch (error) {
       console.error('usePlayAgain: Error creating new game', error);
       Alert.error({ message: 'Failed to start a new game. Please try again.' });
