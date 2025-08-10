@@ -6,7 +6,7 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', 'functions/lib/*'],
+    ignores: ['dist/*'],
   },
   {
     files: ['api/**/*'],
@@ -32,7 +32,7 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['config/firebase.ts', 'functions/src/**/*'],
+    files: ['config/firebase.ts'],
     rules: {
       'no-restricted-imports': 'off',
     },

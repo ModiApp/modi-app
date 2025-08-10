@@ -3,28 +3,7 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "yarn --cwd \"$RESOURCE_DIR\" lint",
-        "yarn --cwd \"$RESOURCE_DIR\" build"
-      ]
-    }
-  ],
   "emulators": {
-    "functions": {
-      "port": 5001,
-      "host": "0.0.0.0"
-    },
     "firestore": {
       "port": 8080,
       "host": "0.0.0.0"

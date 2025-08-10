@@ -62,7 +62,7 @@ A React Native/Expo app that displays real-time connection counts using Firebase
 
 ## Quick Start
 
-1. Install dependencies (this will install both main app and functions dependencies):
+1. Install dependencies:
    ```bash
    yarn install
    ```
@@ -122,19 +122,16 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
 - Uses Firebase Realtime Database for real-time updates
 - TypeScript for type safety
 - Themed components for consistent styling
-- Yarn Workspaces for managing both main app and functions dependencies
+- Yarn Workspaces
 
 ### Available Scripts
 
 - `yarn start` - Start the Expo development server
-- `yarn dev` - Start Expo + Firebase emulators + functions watch mode
-- `yarn functions:build` - Build the functions TypeScript code
-- `yarn functions:build:watch` - Watch and rebuild functions on changes
-- `yarn functions:lint` - Lint the functions code
+- `yarn dev` - Start Expo + Firebase emulators + API dev server
 
 ## Deployment
 
-This project includes a GitHub Action that automatically deploys Firebase Cloud Functions and syncs Firestore rules when you push to the `main` branch.
+Deploy the API separately and manage Firestore rules/indexes via `firebase deploy --only firestore` if needed.
 
 ### Setting up GitHub Actions
 
@@ -175,7 +172,6 @@ If you see a "Firebase not configured" warning:
 ### GitHub Actions Issues
 
 If the deployment fails:
-1. Check that the `FIREBASE_TOKEN` secret is properly set
-2. Verify your Firebase project ID in `.firebaserc` matches your actual project
-3. Ensure your Firebase project has the necessary APIs enabled (Cloud Functions, Firestore)
-4. Check the Actions tab in GitHub for detailed error logs
+1. Verify your Firebase project ID in `.firebaserc` matches your actual project
+2. Ensure your Firebase project has the necessary APIs enabled (Firestore)
+3. Check the Actions tab in GitHub for detailed error logs

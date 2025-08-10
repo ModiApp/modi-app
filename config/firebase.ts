@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseError, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 import { Platform } from 'react-native';
 import config from '../firebase.json';
 
@@ -33,7 +32,6 @@ if (!isFirebaseConfigured) {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
-const functions = getFunctions(app);
 
 const auth = (() => {
   try {
@@ -64,10 +62,6 @@ if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO
     connectFirestoreEmulator(firestore, EMULATOR_HOST, config.emulators.firestore.port);
     console.log(`🔗 Connected to Firestore emulator on ${EMULATOR_HOST}:${config.emulators.firestore.port}`);
     
-    // Connect to Functions emulator
-    connectFunctionsEmulator(functions, EMULATOR_HOST, config.emulators.functions.port);
-    console.log(`🔗 Connected to Functions emulator on http://${EMULATOR_HOST}:${config.emulators.functions.port}`);
-
     // Connect to Auth emulator
     connectAuthEmulator(auth, `http://${EMULATOR_HOST}:${config.emulators.auth.port}`, { disableWarnings: true });
     console.log(`🔗 Connected to Auth emulator on http://${EMULATOR_HOST}:${config.emulators.auth.port}`);
@@ -78,6 +72,5 @@ if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO
   console.log('🔗 Connected to Firebase in production mode');
 }
 
-
-export { auth, firestore, functions };
+export { auth, firestore };
 

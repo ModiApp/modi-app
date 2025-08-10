@@ -3,11 +3,10 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "workspaces": [
-    "functions",
     "api"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn functions:build:watch\" \"yarn api:dev\"",
+    "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn api:dev\"",
     "dev:prod": "EXPO_PUBLIC_CONNECT_TO_PROD=true concurrently \"yarn start\" \"yarn api:dev:prod\"",
     "start": "expo start",
     "android": "expo run:android",
@@ -16,9 +15,6 @@
     "lint": "expo lint",
     "test": "tsc",
     "emulators:start": "firebase emulators:start --import=./emulator-data --export-on-exit",
-    "functions:build": "yarn workspace functions build",
-    "functions:build:watch": "yarn workspace functions build:watch",
-    "functions:lint": "yarn workspace functions lint",
     "api:dev": "yarn workspace api dev",
     "api:dev:prod": "yarn workspace api dev:prod",
     "load-prod-game": "EXPO_PUBLIC_CONNECT_TO_PROD=true tsx -r dotenv/config scripts/load-prod-game.ts",
