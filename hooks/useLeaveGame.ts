@@ -1,10 +1,11 @@
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-async function leaveGameApi() {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/leave`, {
+async function leaveGameApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/leave`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,13 +29,14 @@ async function leaveGameApi() {
 export function useLeaveGame() {
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
+  const { game } = useCurrentGame();
 
   const leaveGame = async () => {
     try {
       console.log("useLeaveGame: Leaving game");
       setIsLeaving(true);
 
-      const result = await leaveGameApi();
+      const result = await leaveGameApi(game.gameId);
       console.log("useLeaveGame: Successfully left game:", result);
       
       // Navigate back to home screen

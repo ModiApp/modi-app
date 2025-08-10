@@ -3,13 +3,13 @@ import { Alert } from '@/ui/components/AlertBanner';
 import { useState } from 'react';
 
 async function startGameApi(gameId: string) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/start`, {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/start`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
     },
-    body: JSON.stringify({ gameId }),
+    body: JSON.stringify({}),
   });
   if (!response.ok) {
     const text = await response.text();

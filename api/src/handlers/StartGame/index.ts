@@ -5,9 +5,7 @@ import { db } from "@/firebase";
 import type { ActiveGame, CardID, GameInternalState, InitialGame } from "@/types";
 import { GameStatus } from "@/types";
 
-export interface StartGameRequest extends AuthenticatedRequest {
-  gameId: string;
-}
+export interface StartGameRequest extends AuthenticatedRequest { gameId: string }
 
 export interface StartGameResponse {
   success: boolean;

@@ -3,22 +3,13 @@ import type { AuthenticatedRequest } from "@/authenticate";
 import { db } from "@/firebase";
 import type { Game } from "@/types";
 
-export interface LeaveGameRequest extends AuthenticatedRequest {}
+export interface LeaveGameRequest extends AuthenticatedRequest { gameId: string }
 export interface LeaveGameResponse { success: boolean; gameId: string }
 
-export async function leaveGame({ userId }: LeaveGameRequest): Promise<LeaveGameResponse> {
-  const gamesRef = db.collection("games");
-  const snapshot = await gamesRef
-    .where("status", "==", "gathering-players")
-    .where("players", "array-contains", userId)
-    .get();
-
-  if (snapshot.empty) {
-    return { success: true, gameId: "" };
-  }
-
-  const gameDoc = snapshot.docs[0];
-  const gameId = gameDoc.id;
+export async function leaveGame({ userId, gameId }: LeaveGameRequest): Promise<LeaveGameResponse> {
+  const gameRef = db.collection("games").doc(gameId);
+  const gameDoc = await gameRef.get();
+  if (!gameDoc.exists) return { success: true, gameId: "" };
   const gameData = gameDoc.data() as Game;
 
   const username = gameData.usernames?.[userId] || "Unknown Player";

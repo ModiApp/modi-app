@@ -1,9 +1,10 @@
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
 import { useState } from 'react';
 
-async function swapCardApi() {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/swap`, {
+async function swapCardApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/swap`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,13 +33,14 @@ async function swapCardApi() {
  */
 export function useSwapCards() {
   const [isSwapping, setIsSwapping] = useState(false);
+  const { game } = useCurrentGame();
 
   const swapCard = async () => {
     try {
       console.log("useSwapCards: Swapping cards");
       setIsSwapping(true);
 
-      const result = await swapCardApi();
+      const result = await swapCardApi(game.gameId);
       console.log("useSwapCards: Cards swapped successfully:", result);
       
       // The game state will automatically update via Firestore listeners

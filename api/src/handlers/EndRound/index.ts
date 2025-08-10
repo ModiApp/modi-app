@@ -4,7 +4,7 @@ import { db } from "@/firebase";
 import type { ActiveGame, CardID, EndedGame, GameInternalState } from "@/types";
 import { GameStatus } from "@/types";
 
-export interface EndRoundRequest extends AuthenticatedRequest {}
+export interface EndRoundRequest extends AuthenticatedRequest { gameId: string }
 export interface EndRoundResponse { success: boolean }
 
 function findNextAlivePlayerToLeft(
@@ -22,21 +22,13 @@ function findNextAlivePlayerToLeft(
   return null;
 }
 
-export async function endRound({ userId }: EndRoundRequest): Promise<EndRoundResponse> {
-  const gamesRef = db.collection("games");
-  const dealerQuery = gamesRef.where("dealer", "==", userId).where("status", "==", "active");
-  const dealerQuerySnapshot = await dealerQuery.get();
-  if (dealerQuerySnapshot.empty) {
-    throw Object.assign(new Error("No active game found where you are the dealer"), { status: 404 });
+export async function endRound({ userId, gameId }: EndRoundRequest): Promise<EndRoundResponse> {
+  const gameRef = db.collection("games").doc(gameId);
+  const gameDoc = await gameRef.get();
+  if (!gameDoc.exists) {
+    throw Object.assign(new Error("Game not found"), { status: 404 });
   }
-  if (dealerQuerySnapshot.size > 1) {
-    throw Object.assign(new Error("Multiple active games found where you are dealer"), { status: 500 });
-  }
-
-  const gameDoc = dealerQuerySnapshot.docs[0];
-  const gameId = gameDoc.id;
   const gameData = gameDoc.data() as ActiveGame;
-  const gameRef = gameDoc.ref;
   if (gameData.status !== "active") {
     throw Object.assign(new Error("Game is not active"), { status: 412 });
   }

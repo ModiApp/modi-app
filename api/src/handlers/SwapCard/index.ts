@@ -5,7 +5,7 @@ import { db } from "@/firebase";
 import type { ActiveGame, CardID, GameInternalState } from "@/types";
 import { calculatePlayersLost } from "@/util";
 
-export interface SwapCardRequest extends AuthenticatedRequest {}
+export interface SwapCardRequest extends AuthenticatedRequest { gameId: string }
 export interface SwapCardResponse { success: boolean }
 
 function findNextAlivePlayerToLeft(
@@ -23,21 +23,13 @@ function findNextAlivePlayerToLeft(
   return null;
 }
 
-export async function swapCard({ userId }: SwapCardRequest): Promise<SwapCardResponse> {
-  const gamesRef = db.collection("games");
-  const activePlayerQuery = gamesRef.where("activePlayer", "==", userId).where("status", "==", "active");
-  const snapshot = await activePlayerQuery.get();
-  if (snapshot.empty) {
-    throw Object.assign(new Error("No active game found where you are the active player"), { status: 404 });
+export async function swapCard({ userId, gameId }: SwapCardRequest): Promise<SwapCardResponse> {
+  const gameRef = db.collection("games").doc(gameId);
+  const gameDoc = await gameRef.get();
+  if (!gameDoc.exists) {
+    throw Object.assign(new Error("Game not found"), { status: 404 });
   }
-  if (snapshot.size > 1) {
-    throw Object.assign(new Error("Multiple active games found where you are active player"), { status: 500 });
-  }
-
-  const gameDoc = snapshot.docs[0];
-  const gameId = gameDoc.id;
   const gameData = gameDoc.data() as ActiveGame;
-  const gameRef = gameDoc.ref;
   if (gameData.status !== "active") {
     throw Object.assign(new Error("Game is not active"), { status: 412 });
   }

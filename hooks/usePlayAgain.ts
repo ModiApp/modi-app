@@ -4,13 +4,13 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 async function playAgainApi(gameId: string) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/play-again`, {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/play-again`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
     },
-    body: JSON.stringify({ gameId }),
+    body: JSON.stringify({}),
   });
   if (!response.ok) {
     const text = await response.text();

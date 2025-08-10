@@ -1,9 +1,10 @@
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
 import { useState } from 'react';
 
-async function endRoundApi() {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/end-round`, {
+async function endRoundApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/end-round`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -35,13 +36,14 @@ async function endRoundApi() {
  */
 export function useEndRound() {
   const [isEndingRound, setIsEndingRound] = useState(false);
+  const { game } = useCurrentGame();
 
   const endRound = async () => {
     try {
       console.log("useEndRound: Ending round");
       setIsEndingRound(true);
 
-      const result = await endRoundApi();
+      const result = await endRoundApi(game.gameId);
       console.log("useEndRound: Round ended successfully:", result);
       
       // The game state will automatically update via Firestore listeners

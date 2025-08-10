@@ -4,9 +4,7 @@ import { db } from "@/firebase";
 import type { InitialGame } from "@/types";
 import { getUsername } from "@/util";
 
-export interface JoinGameRequest extends AuthenticatedRequest {
-  gameId: string;
-}
+export interface JoinGameRequest extends AuthenticatedRequest { gameId: string }
 
 export interface JoinGameResponse {
   success: boolean;

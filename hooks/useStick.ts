@@ -1,9 +1,10 @@
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
 import { useState } from 'react';
 
-async function stickApi() {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/stick`, {
+async function stickApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/stick`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -31,13 +32,14 @@ async function stickApi() {
  */
 export function useStick() {
   const [isSticking, setIsSticking] = useState(false);
+  const { game } = useCurrentGame();
 
   const stick = async () => {
     try {
       console.log("useStick: Sticking (passing turn)");
       setIsSticking(true);
 
-      const result = await stickApi();
+      const result = await stickApi(game.gameId);
       console.log("useStick: Successfully stuck:", result);
       
       // The game state will automatically update via Firestore listeners

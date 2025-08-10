@@ -5,9 +5,7 @@ import type { Game, InitialGame } from "@/types";
 import { GameStatus } from "@/types";
 import { getUsername } from "@/util";
 
-export interface PlayAgainRequest extends AuthenticatedRequest {
-  gameId: string;
-}
+export interface PlayAgainRequest extends AuthenticatedRequest { gameId: string }
 
 export interface PlayAgainResponse {
   gameId: string;

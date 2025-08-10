@@ -2,10 +2,7 @@ import type { AuthenticatedRequest } from "@/authenticate";
 import { db } from "@/firebase";
 import type { InitialGame } from "@/types";
 
-export interface SetPlayerOrderRequest extends AuthenticatedRequest {
-  gameId: string;
-  players: string[];
-}
+export interface SetPlayerOrderRequest extends AuthenticatedRequest { gameId: string; players: string[] }
 
 export interface SetPlayerOrderResponse { success: boolean }
 

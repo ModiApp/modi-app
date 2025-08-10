@@ -28,15 +28,15 @@ app.use('/games', authenticate);
 app.post('/games', makeRequestHandler(createGame));
 
 // Cloud Functions parity
-app.post('/games/join', makeRequestHandler(joinGame));
-app.post('/games/start', makeRequestHandler(startGame));
-app.post('/games/deal', makeRequestHandler(dealCards));
-app.post('/games/end-round', makeRequestHandler(endRound));
-app.post('/games/leave', makeRequestHandler(leaveGame));
-app.post('/games/play-again', makeRequestHandler(playAgain));
-app.post('/games/set-player-order', makeRequestHandler(setPlayerOrder));
-app.post('/games/stick', makeRequestHandler(stick));
-app.post('/games/swap', makeRequestHandler(swapCard));
+app.post('/games/:gameId/join', makeRequestHandler(joinGame));
+app.post('/games/:gameId/start', makeRequestHandler(startGame));
+app.post('/games/:gameId/deal', makeRequestHandler(dealCards));
+app.post('/games/:gameId/end-round', makeRequestHandler(endRound));
+app.post('/games/:gameId/leave', makeRequestHandler(leaveGame));
+app.post('/games/:gameId/play-again', makeRequestHandler(playAgain));
+app.post('/games/:gameId/set-player-order', makeRequestHandler(setPlayerOrder));
+app.post('/games/:gameId/stick', makeRequestHandler(stick));
+app.post('/games/:gameId/swap', makeRequestHandler(swapCard));
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const host = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
