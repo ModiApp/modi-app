@@ -37,9 +37,13 @@ export const cors: RequestHandler = (req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
+  // Ensure caches/proxies don't reuse CORS headers across origins
+  res.header('Vary', 'Origin');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    // Let the browser cache the preflight for a bit to cut down on OPTIONS calls
+    res.header('Access-Control-Max-Age', '600'); // 10 minutes (Safari caps around this)
     res.sendStatus(200);
     return;
   }
