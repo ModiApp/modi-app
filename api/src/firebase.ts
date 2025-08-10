@@ -8,7 +8,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // In development against emulators, set the Auth emulator host BEFORE creating the Auth service
 if (isDevelopment && !process.env.CONNECT_TO_PROD) {
-  process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099';
+  process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '0.0.0.0:9099';
 }
 
 // Initialize Firebase Admin SDK
@@ -29,10 +29,10 @@ export const auth = getAuth(app);
 if (isDevelopment && !process.env.CONNECT_TO_PROD) {
   // Connect to Firestore emulator
   db.settings({
-    host: '127.0.0.1:8080',
+    host: '0.0.0.0:8080',
     ssl: false
   });
-  console.log('🔗 Connected to Firestore emulator on 127.0.0.1:8080');
+  console.log('🔗 Connected to Firestore emulator on 0.0.0.0:8080');
 
   // Auth emulator log (host already set before getAuth)
   console.log(`🔗 Connected to Auth emulator on ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);
