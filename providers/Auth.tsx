@@ -35,8 +35,14 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
 
   useEffect(() => {
     signInAnonymously(auth)
-      .then((result) => {
+      .then(async (result) => {
         console.debug("Signed in anonymously", result.user.uid);
+        // Force-refresh token (useful after emulator restarts)
+        try {
+          await result.user.getIdToken(true);
+        } catch (e) {
+          console.warn("Failed to refresh ID token after sign-in", e);
+        }
         setUserId(result.user.uid);
       })
       .catch((err) => {

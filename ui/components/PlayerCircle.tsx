@@ -1,4 +1,5 @@
-import { Game, isWaitingForPlayers } from "@/functions/src/types";
+import type { Game } from "@/api/src/types";
+import { isWaitingForPlayers } from "@/api/src/types";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, ViewStyle } from "react-native";
 import { Container, Text } from "../elements";

@@ -1,11 +1,24 @@
-import { functions } from '@/config/firebase';
-import { LeaveGameRequest, LeaveGameResponse } from '@/functions/src/leaveGame';
-import { useRouter } from 'expo-router';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 
-const leaveGameFunction = httpsCallable<LeaveGameRequest, LeaveGameResponse>(functions, 'leaveGame');
+async function leaveGameApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/leave`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to leave game: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean; gameId: string }>;
+}
 
 /**
  * A hook to leave the current game.
@@ -16,15 +29,15 @@ const leaveGameFunction = httpsCallable<LeaveGameRequest, LeaveGameResponse>(fun
 export function useLeaveGame() {
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
+  const { game } = useCurrentGame();
 
   const leaveGame = async () => {
     try {
       console.log("useLeaveGame: Leaving game");
       setIsLeaving(true);
 
-      const result = await leaveGameFunction({});
-
-      console.log("useLeaveGame: Successfully left game:", result.data);
+      const result = await leaveGameApi(game.gameId);
+      console.log("useLeaveGame: Successfully left game:", result);
       
       // Navigate back to home screen
       router.push("/");

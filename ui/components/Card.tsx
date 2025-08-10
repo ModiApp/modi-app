@@ -1,4 +1,4 @@
-import { CardID } from "@/functions/src/types";
+import type { CardID } from "@/api/src/types/card.types";
 import cardImgs from "@/ui/assets/images/cards";
 import React from "react";
 import { Image, ImageProps, ImageStyle } from "react-native";

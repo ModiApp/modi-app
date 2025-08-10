@@ -1,4 +1,4 @@
-import { Game } from "@/functions/src/types";
+import type { Game } from "@/api/src/types";
 import React, { useState } from "react";
 import { LayoutChangeEvent, ViewStyle } from "react-native";
 import { Container } from "../elements";

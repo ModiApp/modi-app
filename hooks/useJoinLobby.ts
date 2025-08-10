@@ -1,11 +1,22 @@
-import { functions } from '@/config/firebase';
-import { JoinGameRequest, JoinGameResponse } from '@/functions/src/joinGame';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { usePathname, useRouter } from 'expo-router';
-import { httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
-
-const joinGameFunction = httpsCallable<JoinGameRequest, JoinGameResponse>(functions, 'joinGame');
+async function joinGameApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/join`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to join game: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean; gameId: string }>;
+}
 
 /**
  * A hook to join an existing game lobby.
@@ -28,9 +39,8 @@ export function useJoinLobby() {
       console.log("useJoinLobby: Joining game", { gameId });
       setIsJoining(true);
 
-      const result = await joinGameFunction({ gameId: gameId.trim() });
-
-      console.log("useJoinLobby: Successfully joined game:", result.data);
+      const result = await joinGameApi(gameId.trim());
+      console.log("useJoinLobby: Successfully joined game:", result);
       
       // Navigate to the lobby with the game ID
       // if route is not already /games/:gameId, push to it
@@ -40,20 +50,7 @@ export function useJoinLobby() {
     } catch (error: any) {
       console.error("useJoinLobby: Error joining game:", error);
       
-      // Handle different types of errors
-      if (error.code === 'functions/not-found') {
-        Alert.error({ message: 'Game not found. Please check the game ID.' });
-      } else if (error.code === 'functions/failed-precondition') {
-        Alert.error({ message: 'Game is not accepting players right now.' });
-      } else if (error.code === 'functions/already-exists') {
-        Alert.error({ message: 'Username is already taken in this game.' });
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: 'Please sign in to join a game.' });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: 'Invalid game ID or username.' });
-      } else {
-        Alert.error({ message: 'Failed to join game. Please try again.' });
-      }
+      Alert.error({ message: 'Failed to join game. Please try again.' });
     } finally {
       setIsJoining(false);
     }

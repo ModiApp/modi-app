@@ -1,10 +1,23 @@
-import { functions } from '@/config/firebase';
-import { EndRoundRequest, EndRoundResponse } from '@/functions/src/endRound';
-import { httpsCallable } from 'firebase/functions';
-import { useState } from 'react';
+import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
+import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
+import { useState } from 'react';
 
-const endRoundFunction = httpsCallable<EndRoundRequest, EndRoundResponse>(functions, 'endRound');
+async function endRoundApi(gameId: string) {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/end-round`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Failed to end round: ${response.statusText}`);
+  }
+  return response.json() as Promise<{ success: boolean }>;
+}
 
 /**
  * A hook to end the current round and resolve the game state.
@@ -23,15 +36,15 @@ const endRoundFunction = httpsCallable<EndRoundRequest, EndRoundResponse>(functi
  */
 export function useEndRound() {
   const [isEndingRound, setIsEndingRound] = useState(false);
+  const { game } = useCurrentGame();
 
   const endRound = async () => {
     try {
       console.log("useEndRound: Ending round");
       setIsEndingRound(true);
 
-      const result = await endRoundFunction({});
-
-      console.log("useEndRound: Round ended successfully:", result.data);
+      const result = await endRoundApi(game.gameId);
+      console.log("useEndRound: Round ended successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // The round state will change from "tallying" to "pre-deal"
@@ -43,40 +56,7 @@ export function useEndRound() {
     } catch (error: any) {
       console.error("useEndRound: Error ending round:", error);
       
-      // Handle different types of errors
-      if (error.code === 'functions/not-found') {
-        Alert.error({ message: "No active game found where you are the dealer." });
-      } else if (error.code === 'functions/failed-precondition') {
-        if (error.message?.includes('not active')) {
-          Alert.error({ message: "Game is not active." });
-        } else if (error.message?.includes('tallying')) {
-          Alert.error({ message: "Round can only be ended in tallying state." });
-        } else if (error.message?.includes('No player hands found')) {
-          Alert.error({ message: "No player hands found." });
-        } else if (error.message?.includes('No valid player cards found')) {
-          Alert.error({ message: "No valid player cards found." });
-        } else if (error.message?.includes('No alive players found for new dealer')) {
-          Alert.error({ message: "No alive players found for new dealer." });
-        } else if (error.message?.includes('No alive players found for new active player')) {
-          Alert.error({ message: "No alive players found for new active player." });
-        } else {
-          Alert.error({ message: "Round cannot be ended right now." });
-        }
-      } else if (error.code === 'functions/permission-denied') {
-        if (error.message?.includes('dealer')) {
-          Alert.error({ message: "Only the dealer can end the round." });
-        } else if (error.message?.includes('active player')) {
-          Alert.error({ message: "Only the active player can end the round." });
-        } else {
-          Alert.error({ message: "You don't have permission to end the round." });
-        }
-      } else if (error.code === 'functions/unauthenticated') {
-        Alert.error({ message: "Please sign in to end the round." });
-      } else if (error.code === 'functions/invalid-argument') {
-        Alert.error({ message: "Invalid request." });
-      } else {
-        Alert.error({ message: "Failed to end round. Please try again." });
-      }
+      Alert.error({ message: 'Failed to end round. Please try again.' });
     } finally {
       setIsEndingRound(false);
     }

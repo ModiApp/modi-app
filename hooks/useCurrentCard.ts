@@ -1,5 +1,5 @@
+import type { CardID } from '@/api/src/types/card.types';
 import { firestore } from '@/config/firebase';
-import { CardID } from '@/functions/src/types';
 import { useUserId } from '@/providers/Auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
