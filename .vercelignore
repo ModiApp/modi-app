@@ -1,0 +1,13 @@
+# Exclude server and emulator-related directories from Vercel deployments
+api/
+functions/
+emulator-data/
+
+# Local configs/secrets not needed for static web deploys
+firebase.json
+firestore.rules
+firestore.indexes.json
+google-service-account.json
+
+# Scripts not needed at build time on Vercel
+scripts/
