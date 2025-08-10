@@ -7,7 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { WebAppHead } from "./WebAppHead";
+import { WebAppHead } from "@/ui/components/WebAppHead";
 
 export default function RootLayout() {
   return (
