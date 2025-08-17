@@ -13,11 +13,16 @@ export function WebAppHead() {
         rel="apple-touch-icon"
         href={Asset.fromModule(require("@/ui/assets/images/icon.png")).uri}
       />
+      <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-title" content="Modi" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="theme-color" content="#35654D" />
+      <style>{`
+        html, body, #root { height: 100%; background: #35654D; }
+        body { margin: 0; }
+      `}</style>
       <meta
         property="og:description"
         content="Play with friends, don't end up with the lowest card."
