@@ -4,10 +4,10 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isLocalEnv = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
-// In development against emulators, set the Auth emulator host BEFORE creating the Auth service
-if (isDevelopment && !process.env.CONNECT_TO_PROD) {
+// In development or test against emulators, set the Auth emulator host BEFORE creating the Auth service
+if (isLocalEnv && !process.env.CONNECT_TO_PROD) {
   process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '0.0.0.0:9099';
 }
 
@@ -15,7 +15,7 @@ if (isDevelopment && !process.env.CONNECT_TO_PROD) {
 const appConfig: AppOptions = {
   projectId: process.env.FIREBASE_PROJECT_ID,
 }
-if (!isDevelopment) {
+if (!isLocalEnv) {
   appConfig.credential = admin.credential.cert(
     JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIAL_BASE64 || 'e30=', 'base64').toString())
   )
@@ -26,13 +26,14 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 
-if (isDevelopment && !process.env.CONNECT_TO_PROD) {
+if (isLocalEnv && !process.env.CONNECT_TO_PROD) {
   // Connect to Firestore emulator
   db.settings({
-    host: '0.0.0.0:8080',
-    ssl: false
+    host: process.env.FIRESTORE_EMULATOR_HOST || '0.0.0.0:8080',
+    ignoreUndefinedProperties: true
   });
-  console.log('🔗 Connected to Firestore emulator on 0.0.0.0:8080');
+
+  console.log(`🔗 Connected to Firestore emulator on ${process.env.FIRESTORE_EMULATOR_HOST || '0.0.0.0:8080'}`);
 
   // Auth emulator log (host already set before getAuth)
   console.log(`🔗 Connected to Auth emulator on ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);

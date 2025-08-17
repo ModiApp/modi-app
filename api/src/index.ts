@@ -41,10 +41,14 @@ app.post('/games/:gameId/swap', makeRequestHandler(swapCard));
 const port = parseInt(process.env.PORT || '3000', 10);
 const host = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
 
-app.listen(port, host, () => {
-  console.log(`🚀 Server is running on http://${host}:${port}`);
-  keepAlive();
-});
+// Only start the server when not running tests
+const isTestEnv = process.env['NODE_ENV'] === 'test' || process.env['JEST_WORKER_ID'] !== undefined;
+if (!isTestEnv) {
+  app.listen(port, host, () => {
+    console.log(`🚀 Server is running on http://${host}:${port}`);
+    keepAlive();
+  });
+}
 
 // Error handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -53,3 +57,5 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   const message = typeof err.message === 'string' ? err.message : 'Internal Server Error';
   res.status(status).send(message);
 });
+
+export default app;
