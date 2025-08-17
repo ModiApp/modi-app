@@ -9,7 +9,6 @@ import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { WebAppHead } from "@/ui/components/WebAppHead";
 import { colors } from "@/ui/styles";
-import { Platform } from "react-native";
 
 export default function RootLayout() {
   return (
@@ -22,7 +21,6 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.feltGreen },
-              animation: Platform.OS === "web" ? "none" : undefined,
             }}
           >
             <Stack.Screen name="index" />
