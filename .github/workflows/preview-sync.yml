@@ -1,0 +1,83 @@
+name: Preview sync (Heroku Review App -> Vercel)
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+      HEROKU_PIPELINE_ID: ${{ secrets.HEROKU_PIPELINE_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
+      STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure jq is available
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Wait for Heroku Review App and get URL
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          set -euo pipefail
+          AUTH="Authorization: Bearer ${HEROKU_API_KEY}"
+          ACC="Accept: application/vnd.heroku+json; version=3.review-apps"
+          API_BASE="https://api.heroku.com"
+          # Poll up to ~5 minutes
+          for i in {1..60}; do
+            resp=$(curl -sS -H "$AUTH" -H "$ACC" \
+              "${API_BASE}/pipelines/${HEROKU_PIPELINE_ID}/review-apps")
+            app_id=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .app.id" | head -n1)
+            status=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .status" | head -n1)
+            if [ -n "${app_id:-}" ] && [ "$status" = "created" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          if [ -z "${app_id:-}" ]; then
+            echo "Heroku review app not found yet; falling back to STAGING_API_URL"
+            echo "API_PREVIEW_URL=${STAGING_API_URL}" >> $GITHUB_ENV
+            echo "FALLBACK_USED=true" >> $GITHUB_ENV
+          else
+            app=$(curl -sS -H "$AUTH" -H "Accept: application/vnd.heroku+json; version=3" \
+              "${API_BASE}/apps/${app_id}")
+            url=$(echo "$app" | jq -r ".web_url" | sed 's#/$##')
+            echo "API_PREVIEW_URL=${url}" >> $GITHUB_ENV
+            echo "FALLBACK_USED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Link/pull Vercel project settings
+        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"}
+
+      - name: Deploy Vercel preview wired to API review
+        id: vercel_deploy
+        run: |
+          set -euo pipefail
+          OUT=$(vercel deploy --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"} --yes \
+            --env EXPO_PUBLIC_API_BASE_URL="${API_PREVIEW_URL}" \
+            --build-env EXPO_PUBLIC_API_BASE_URL="${API_PREVIEW_URL}" \
+            --json)
+          URL=$(echo "$OUT" | jq -r .url)
+          echo "VERCEL_URL=${URL}" >> $GITHUB_ENV
+          echo "Vercel deployment: ${URL}"
+
+      - name: Comment URLs on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.number }}
+          body: |
+            ✅ Preview environments ready:
+            - API: ${{ env.API_PREVIEW_URL }}${{ env.FALLBACK_USED == 'true' && ' (fallback to staging)' || '' }}
+            - Frontend (Vercel): https://${{ env.VERCEL_URL }}
