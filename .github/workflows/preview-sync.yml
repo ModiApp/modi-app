@@ -56,8 +56,15 @@ jobs:
           for i in {1..120}; do
             resp=$(curl -sS -H "$AUTH" -H "$ACC" \
               "${API_BASE}/pipelines/${HEROKU_PIPELINE_ID}/review-apps")
-            app_id=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .app.id" | head -n1)
-            status=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .status" | head -n1)
+            # Ensure response is an array before attempting to index
+            if echo "$resp" | jq -e 'type=="array"' >/dev/null 2>&1; then
+              app_id=$(echo "$resp" | jq -r --arg pr "$PR_NUMBER" 'map(select((.pr_number|tostring) == $pr)) | (.[0].app.id // empty)')
+              status=$(echo "$resp" | jq -r --arg pr "$PR_NUMBER" 'map(select((.pr_number|tostring) == $pr)) | (.[0].status // empty)')
+            else
+              echo "::warning::Unexpected Heroku response (not an array). Raw response: $resp"
+              app_id=""
+              status=""
+            fi
             echo "Heroku review app status: app_id='${app_id:-}', status='${status:-}' (attempt $i)"
             if [ -n "${app_id:-}" ] && [ "$status" = "created" ]; then
               break
