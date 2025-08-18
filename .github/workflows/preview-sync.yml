@@ -20,6 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate required secrets
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_PIPELINE_ID: ${{ secrets.HEROKU_PIPELINE_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in HEROKU_API_KEY HEROKU_PIPELINE_ID VERCEL_TOKEN; do
+            if [ -z "${!v:-}" ] || [ "${!v}" = "null" ]; then
+              missing+=("$v")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}" >&2
+            exit 1
+          fi
+
       - name: Ensure jq is available
         run: sudo apt-get update && sudo apt-get install -y jq
 
@@ -44,6 +62,10 @@ jobs:
           done
 
           if [ -z "${app_id:-}" ]; then
+            if [ -z "${STAGING_API_URL:-}" ] || [ "${STAGING_API_URL}" = "null" ]; then
+              echo "::error::Heroku review app not ready and STAGING_API_URL is not set. Set STAGING_API_URL secret to a stable API base URL or increase polling." >&2
+              exit 1
+            fi
             echo "Heroku review app not found yet; falling back to STAGING_API_URL"
             echo "API_PREVIEW_URL=${STAGING_API_URL}" >> $GITHUB_ENV
             echo "FALLBACK_USED=true" >> $GITHUB_ENV
@@ -58,14 +80,25 @@ jobs:
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
+      - name: Resolve Vercel project name
+        env:
+          VERCEL_PROJECT_SECRET: ${{ secrets.VERCEL_PROJECT }}
+        run: |
+          set -euo pipefail
+          PROJ="$VERCEL_PROJECT_SECRET"
+          if [ -z "${PROJ:-}" ] || [ "$PROJ" = "null" ]; then
+            PROJ="${{ github.event.repository.name }}"
+          fi
+          echo "VERCEL_PROJECT_RESOLVED=$PROJ" >> $GITHUB_ENV
+
       - name: Link/pull Vercel project settings
-        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"}
+        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"} --project "$VERCEL_PROJECT_RESOLVED"
 
       - name: Deploy Vercel preview wired to API review
         id: vercel_deploy
         run: |
           set -euo pipefail
-          OUT=$(vercel deploy --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"} --yes \
+          OUT=$(vercel deploy --token "$VERCEL_TOKEN" ${VERCEL_SCOPE:+--scope "$VERCEL_SCOPE"} --project "$VERCEL_PROJECT_RESOLVED" --yes \
             --env EXPO_PUBLIC_API_BASE_URL="${API_PREVIEW_URL}" \
             --build-env EXPO_PUBLIC_API_BASE_URL="${API_PREVIEW_URL}" \
             --json)
