@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   pull-requests: write
 
 jobs:
@@ -44,17 +45,20 @@ jobs:
       - name: Wait for Heroku Review App and get URL
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_PARENT_APP_NAME: ${{ secrets.HEROKU_PARENT_APP_NAME }}
         run: |
           set -euo pipefail
           AUTH="Authorization: Bearer ${HEROKU_API_KEY}"
           ACC="Accept: application/vnd.heroku+json; version=3.review-apps"
           API_BASE="https://api.heroku.com"
-          # Poll up to ~5 minutes
-          for i in {1..60}; do
+          echo "Polling Heroku for review app for PR #${PR_NUMBER} on pipeline ${HEROKU_PIPELINE_ID}"
+          # Poll up to ~10 minutes
+          for i in {1..120}; do
             resp=$(curl -sS -H "$AUTH" -H "$ACC" \
               "${API_BASE}/pipelines/${HEROKU_PIPELINE_ID}/review-apps")
             app_id=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .app.id" | head -n1)
             status=$(echo "$resp" | jq -r ".[] | select(.pr_number == ${PR_NUMBER}) | .status" | head -n1)
+            echo "Heroku review app status: app_id='${app_id:-}', status='${status:-}' (attempt $i)"
             if [ -n "${app_id:-}" ] && [ "$status" = "created" ]; then
               break
             fi
@@ -62,13 +66,30 @@ jobs:
           done
 
           if [ -z "${app_id:-}" ]; then
-            if [ -z "${STAGING_API_URL:-}" ] || [ "${STAGING_API_URL}" = "null" ]; then
-              echo "::error::Heroku review app not ready and STAGING_API_URL is not set. Set STAGING_API_URL secret to a stable API base URL or increase polling." >&2
-              exit 1
+            # Try fallback to parent app URL if provided
+            if [ -n "${HEROKU_PARENT_APP_NAME:-}" ] && [ "${HEROKU_PARENT_APP_NAME}" != "null" ]; then
+              echo "No review app yet; fetching parent app (${HEROKU_PARENT_APP_NAME}) web_url as fallback"
+              parent=$(curl -sS -H "$AUTH" -H "Accept: application/vnd.heroku+json; version=3" \
+                "${API_BASE}/apps/${HEROKU_PARENT_APP_NAME}")
+              parent_url=$(echo "$parent" | jq -r ".web_url" | sed 's#/$##')
+              if [ -n "${parent_url:-}" ] && [ "${parent_url}" != "null" ]; then
+                echo "API_PREVIEW_URL=${parent_url}" >> $GITHUB_ENV
+                echo "FALLBACK_USED=true" >> $GITHUB_ENV
+              else
+                echo "::warning::Could not resolve parent app URL."
+              fi
             fi
-            echo "Heroku review app not found yet; falling back to STAGING_API_URL"
-            echo "API_PREVIEW_URL=${STAGING_API_URL}" >> $GITHUB_ENV
-            echo "FALLBACK_USED=true" >> $GITHUB_ENV
+            # Final fallback to STAGING_API_URL if set
+            if [ -z "${API_PREVIEW_URL:-}" ]; then
+              if [ -n "${STAGING_API_URL:-}" ] && [ "${STAGING_API_URL}" != "null" ]; then
+                echo "No review app; falling back to STAGING_API_URL"
+                echo "API_PREVIEW_URL=${STAGING_API_URL}" >> $GITHUB_ENV
+                echo "FALLBACK_USED=true" >> $GITHUB_ENV
+              else
+                echo "::error::Heroku review app not ready and no fallback provided. Set HEROKU_PARENT_APP_NAME or STAGING_API_URL as a secret, or ensure Review Apps are enabled for the pipeline." >&2
+                exit 1
+              fi
+            fi
           else
             app=$(curl -sS -H "$AUTH" -H "Accept: application/vnd.heroku+json; version=3" \
               "${API_BASE}/apps/${app_id}")
