@@ -57,28 +57,44 @@ export async function dealCards({ userId, gameId }: DealCardsRequest): Promise<D
   const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
   const updatedPlayerHands: { [playerId: string]: CardID } = {};
 
-  let playerIndexOfReshuffle = 0;
+  let actionCounter = 0;
   const now = Date.now();
-  dealingOrder.forEach((pid, i) => {
+  let lastDealtIndex = 0;
+  
+  for (let i = 0; i < dealingOrder.length; i++) {
+    const pid = dealingOrder[i];
+    
+    // Check if we need to reshuffle before dealing to this player
     if (deck.length === 0) {
       if (trash.length === 0) {
         throw Object.assign(new Error("No cards left in deck or trash"), { status: 412 });
       }
-      if (i > 1) {
-        const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(0, i - 1));
-        addActionToBatch(batch, gameId, dealCardsAction, new Date(now));
-        playerIndexOfReshuffle = i;
+      
+      // If we've already dealt some cards, create a deal cards action for them
+      if (i > lastDealtIndex) {
+        const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(lastDealtIndex, i));
+        addActionToBatch(batch, gameId, dealCardsAction, new Date(now + actionCounter * 10));
+        actionCounter++;
       }
+      
+      // Create reshuffle action and reshuffle the trash into the deck
       const reshuffleAction = createDeckReshuffleAction(userId, gameData.dealer);
-      addActionToBatch(batch, gameId, reshuffleAction, new Date(now + 1));
+      addActionToBatch(batch, gameId, reshuffleAction, new Date(now + actionCounter * 10));
       deck = shuffleDeck(trash);
       trash = [];
+      actionCounter++;
+      lastDealtIndex = i;
     }
+    
+    // Deal a card to the current player
     updatedPlayerHands[pid] = deck.pop()!;
-  });
+  }
 
-  const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(playerIndexOfReshuffle));
-  addActionToBatch(batch, gameId, dealCardsAction, new Date(now + 2));
+  // Create final deal cards action for any remaining players after reshuffle
+  if (lastDealtIndex < dealingOrder.length) {
+    const dealCardsAction = createDealCardsAction(userId, dealingOrder.slice(lastDealtIndex));
+    addActionToBatch(batch, gameId, dealCardsAction, new Date(now + actionCounter * 10));
+  }
 
   batch.update(gameRef, { roundState: "playing", activePlayer: dealingOrder[0] });
   batch.set(internalStateRef, { deck, trash });
