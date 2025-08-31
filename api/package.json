@@ -7,7 +7,7 @@
   "author": "Isaac J. Benzaken",
   "license": "MIT",
   "engines": {
-    "node": "20.x",
+    "node": ">=20.x",
     "yarn": "1.22.x"
   },
   "scripts": {
@@ -15,18 +15,24 @@
     "prestart": "yarn build",
     "build": "tsc && tsc-alias",
     "dev": "NODE_ENV=development tsx watch src/index.ts",
-    "dev:prod": "CONNECT_TO_PROD=true tsx watch src/index.ts"
+    "dev:prod": "CONNECT_TO_PROD=true tsx watch src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "firebase-admin": "^13.4.0",
-    "typescript": "^5.9.2",
-    "dotenv": "^17.2.1",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
-    "tsc-alias": "^1.8.8"
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.4.0",
+    "tsc-alias": "^1.8.8",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.1.1",
+    "ts-jest": "^29.4.1",
     "tsx": "^4.20.3"
   }
 }
