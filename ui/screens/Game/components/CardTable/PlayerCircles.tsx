@@ -210,7 +210,7 @@ export function PlayerCircles() {
           opacity: isDragged ? 0.3 : 1,
         }}
       >
-        <Text size={10}>{game.usernames[playerId].slice(0, 2)}</Text>
+        <Text size={10}>{game.usernames[playerId].slice(0, 8)}</Text>
       </Container>
     );
 
@@ -251,7 +251,7 @@ export function PlayerCircles() {
         ]}
       >
         <Text size={10} style={{ color: "white" }}>
-          {game.usernames[draggedPlayerId].slice(0, 2)}
+          {game.usernames[draggedPlayerId].slice(0, 8)}
         </Text>
       </Animated.View>
     );
