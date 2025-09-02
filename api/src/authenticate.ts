@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { auth } from "./firebase";
 
 declare global {
   namespace Express {
@@ -20,6 +19,7 @@ const authenticate: RequestHandler = async function authenticate(req, res, next)
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
+  const { auth } = await import('./firebase');
   const decodedToken = await auth.verifyIdToken(token);
   req.userId = decodedToken.uid;
   next();
