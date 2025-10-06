@@ -7,7 +7,7 @@
   "author": "Isaac J. Benzaken",
   "license": "MIT",
   "engines": {
-    "node": "20.x",
+    "node": ">=18.0.0",
     "yarn": "1.22.x"
   },
   "scripts": {
