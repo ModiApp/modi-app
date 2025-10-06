@@ -13,7 +13,6 @@ import { startGame } from "./handlers/StartGame";
 import { stick } from "./handlers/Stick";
 import { swapCard } from "./handlers/SwapCard";
 import { makeRequestHandler } from "./handlers/makeHandler";
-import { keepAlive } from "./keepAlive";
 
 const app = express();
 
@@ -43,7 +42,6 @@ const host = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
 
 app.listen(port, host, () => {
   console.log(`🚀 Server is running on http://${host}:${port}`);
-  keepAlive();
 });
 
 // Error handling middleware

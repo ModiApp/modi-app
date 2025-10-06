@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React, { createContext, useState } from "react";
 
 import { useCreateGame } from "@/hooks/useCreateGame";
+import { useWarmUpServer } from "@/hooks/useWarmUpServer";
 import { useUsername } from "@/providers/Username";
 import type { HomeScreenProps } from "./Base";
 
@@ -20,6 +21,10 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
   const [shouldAskForUsername, setShouldAskForUsername] = useState(false);
   const username = useUsername();
   const { createGame, isCreatingGame } = useCreateGame();
+
+  // Awaken the server as soon as a user reaches the home screen
+  // since we're no longer paying to keep the server awake 24/7
+  useWarmUpServer();
 
   return (
     <HomeScreenContext.Provider
