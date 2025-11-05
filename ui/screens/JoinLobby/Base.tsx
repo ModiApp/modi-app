@@ -14,11 +14,15 @@ export interface JoinLobbyScreenProps {
   isValidatingLobbyId: boolean;
   validationError?: string;
   isLobbyIdInvalid: boolean;
+  lobbyId: string;
+  onLobbyIdChange: (lobbyId: string) => void;
   onLobbyIdSet: (lobbyId: string) => void;
   onCancel: () => void;
 }
 const JoinLobbyScreenBase: React.FC<JoinLobbyScreenProps> = ({
   onLobbyIdSet,
+  lobbyId,
+  onLobbyIdChange,
   isValidatingLobbyId,
   isLobbyIdInvalid,
   validationError,
@@ -54,7 +58,13 @@ const JoinLobbyScreenBase: React.FC<JoinLobbyScreenProps> = ({
         <TextInput
           style={{ fontSize: 24 }}
           placeholder="Game PIN"
-          onChangeText={(text) => text.length === 4 && onLobbyIdSet(text)}
+          value={lobbyId}
+          onChangeText={(text) => {
+            onLobbyIdChange(text);
+            if (text.length === 4) {
+              onLobbyIdSet(text);
+            }
+          }}
           autoFocus
           keyboardType="number-pad"
         />
