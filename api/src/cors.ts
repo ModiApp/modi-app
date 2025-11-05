@@ -1,4 +1,5 @@
 import { RequestHandler } from "express";
+import { getLanIp } from "./utils/getLanIPAddress";
 
 // Helper function to check if origin matches a wildcard pattern
 const matchesWildcardPattern = (origin: string, pattern: string): boolean => {
@@ -16,7 +17,7 @@ export const cors: RequestHandler = (req, res, next) => {
 
   if (isDevelopment) {
     // In development, allow any origin from the LAN network
-    if (origin && (origin.includes('192.168.') || origin.includes('localhost'))) {
+    if (origin && (origin.includes(getLanIp()) || origin.includes('localhost'))) {
       res.header('Access-Control-Allow-Origin', origin);
     }
   } else {

@@ -13,15 +13,16 @@ import { startGame } from "./handlers/StartGame";
 import { stick } from "./handlers/Stick";
 import { swapCard } from "./handlers/SwapCard";
 import { makeRequestHandler } from "./handlers/makeHandler";
+import { getLanIp } from "./utils/getLanIPAddress";
 
 const app = express();
 
+app.use(cors);
 app.get('/', (req, res) => {
   res.send('Herro herro');
 });
 
 app.use(express.json());
-app.use(cors);
 
 app.use('/games', authenticate);
 app.post('/games', makeRequestHandler(createGame));
@@ -41,7 +42,11 @@ const port = parseInt(process.env.PORT || '3000', 10);
 const host = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
 
 app.listen(port, host, () => {
-  console.log(`🚀 Server is running on http://${host}:${port}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🚀 Server is running on http://${getLanIp()}:${port}`);
+  } else {
+    console.log(`🚀 Server is running`);
+  }
 });
 
 // Error handling middleware
