@@ -28,6 +28,7 @@ export interface ActiveGame extends GameBase {
   round: number;
   activePlayer: string;
   roundState: 'pre-deal' | 'playing' | 'tallying';
+  turnStartedAt: number | null;
 }
 
 export interface EndedGame extends Omit<ActiveGame, 'status' | 'dealer' | 'activePlayer'> {

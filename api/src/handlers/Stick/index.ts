@@ -33,13 +33,13 @@ export async function stick({ userId, gameId }: StickRequest): Promise<StickResp
   let updateData: Partial<ActiveGame> = {};
   const isDealer = gameData.dealer === userId;
   if (isDealer) {
-    updateData = { roundState: "tallying" };
+    updateData = { roundState: "tallying", turnStartedAt: null };
   } else {
     const nextPlayerId = findNextAlivePlayerToLeft(gameData.players, gameData.playerLives, userId);
     if (!nextPlayerId) {
       throw Object.assign(new Error("No alive players found to pass turn to"), { status: 412 });
     }
-    updateData = { activePlayer: nextPlayerId };
+    updateData = { activePlayer: nextPlayerId, turnStartedAt: Date.now() };
   }
 
   const batch = db.batch();

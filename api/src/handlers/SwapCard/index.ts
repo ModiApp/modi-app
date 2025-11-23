@@ -87,7 +87,7 @@ export async function swapCard({ userId, gameId }: SwapCardRequest): Promise<Swa
     currentTrash.push(currentPlayerCard);
     updatedInternalState = { deck: currentDeck, trash: currentTrash };
     updatedPlayerHands[userId] = newCard;
-    await gameRef.update({ roundState: "tallying" });
+    await gameRef.update({ roundState: "tallying", turnStartedAt: null });
   } else {
     const nextPlayerId = findNextAlivePlayerToLeft(gameData.players, gameData.playerLives, userId);
     if (!nextPlayerId) {
@@ -116,7 +116,7 @@ export async function swapCard({ userId, gameId }: SwapCardRequest): Promise<Swa
   }
 
   if (gameData.dealer !== userId && newActivePlayer) {
-    batch.update(gameRef, { activePlayer: newActivePlayer });
+    batch.update(gameRef, { activePlayer: newActivePlayer, turnStartedAt: Date.now() });
   }
   if (updatedInternalState !== internalState) {
     batch.set(internalStateRef, updatedInternalState);
