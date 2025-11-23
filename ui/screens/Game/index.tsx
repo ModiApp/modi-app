@@ -1,4 +1,4 @@
-import { useUserId } from "@/providers/Auth";
+import { useAuth } from "@/providers/Auth";
 import { Container } from "@/ui/elements";
 import ScreenContainer from "@/ui/elements/Screen";
 import { GameActionProvider } from "@/ui/screens/Game/GameActionsProvider";
@@ -18,8 +18,8 @@ const GameScreen: React.FC = () => {
   // get the game id from the url
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
   const game = useGame(gameId);
-  const currentUserId = useUserId();
-  if (!game) return <ScreenContainer />;
+  const { userId: currentUserId } = useAuth();
+  if (!game || !currentUserId) return <ScreenContainer />;
 
   return (
     <ScreenContainer>
