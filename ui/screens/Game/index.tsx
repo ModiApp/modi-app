@@ -13,6 +13,7 @@ import { WinnerInfo } from "./components/WinnerInfo";
 import { useGame } from "./hooks/useGame";
 import { PlayerControls } from "./PlayerControls";
 import { PlayingProvider } from "./PlayingContext";
+import { GameSettingsButton } from "./components/GameSettingsButton";
 
 const GameScreen: React.FC = () => {
   // get the game id from the url
@@ -32,8 +33,18 @@ const GameScreen: React.FC = () => {
                 paddingTop: 28,
                 paddingVertical: 32,
                 alignItems: "center",
+                width: "100%",
               }}
             >
+              <Container
+                style={{
+                  position: "absolute",
+                  top: 28,
+                  right: 24,
+                }}
+              >
+                <GameSettingsButton />
+              </Container>
               <ShareGameInfo />
               <WinnerInfo />
             </Container>
