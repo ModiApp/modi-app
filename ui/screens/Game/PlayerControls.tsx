@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { ActiveGame, Game } from "@/api/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
 import { useEndRound } from "@/hooks/useEndRound";
@@ -10,9 +11,52 @@ import { LeaveGameButton } from "./components/LeaveGameButton";
 import { PlayAgainButton } from "./components/PlayAgainButton";
 import { StartGameButton } from "./components/StartGameButton";
 
+const TURN_DURATION_MS = 30_000;
+
 export function PlayerControls(props: { game: Game; currUserId: string }) {
   const { game, currUserId } = props;
   const currentCard = useCurrentCard(game.gameId);
+  const { swapCard, isSwapping } = useSwapCards();
+  const { stick, isSticking } = useStick();
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activePlayer = game.status === "active" ? game.activePlayer : null;
+  const roundState = game.status === "active" ? game.roundState : null;
+  const turnStartedAt = game.status === "active" ? game.turnStartedAt : null;
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (tickRef.current) clearInterval(tickRef.current);
+
+    if (roundState !== "playing" || activePlayer !== currUserId) {
+      setSecondsRemaining(null);
+      return undefined;
+    }
+
+    const turnStart = turnStartedAt ?? Date.now();
+    const turnEndsAt = turnStart + TURN_DURATION_MS;
+
+    const updateSecondsRemaining = () => {
+      const remainingMs = turnEndsAt - Date.now();
+      setSecondsRemaining(Math.max(0, Math.ceil(remainingMs / 1000)));
+    };
+
+    updateSecondsRemaining();
+
+    if (!isSticking && !isSwapping) {
+      timerRef.current = setTimeout(() => {
+        stick();
+      }, Math.max(0, turnEndsAt - Date.now()));
+    }
+
+    tickRef.current = setInterval(updateSecondsRemaining, 250);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
+  }, [activePlayer, currUserId, isSticking, isSwapping, roundState, stick, turnStartedAt]);
 
   if (game.status === "gathering-players") {
     return (
@@ -58,9 +102,19 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
       return (
         <>
           {!currentCard?.startsWith("K") && (
-            <SwapCardsButton game={game} currUserId={currUserId} />
+            <SwapCardsButton
+              game={game}
+              currUserId={currUserId}
+              swapCard={swapCard}
+              isSwapping={isSwapping}
+            />
           )}
-          <StickButton />
+          <StickButton stick={stick} isSticking={isSticking} />
+          {secondsRemaining !== null && (
+            <Text style={{ marginTop: 8, textAlign: "center" }}>
+              Auto-sticking in {secondsRemaining}s
+            </Text>
+          )}
         </>
       );
     }
@@ -94,9 +148,13 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
   );
 }
 
-function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
-  const { game, currUserId } = props;
-  const { swapCard, isSwapping } = useSwapCards();
+function SwapCardsButton(props: {
+  game: ActiveGame;
+  currUserId: string;
+  swapCard: () => Promise<void>;
+  isSwapping: boolean;
+}) {
+  const { game, currUserId, swapCard, isSwapping } = props;
 
   return (
     <Button color="red" onPress={swapCard} loading={isSwapping} fullWidth>
@@ -105,8 +163,8 @@ function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
   );
 }
 
-function StickButton() {
-  const { stick, isSticking } = useStick();
+function StickButton(props: { stick: () => Promise<void>; isSticking: boolean }) {
+  const { stick, isSticking } = props;
 
   return (
     <Button color="blue" onPress={stick} loading={isSticking} fullWidth>

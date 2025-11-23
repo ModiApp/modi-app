@@ -87,6 +87,7 @@ export async function endRound({ userId, gameId }: EndRoundRequest): Promise<End
     activePlayer: newDealer,
     roundState: "pre-deal",
     round: gameData.round + 1,
+    turnStartedAt: null,
   });
   const updatedInternalState: GameInternalState = { deck: internalState.deck, trash: updatedTrash };
   batch.set(internalStateRef, updatedInternalState);

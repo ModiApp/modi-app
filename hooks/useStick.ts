@@ -1,7 +1,7 @@
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 async function stickApi(gameId: string) {
   const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/stick`, {
@@ -34,7 +34,7 @@ export function useStick() {
   const [isSticking, setIsSticking] = useState(false);
   const { game } = useCurrentGame();
 
-  const stick = async () => {
+  const stick = useCallback(async () => {
     try {
       console.log("useStick: Sticking (passing turn)");
       setIsSticking(true);
@@ -53,7 +53,7 @@ export function useStick() {
     } finally {
       setIsSticking(false);
     }
-  };
+  }, [game.gameId]);
 
   return {
     stick,

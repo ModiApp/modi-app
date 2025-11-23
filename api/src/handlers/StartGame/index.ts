@@ -48,6 +48,7 @@ export async function startGame({ userId, gameId }: StartGameRequest): Promise<S
     round: 1,
     activePlayer: gameData.host,
     roundState: "pre-deal",
+    turnStartedAt: Date.now(),
   };
 
   const internalState: GameInternalState = { deck, trash: [] };

@@ -96,7 +96,11 @@ export async function dealCards({ userId, gameId }: DealCardsRequest): Promise<D
     addActionToBatch(batch, gameId, dealCardsAction, new Date(now + actionCounter * 10));
   }
 
-  batch.update(gameRef, { roundState: "playing", activePlayer: dealingOrder[0] });
+  batch.update(gameRef, {
+    roundState: "playing",
+    activePlayer: dealingOrder[0],
+    turnStartedAt: Date.now(),
+  });
   batch.set(internalStateRef, { deck, trash });
   Object.entries(updatedPlayerHands).forEach(([pid, card]) => {
     batch.set(playerHandsRef.doc(pid), { card });
