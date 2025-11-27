@@ -1,10 +1,11 @@
-import type { ActiveGame, Game } from "@/api/src/types";
+import type { ActiveGame, Game, InitialGame } from "@/api/src/types";
 import { useCurrentCard } from "@/hooks/useCurrentCard";
 import { useEndRound } from "@/hooks/useEndRound";
 import { useStick } from "@/hooks/useStick";
 import { useSwapCards } from "@/hooks/useSwapCards";
 import { Button, Container, Text } from "@/ui/elements";
 import { DealCardsButton } from "./components/DealCardsButton";
+import { GameSettingsButton } from "./components/GameSettingsButton";
 import { JoinGameButton } from "./components/JoinGameButton";
 import { LeaveGameButton } from "./components/LeaveGameButton";
 import { PlayAgainButton } from "./components/PlayAgainButton";
@@ -21,7 +22,10 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
         <Container style={{ flex: 1, justifyContent: "center" }}>
           {game.players.includes(currUserId) ? (
             game.host === currUserId ? (
-              <StartGameButton gameId={game.gameId} />
+              <Container style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+                <StartGameButton gameId={game.gameId} fullWidth />
+                <GameSettingsButton game={game as InitialGame} />
+              </Container>
             ) : (
               <Text>
                 Waiting for {game.usernames[game.host]} to start the game...
