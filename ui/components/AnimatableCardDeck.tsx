@@ -1,5 +1,6 @@
 import type { CardID } from "@/api/src/types/card.types";
 import { Card, CardBack } from "@/ui/components/Card";
+import { useAnimationSpeed } from "@/ui/screens/Game/AnimationSpeedContext";
 import React, {
   useCallback,
   useImperativeHandle,
@@ -30,6 +31,7 @@ export const AnimatableCardDeck = React.forwardRef<
   AnimatableCardDeckProps
 >(function AnimatableCardDeck(props, ref) {
   const { cardWidth, numCards = 52 } = props;
+  const { getDuration } = useAnimationSpeed();
   const cards = useRef<readonly CardAnimatableProps[]>(
     createInitialCardDeck(numCards)
   ).current;
@@ -54,6 +56,7 @@ export const AnimatableCardDeck = React.forwardRef<
           ref={cardRefs[index]}
           cardWidth={cardWidth}
           zIndex={index - cards.length}
+          getDuration={getDuration}
           {...card}
         />
       ))}
@@ -73,6 +76,7 @@ export interface CardAnimatableProps {
 
 interface AnimatableCardProps extends CardAnimatableProps {
   cardWidth: number;
+  getDuration(duration: number): number;
 }
 
 export interface AnimatableCardRef {
@@ -138,10 +142,11 @@ export const AnimatableCard = React.forwardRef<
       isFaceDownRef.current = !isFaceDownRef.current;
       return cardFlipAnimation(
         { rotateY, backOpacity, faceOpacity },
-        wasFaceDown
+        wasFaceDown,
+        props.getDuration
       );
     },
-    [rotateY, backOpacity, faceOpacity]
+    [rotateY, backOpacity, faceOpacity, props.getDuration]
   );
 
   const ensureFaceUp = useCallback(
@@ -224,17 +229,42 @@ function createCardRefs(
 
 function cardFlipAnimation(
   card: Pick<CardAnimatableProps, "rotateY" | "backOpacity" | "faceOpacity">,
-  wasFaceDown: boolean
+  wasFaceDown: boolean,
+  getDuration: (duration: number) => number
 ): Promise<void> {
   const { rotateY, backOpacity, faceOpacity } = card;
   return new Promise<void>((resolve) => {
     const finalBackOpacity = wasFaceDown ? 0 : 1;
     const finalFaceOpacity = wasFaceDown ? 1 : 0;
     // Animate rotateY to 90, swap opacities, then animate back to 0
-    rotateY.value = withTiming(90, { duration: 150 }, () => {
+    const firstDuration = getDuration(150);
+    if (firstDuration === 0) {
+      rotateY.value = 90;
       backOpacity.value = finalBackOpacity;
       faceOpacity.value = finalFaceOpacity;
-      rotateY.value = withTiming(0, { duration: 150 }, () => {
+      const secondDuration = getDuration(150);
+      if (secondDuration === 0) {
+        rotateY.value = 0;
+        resolve();
+        return;
+      }
+
+      rotateY.value = withTiming(0, { duration: secondDuration }, () => {
+        resolve();
+      });
+      return;
+    }
+
+    rotateY.value = withTiming(90, { duration: firstDuration }, () => {
+      backOpacity.value = finalBackOpacity;
+      faceOpacity.value = finalFaceOpacity;
+      const secondDuration = getDuration(150);
+      if (secondDuration === 0) {
+        rotateY.value = 0;
+        resolve();
+        return;
+      }
+      rotateY.value = withTiming(0, { duration: secondDuration }, () => {
         resolve();
       });
     });

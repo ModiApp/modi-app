@@ -7,8 +7,14 @@ import { useGameActions } from "@/ui/screens/Game/GameActionsProvider";
 import React, { useRef } from "react";
 
 import { withTiming } from "react-native-reanimated";
+import { useAnimationSpeed } from "../../AnimationSpeedContext";
 import { useCardTable } from "./context";
 import { PlayerPosition } from "./types";
+
+type AnimationSpeedControls = Pick<
+  ReturnType<typeof useAnimationSpeed>,
+  "getDelay" | "getDuration"
+>;
 
 export function AnimatedCards() {
   const { playerPositions, radius } = useCardTable();
@@ -20,6 +26,7 @@ export function AnimatedCards() {
 function AnimatedCardsInner() {
   const deck = useRef<AnimatableCardDeckRef>(null);
   const { playerPositions } = useCardTable();
+  const animationSpeed = useAnimationSpeed();
 
   const virtualTrash = useRef<AnimatedCard[]>([]);
   const playerHands = useRef<{
@@ -52,7 +59,11 @@ function AnimatedCardsInner() {
   // Hook into live game actions
   useGameActions({
     gameStarted: async ({ initialDealer }) => {
-      await moveDeckNextToPlayer(getDeck(), playerPositions[initialDealer]);
+      await moveDeckNextToPlayer(
+        getDeck(),
+        playerPositions[initialDealer],
+        animationSpeed
+      );
     },
     dealCards: async ({ dealingOrder }) => {
       const zIndexes: { [zIndex: number]: AnimatedCard } = {};
@@ -61,9 +72,10 @@ function AnimatedCardsInner() {
         playerHands.current[playerId] = nextCard;
         const zIndex = nextTableZIndex.current++;
         zIndexes[zIndex] = nextCard;
-        return () => moveCardToPlayer(playerPositions[playerId], nextCard);
+        return () =>
+          moveCardToPlayer(playerPositions[playerId], nextCard, animationSpeed);
       });
-      await staggerPromises(400, animations);
+      await staggerPromises(400, animations, animationSpeed);
       Object.entries(zIndexes).forEach(([zIndex, card]) => {
         card.setZIndex(Number(zIndex));
       });
@@ -78,14 +90,24 @@ function AnimatedCardsInner() {
         () =>
           staggerPromises(100, [
             () => fromCard.ensureFaceDown(),
-            () => moveCardToPlayer(playerPositions[targetPlayerId], fromCard),
-          ]),
+            () =>
+              moveCardToPlayer(
+                playerPositions[targetPlayerId],
+                fromCard,
+                animationSpeed
+              ),
+          ], animationSpeed),
         () =>
           staggerPromises(100, [
             () => toCard.ensureFaceDown(),
-            () => moveCardToPlayer(playerPositions[playerId], toCard),
-          ]),
-      ]);
+            () =>
+              moveCardToPlayer(
+                playerPositions[playerId],
+                toCard,
+                animationSpeed
+              ),
+          ], animationSpeed),
+      ], animationSpeed);
     },
     dealerDraw: async ({ playerId, previousCard }) => {
       const nextCard = getNextCardFromDeck();
@@ -94,8 +116,16 @@ function AnimatedCardsInner() {
       const card = playerHands.current[playerId]!;
       card.setValue(previousCard);
       await card.ensureFaceUp();
-      await makeRoomForHitCard(card, playerPositions[playerId]);
-      await moveCardToPlayer(playerPositions[playerId], nextCard);
+      await makeRoomForHitCard(
+        card,
+        playerPositions[playerId],
+        animationSpeed
+      );
+      await moveCardToPlayer(
+        playerPositions[playerId],
+        nextCard,
+        animationSpeed
+      );
       playerHands.current[playerId] = nextCard;
     },
     endRound: async ({ newDealer }) => {
@@ -105,15 +135,24 @@ function AnimatedCardsInner() {
       playerHands.current = {};
       await staggerPromises(
         200,
-        cards.map((card, idx) => () => moveCardToTrash(card, idx))
+        cards.map((card, idx) => () => moveCardToTrash(card, idx, animationSpeed)),
+        animationSpeed
       );
-      await moveDeckNextToPlayer(getDeck(), playerPositions[newDealer]);
+      await moveDeckNextToPlayer(
+        getDeck(),
+        playerPositions[newDealer],
+        animationSpeed
+      );
     },
     receiveCard: async ({ playerId, card: cardId }) => {
       const card = playerHands.current[playerId]!;
       card.setValue(cardId);
       await card.ensureFaceUp();
-      await moveCardToPlayer(playerPositions[playerId], card);
+      await moveCardToPlayer(
+        playerPositions[playerId],
+        card,
+        animationSpeed
+      );
     },
     revealCards: async ({ playerCards }) => {
       const cards = deck.current?.getCards();
@@ -127,7 +166,8 @@ function AnimatedCardsInner() {
         200,
         Object.keys(playerCards).map((playerId) => {
           return () => playerHands.current[playerId]!.ensureFaceUp();
-        })
+        }),
+        animationSpeed
       );
     },
     kung: async ({ playerId, playerIdWithKing, cardId }) => {
@@ -136,16 +176,21 @@ function AnimatedCardsInner() {
       const card = playerHands.current[playerId]!;
       const kingCard = playerHands.current[playerIdWithKing]!;
       kingCard.setValue(cardId);
-      await moveCardToPlayer(king, card);
+      await moveCardToPlayer(king, card, animationSpeed);
       await staggerPromises(200, [
         () => kingCard.ensureFaceUp(),
-        () => moveCardToPlayer(player, card),
-      ]);
+        () => moveCardToPlayer(player, card, animationSpeed),
+      ], animationSpeed);
     },
     deckReshuffle: async ({ currentDealer }) => {
       const trash = [...virtualTrash.current];
       virtualTrash.current = [];
-      await moveDeckNextToPlayer(trash, playerPositions[currentDealer], true);
+      await moveDeckNextToPlayer(
+        trash,
+        playerPositions[currentDealer],
+        animationSpeed,
+        true
+      );
       // After reshuffling, place the former trash back into the deck and reset
       // their z-indices so the top of the deck is always the highest within
       // the deck group (but still below any table cards).
@@ -168,7 +213,8 @@ function AnimatedCardsInner() {
 
 async function moveCardToPlayer(
   playerPosition: PlayerPosition,
-  card: AnimatedCard
+  card: AnimatedCard,
+  animationSpeed: AnimationSpeedControls
 ): Promise<void> {
   const { rotation } = playerPosition;
   // the card should be 40px closer to the center of the table than the player's circle
@@ -188,11 +234,7 @@ async function moveCardToPlayer(
   await Promise.all(
     pairs.map(
       ([value, toValue]) =>
-        new Promise<void>((resolve) => {
-          value.value = withTiming(toValue, { duration: 500 }, () => {
-            resolve();
-          });
-        })
+        animateValue(value, toValue, 500, animationSpeed)
     )
   );
 }
@@ -203,7 +245,8 @@ async function moveCardToPlayer(
  */
 async function makeRoomForHitCard(
   card: AnimatedCard,
-  playerPosition: PlayerPosition
+  playerPosition: PlayerPosition,
+  animationSpeed: AnimationSpeedControls
 ) {
   // Calculate angle from center to player
   const angle = Math.atan2(playerPosition.y, playerPosition.x);
@@ -228,42 +271,27 @@ async function makeRoomForHitCard(
   await Promise.all(
     pairs.map(
       ([value, toValue]) =>
-        new Promise<void>((resolve) => {
-          value.value = withTiming(toValue, { duration: 300 }, () => {
-            resolve();
-          });
-        })
+        animateValue(value, toValue, 300, animationSpeed)
     )
   );
 }
 
-async function moveCardToTrash(card: AnimatedCard, index: number) {
+async function moveCardToTrash(
+  card: AnimatedCard,
+  index: number,
+  animationSpeed: AnimationSpeedControls
+) {
   await card.ensureFaceDown();
   await Promise.all([
-    new Promise<void>((resolve) => {
-      card.x.value = withTiming(0, { duration: 300 }, () => {
-        resolve();
-      });
-    }),
-    new Promise<void>((resolve) => {
-      card.y.value = withTiming(0, { duration: 300 }, () => {
-        resolve();
-      });
-    }),
-    new Promise<void>((resolve) => {
-      card.rotation.value = withTiming(
-        Math.floor(Math.random() * 18) - 9,
-        { duration: 300 },
-        () => {
-          resolve();
-        }
-      );
-    }),
-    new Promise<void>((resolve) => {
-      card.scale.value = withTiming(0.3, { duration: 300 }, () => {
-        resolve();
-      });
-    }),
+    animateValue(card.x, 0, 300, animationSpeed),
+    animateValue(card.y, 0, 300, animationSpeed),
+    animateValue(
+      card.rotation,
+      Math.floor(Math.random() * 18) - 9,
+      300,
+      animationSpeed
+    ),
+    animateValue(card.scale, 0.3, 300, animationSpeed),
   ]);
   // After the animation completes (i.e., once the card has visually joined the
   // discard pile), push its z-index far below the deck so it never covers any
@@ -273,12 +301,14 @@ async function moveCardToTrash(card: AnimatedCard, index: number) {
 
 function staggerPromises<T>(
   delay: number,
-  promises: (() => Promise<T>)[]
+  promises: (() => Promise<T>)[],
+  animationSpeed: AnimationSpeedControls
 ): Promise<T[]> {
+  const actualDelay = animationSpeed.getDelay(delay);
   return Promise.all(
     promises.map((promise, index) => {
       return new Promise<T>((resolve) => {
-        setTimeout(() => promise().then(resolve), index * delay);
+        setTimeout(() => promise().then(resolve), index * actualDelay);
       });
     })
   );
@@ -287,6 +317,7 @@ function staggerPromises<T>(
 function moveDeckNextToPlayer(
   deck: AnimatedCard[],
   playerPosition: PlayerPosition,
+  animationSpeed: AnimationSpeedControls,
   stagger: boolean = false
 ): Promise<void[]> {
   // position the deck 60px diagonal from the center of the player's circle
@@ -309,13 +340,8 @@ function moveDeckNextToPlayer(
     ] as const;
 
     return Promise.all(
-      pairs.map(
-        ([value, toValue]) =>
-          new Promise<void>((resolve) => {
-            value.value = withTiming(toValue, { duration: 300 }, () => {
-              resolve();
-            });
-          })
+      pairs.map(([value, toValue]) =>
+        animateValue(value, toValue, 300, animationSpeed)
       )
     ).then(() => undefined);
   }
@@ -323,7 +349,27 @@ function moveDeckNextToPlayer(
   return stagger
     ? staggerPromises<void>(
         20,
-        deck.map((card) => () => moveCard(card))
+        deck.map((card) => () => moveCard(card)),
+        animationSpeed
       )
     : Promise.all(deck.map(moveCard));
+}
+
+function animateValue(
+  value: AnimatedCard["x"],
+  toValue: number,
+  duration: number,
+  animationSpeed: AnimationSpeedControls
+): Promise<void> {
+  const actualDuration = animationSpeed.getDuration(duration);
+  return new Promise<void>((resolve) => {
+    if (actualDuration === 0) {
+      value.value = toValue;
+      resolve();
+      return;
+    }
+    value.value = withTiming(toValue, { duration: actualDuration }, () => {
+      resolve();
+    });
+  });
 }
