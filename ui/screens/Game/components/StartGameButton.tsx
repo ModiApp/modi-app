@@ -2,8 +2,12 @@ import { useStartGame } from "@/hooks/useStartGame";
 import { Button } from "@/ui/elements";
 import React from "react";
 
-export function StartGameButton(props: { gameId: string }) {
-  const { gameId } = props;
+interface StartGameButtonProps {
+  gameId: string;
+  fullWidth?: boolean;
+}
+
+export function StartGameButton({ gameId, fullWidth = false }: StartGameButtonProps) {
   const { startGame, isStartingGame } = useStartGame();
   return (
     <Button
@@ -11,6 +15,7 @@ export function StartGameButton(props: { gameId: string }) {
       title="Start Game"
       onPress={() => startGame(gameId)}
       loading={isStartingGame}
+      fullWidth={fullWidth}
     />
   );
 }

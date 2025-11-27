@@ -24,6 +24,7 @@ const iconNameMap = {
   "checkmark-circle": "checkmark-circle",
   warning: "warning",
   "information-circle": "information-circle",
+  settings: "settings-sharp",
 } satisfies Record<string, IoniconIconName>;
 
 type IconName = keyof typeof iconNameMap;

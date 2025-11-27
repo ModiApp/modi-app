@@ -12,6 +12,7 @@ import { setPlayerOrder } from "./handlers/SetPlayerOrder";
 import { startGame } from "./handlers/StartGame";
 import { stick } from "./handlers/Stick";
 import { swapCard } from "./handlers/SwapCard";
+import { updateGameSettings } from "./handlers/UpdateGameSettings";
 import { makeRequestHandler } from "./handlers/makeHandler";
 import { getLanIp } from "./utils/getLanIPAddress";
 
@@ -37,6 +38,7 @@ app.post('/games/:gameId/play-again', makeRequestHandler(playAgain));
 app.post('/games/:gameId/set-player-order', makeRequestHandler(setPlayerOrder));
 app.post('/games/:gameId/stick', makeRequestHandler(stick));
 app.post('/games/:gameId/swap', makeRequestHandler(swapCard));
+app.patch('/games/:gameId/settings', makeRequestHandler(updateGameSettings));
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const host = process.env.HOST || '0.0.0.0'; // Bind to all network interfaces
