@@ -9,6 +9,7 @@ import type { HomeScreenProps } from "./Base";
 const defaultContextValue: HomeScreenProps = {
   isCreatingGame: false,
   shouldAskForUsername: false,
+  onAboutPress() {},
   onCreateGameBtnPressed() {},
   onJoinGameBtnPressed() {},
 };
@@ -44,6 +45,9 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
             return;
           }
           router.push("/join-lobby");
+        },
+        onAboutPress: () => {
+          router.push("/about");
         },
       }}
     >

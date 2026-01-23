@@ -2,11 +2,18 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 
 import UsernameInput from "@/ui/components/UsernameInput";
-import { Button, LoadingSpinner, ScreenContainer, Text } from "@/ui/elements";
+import {
+  Button,
+  Icon,
+  LoadingSpinner,
+  ScreenContainer,
+  Text,
+} from "@/ui/elements";
 
 export interface HomeScreenProps {
   isCreatingGame: boolean;
   shouldAskForUsername: boolean;
+  onAboutPress: () => void;
   onCreateGameBtnPressed: () => void;
   onJoinGameBtnPressed: () => void;
 }
@@ -16,9 +23,22 @@ function HomeScreenBase({
   onCreateGameBtnPressed,
   isCreatingGame,
   shouldAskForUsername,
+  onAboutPress,
 }: HomeScreenProps) {
   return (
     <ScreenContainer>
+      <View style={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+        <Button
+          onPress={onAboutPress}
+          fullWidth={false}
+          style={{
+            padding: 8,
+            borderRadius: 16,
+          }}
+        >
+          <Icon name="information-circle" size={22} color="white" />
+        </Button>
+      </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
