@@ -47,8 +47,12 @@ export function useStartGame() {
       
     } catch (error: any) {
       console.error("useStartGame: Error starting game:", error);
-      
-      Alert.error({ message: 'Failed to start game. Please try again.' });
+      const errorMessage = typeof error?.message === 'string' ? error.message : '';
+      const message = errorMessage.includes('Need at least 2 players')
+        ? 'You need at least 2 players in order to start the game.'
+        : errorMessage || 'Failed to start game. Please try again.';
+
+      Alert.error({ message });
     } finally {
       setIsStartingGame(false);
     }
