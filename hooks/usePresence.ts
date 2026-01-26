@@ -27,23 +27,15 @@ export function usePresence(gameId: string | undefined): PresenceMap {
 
   // Set up presence tracking for current user
   useEffect(() => {
-    console.log('[usePresence] Effect running - gameId:', gameId, 'userId:', userId);
-    if (!gameId || !userId) {
-      console.log('[usePresence] Missing gameId or userId, skipping');
-      return;
-    }
+    if (!gameId || !userId) return;
 
     const userPresenceRef = ref(database, `presence/${gameId}/${userId}`);
     const connectedRef = ref(database, '.info/connected');
 
-    console.log('[usePresence] Setting up connection listener');
-
     // Track connection state
     const unsubscribeConnected = onValue(connectedRef, (snapshot) => {
-      console.log('[usePresence] Connection state changed:', snapshot.val());
       if (snapshot.val() === true) {
         // We're connected (or reconnected)
-        console.log('[usePresence] Connected! Setting presence to online');
         
         // Set up onDisconnect to mark as offline when we disconnect
         onDisconnect(userPresenceRef).set({
@@ -55,10 +47,6 @@ export function usePresence(gameId: string | undefined): PresenceMap {
         set(userPresenceRef, {
           online: true,
           lastSeen: serverTimestamp(),
-        }).then(() => {
-          console.log('[usePresence] Successfully set online status');
-        }).catch((err) => {
-          console.error('[usePresence] Error setting online status:', err);
         });
       }
     });
@@ -99,11 +87,9 @@ export function usePresence(gameId: string | undefined): PresenceMap {
     if (!gameId) return;
 
     const gamePresenceRef = ref(database, `presence/${gameId}`);
-    console.log('[usePresence] Listening to presence at:', `presence/${gameId}`);
     
     const unsubscribe = onValue(gamePresenceRef, (snapshot) => {
       const data = snapshot.val();
-      console.log('[usePresence] Presence data received:', data);
       if (data) {
         setPresence(data);
       } else {
