@@ -43,6 +43,11 @@ yarn-error.*
 # Firebase emulator data
 emulator-data/
 
+# Firebase Functions
+functions/lib/
+functions/node_modules/
+functions/coverage/
+
 # Service account keys
 google-service-account.json
 
