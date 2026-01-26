@@ -21,13 +21,17 @@ const AboutScreen: React.FC = () => {
         </Text>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.heroCard}>
           <Text size={20} style={styles.heroTitle}>
             Fast-paced multiplayer card battles
           </Text>
           <Text fontFamily={BODY_FONT} style={styles.bodyText}>
-            Modi is inspired by \"Pass the Ace.\" Each round, every player gets
+            Modi is inspired by "Pass the Ace." Each round, every player gets
             one face-down card and tries to avoid ending with the lowest-ranked
             card.
           </Text>
@@ -42,7 +46,7 @@ const AboutScreen: React.FC = () => {
               1. Enter a username on the landing screen.
             </Text>
             <Text fontFamily={BODY_FONT} style={styles.listItem}>
-              2. Tap \"Create Game\" to host, or \"Join Game\" to enter a shared
+              2. Tap "Create Game" to host, or "Join Game" to enter a shared
               Game PIN.
             </Text>
             <Text fontFamily={BODY_FONT} style={styles.listItem}>
@@ -75,7 +79,7 @@ const AboutScreen: React.FC = () => {
               • The dealer may draw a new card from the deck instead of swapping.
             </Text>
             <Text fontFamily={BODY_FONT} style={styles.listItem}>
-              • Kings are protected. Trying to swap with one triggers a \"Kung\"
+              • Kings are protected. Trying to swap with one triggers a "Kung"
               and ends your turn.
             </Text>
           </View>
