@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "concurrently \"yarn start\" \"yarn emulators:start\" \"yarn api:dev\"",
     "dev:prod": "EXPO_PUBLIC_CONNECT_TO_PROD=true concurrently \"yarn start\" \"yarn api:dev:prod\"",
-    "start": "EXPO_PUBLIC_API_BASE_URL=http://$(ipconfig getifaddr en0):3000 expo start",
+    "start": "EXPO_PUBLIC_API_BASE_URL=http://$(node scripts/get-local-ip.js):3000 expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
