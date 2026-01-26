@@ -12,6 +12,10 @@
       "port": 9099,
       "host": "0.0.0.0"
     },
+    "database": {
+      "port": 9000,
+      "host": "0.0.0.0"
+    },
     "ui": {
       "enabled": true
     },

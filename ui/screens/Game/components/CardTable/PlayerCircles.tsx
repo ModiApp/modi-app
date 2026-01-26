@@ -1,8 +1,10 @@
 import { useSetPlayerOrder } from "@/hooks/useSetPlayerOrder";
+import { isPlayerOnline } from "@/hooks/usePresence";
 import { useUserId } from "@/providers/Auth";
 import { Container, Text } from "@/ui/elements";
 import { useCurrentGame } from "@/ui/screens/Game/PlayingContext";
 import React, { useEffect, useMemo, useState } from "react";
+import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -14,7 +16,7 @@ import { useCardTable } from "./context";
 import { degreesToRadians, radiansToDegrees } from "./utils";
 
 export function PlayerCircles() {
-  const { game } = useCurrentGame();
+  const { game, presence } = useCurrentGame();
   const currUserId = useUserId();
   const { radius, setPlayerPositions } = useCardTable();
   const isGatheringPlayers = game.status === "gathering-players";
@@ -187,6 +189,7 @@ export function PlayerCircles() {
       draggedPlayerId &&
       getClosestPlayer(dragX.value, dragY.value)?.playerId === playerId;
     const canDrag = isGatheringPlayers && isHost && playerId !== currUserId;
+    const isOnline = isPlayerOnline(presence, playerId);
 
     const circleContent = (
       <Container
@@ -210,7 +213,17 @@ export function PlayerCircles() {
           opacity: isDragged ? 0.3 : 1,
         }}
       >
-        <Text size={10}>{game.usernames[playerId].slice(0, 8)}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <View
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: isOnline ? "#22c55e" : "#6b7280",
+            }}
+          />
+          <Text size={10}>{game.usernames[playerId].slice(0, 8)}</Text>
+        </View>
       </Container>
     );
 
@@ -232,6 +245,7 @@ export function PlayerCircles() {
   // Render dragged circle overlay
   const renderDraggedCircle = () => {
     if (!draggedPlayerId) return null;
+    const isOnline = isPlayerOnline(presence, draggedPlayerId);
 
     return (
       <Animated.View
@@ -250,9 +264,19 @@ export function PlayerCircles() {
           draggedCircleStyle,
         ]}
       >
-        <Text size={10} style={{ color: "white" }}>
-          {game.usernames[draggedPlayerId].slice(0, 8)}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <View
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: isOnline ? "#22c55e" : "#6b7280",
+            }}
+          />
+          <Text size={10} style={{ color: "white" }}>
+            {game.usernames[draggedPlayerId].slice(0, 8)}
+          </Text>
+        </View>
       </Animated.View>
     );
   };
