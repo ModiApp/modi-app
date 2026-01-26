@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseError, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import config from '../firebase.json';
@@ -32,6 +33,7 @@ if (!isFirebaseConfigured) {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
+const database = getDatabase(app);
 
 const auth = (() => {
   try {
@@ -65,6 +67,10 @@ if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO
     // Connect to Auth emulator
     connectAuthEmulator(auth, `http://${EMULATOR_HOST}:${config.emulators.auth.port}`, { disableWarnings: true });
     console.log(`🔗 Connected to Auth emulator on http://${EMULATOR_HOST}:${config.emulators.auth.port}`);
+    
+    // Connect to Realtime Database emulator
+    connectDatabaseEmulator(database, EMULATOR_HOST, config.emulators.database.port);
+    console.log(`🔗 Connected to Database emulator on ${EMULATOR_HOST}:${config.emulators.database.port}`);
   } catch (error) {
     console.log('⚠️ Emulator connection failed (this is normal if emulators are not running):', error);
   }
@@ -72,5 +78,5 @@ if (isDevelopment && isFirebaseConfigured && !process.env.EXPO_PUBLIC_CONNECT_TO
   console.log('🔗 Connected to Firebase in production mode');
 }
 
-export { auth, firestore };
+export { auth, database, firestore };
 
