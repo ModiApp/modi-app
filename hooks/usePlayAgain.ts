@@ -1,10 +1,11 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 async function playAgainApi(gameId: string) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/play-again`, {
+  const response = await fetch(`${API_BASE_URL}/games/${gameId}/play-again`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
