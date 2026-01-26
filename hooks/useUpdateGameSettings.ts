@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from "@/config/firebase";
 import { Alert } from "@/ui/components/AlertBanner";
 import { useState } from "react";
@@ -10,7 +11,7 @@ interface UpdateGameSettingsParams {
 async function updateGameSettingsApi(params: UpdateGameSettingsParams) {
   const { gameId, ...body } = params;
   const response = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/settings`,
+    `${API_BASE_URL}/games/${gameId}/settings`,
     {
       method: "PATCH",
       headers: {

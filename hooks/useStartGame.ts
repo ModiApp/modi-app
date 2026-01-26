@@ -1,9 +1,10 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useState } from 'react';
 
 async function startGameApi(gameId: string) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/start`, {
+  const response = await fetch(`${API_BASE_URL}/games/${gameId}/start`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

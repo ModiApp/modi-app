@@ -1,9 +1,10 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useState } from 'react';
 
 async function setPlayerOrderApi(gameId: string, players: string[]) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/set-player-order`, {
+  const response = await fetch(`${API_BASE_URL}/games/${gameId}/set-player-order`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

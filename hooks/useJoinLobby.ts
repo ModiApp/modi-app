@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { usePathname, useRouter } from 'expo-router';
@@ -9,7 +10,7 @@ type JoinLobbyResult =
 
 async function joinGameApi(gameId: string) {
   const response = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/join`,
+    `${API_BASE_URL}/games/${gameId}/join`,
     {
       method: 'POST',
       headers: {

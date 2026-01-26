@@ -1,10 +1,11 @@
+import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useCurrentGame } from '@/ui/screens/Game/PlayingContext';
 import { useState } from 'react';
 
 async function swapCardApi(gameId: string) {
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/games/${gameId}/swap`, {
+  const response = await fetch(`${API_BASE_URL}/games/${gameId}/swap`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
