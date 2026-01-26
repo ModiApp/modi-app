@@ -2,6 +2,7 @@ import type { CardID } from "@/api/src/types/card.types";
 import { Card, CardBack } from "@/ui/components/Card";
 import React, {
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -36,6 +37,14 @@ export const AnimatableCardDeck = React.forwardRef<
   const cardRefs = useRef<React.RefObject<AnimatableCardRef>[]>(
     createCardRefs(numCards)
   ).current;
+
+  // Randomize card rotations after mount to create the fanned deck look
+  // This runs client-side only, avoiding SSR hydration mismatch
+  useEffect(() => {
+    cards.forEach((card) => {
+      card.rotation.value = Math.floor(Math.random() * 4);
+    });
+  }, [cards]);
 
   useImperativeHandle(ref, () => ({
     getCards: () => {
@@ -197,7 +206,9 @@ function createInitialCardDeck(
       Object.freeze({
         x: useSharedValue(0),
         y: useSharedValue(0),
-        rotation: useSharedValue(Math.floor(Math.random() * 4)),
+        // Use deterministic initial value to avoid React hydration mismatch (#418)
+        // Random rotation during SSR vs client render causes hydration to fail
+        rotation: useSharedValue(0),
         backOpacity: useSharedValue(1),
         faceOpacity: useSharedValue(0),
         rotateY: useSharedValue(0),
