@@ -1,4 +1,5 @@
 import { useAuth } from "@/providers/Auth";
+import { NotificationPrompt } from "@/ui/components/NotificationPrompt";
 import { Container } from "@/ui/elements";
 import ScreenContainer from "@/ui/elements/Screen";
 import { GameActionProvider } from "@/ui/screens/Game/GameActionsProvider";
@@ -36,6 +37,7 @@ const GameScreen: React.FC = () => {
             >
               <ShareGameInfo />
               <WinnerInfo />
+              <NotificationPrompt />
             </Container>
             <Container style={{ flex: 1, marginBottom: 16 }}>
               <CardTable>

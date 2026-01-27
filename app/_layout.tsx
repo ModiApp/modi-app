@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/providers/Auth";
+import { PushNotificationProvider } from "@/providers/PushNotifications";
 import { SplashScreenProvider } from "@/providers/SplashScreen";
 import { UsernameProvider } from "@/providers/Username";
 import { AlertBanner } from "@/ui/components/AlertBanner";
@@ -19,9 +20,10 @@ export default function RootLayout() {
         <BottomSheetModalProvider>
           <WebAppHead />
           <AuthProvider>
-            <UsernameProvider>
-              <SplashScreenProvider />
-              <Stack
+            <PushNotificationProvider>
+              <UsernameProvider>
+                <SplashScreenProvider />
+                <Stack
                 screenOptions={{
                   headerShown: false,
                   contentStyle: { backgroundColor: colors.feltGreen },
@@ -34,7 +36,8 @@ export default function RootLayout() {
                 <Stack.Screen name="games/[gameId]" />
                 <Stack.Screen name="+not-found" />
               </Stack>
-            </UsernameProvider>
+              </UsernameProvider>
+            </PushNotificationProvider>
           </AuthProvider>
           <AlertBanner />
           <StatusBar style="light" />
