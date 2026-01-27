@@ -184,6 +184,22 @@ export const onTurnChanged = onDocumentUpdated('games/{gameId}', async (event) =
   const activePlayerId = after.activePlayer;
   const playerName = after.usernames?.[activePlayerId] || 'Player';
   
+  // Deduplication: Check if we recently sent a notification for this player/game
+  // This prevents duplicate notifications if the function fires multiple times
+  const dedupeKey = `notifications/${gameId}/${activePlayerId}`;
+  const lastNotifSnapshot = await database.ref(dedupeKey).once('value');
+  const lastNotifTime = lastNotifSnapshot.val()?.timestamp || 0;
+  const now = Date.now();
+  
+  // Skip if we sent a notification within the last 10 seconds
+  if (now - lastNotifTime < 10000) {
+    console.log(`Skipping duplicate notification for ${activePlayerId} in game ${gameId}`);
+    return;
+  }
+  
+  // Mark that we're sending a notification now
+  await database.ref(dedupeKey).set({ timestamp: now });
+  
   console.log(`Turn changed in game ${gameId}, notifying ${activePlayerId}`);
 
   try {
