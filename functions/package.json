@@ -15,7 +15,7 @@
     "test:emulator": "firebase emulators:exec --only firestore,database,functions 'yarn test'"
   },
   "engines": {
-    "node": "18"
+    "node": ">=18"
   },
   "main": "lib/index.js",
   "dependencies": {
