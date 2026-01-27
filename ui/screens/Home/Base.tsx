@@ -1,6 +1,7 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 
+import { NotificationPrompt } from "@/ui/components/NotificationPrompt";
 import UsernameInput from "@/ui/components/UsernameInput";
 import {
   Button,
@@ -39,6 +40,10 @@ function HomeScreenBase({
           <Icon name="information-circle" size={22} color="white" />
         </Button>
       </View>
+      
+      {/* Prompt to enable notifications */}
+      <NotificationPrompt />
+      
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { firestore, auth } from '@/config/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -31,70 +31,53 @@ export interface PushNotificationState {
   notification: any | null;
   error: string | null;
   platform: 'ios' | 'android' | 'web' | null;
+  permissionStatus: 'unknown' | 'granted' | 'denied' | 'prompt';
+  requestPermission: () => Promise<void>;
 }
 
 /**
  * Hook to manage push notifications across all platforms.
  * Uses Expo notifications on mobile, FCM on web.
+ * 
+ * IMPORTANT: On web, call requestPermission() in response to a user gesture (button click)
+ * as browsers block automatic permission requests.
  */
 export function usePushNotifications(): PushNotificationState {
   const [pushToken, setPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'web' | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown');
   
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
 
+  // Check current permission status on mount (without requesting)
   useEffect(() => {
     if (Platform.OS === 'web') {
-      // Web: Use Firebase Cloud Messaging
-      registerForWebPushAsync()
-        .then(token => {
-          if (token) {
-            setPushToken(token);
-            setPlatform('web');
-            savePushToken(token, 'web');
-          }
-        })
-        .catch(err => {
-          setError(err.message);
-          console.error('Web push registration failed:', err);
-        });
-
-      // Set up web push message listener
-      setupWebPushListener(setNotification);
+      checkWebPermissionStatus();
     } else {
-      // Mobile: Use Expo notifications
-      registerForMobilePushAsync()
-        .then(token => {
-          if (token) {
-            setPushToken(token);
-            setPlatform(Platform.OS as 'ios' | 'android');
-            savePushToken(token, Platform.OS as 'ios' | 'android');
-          }
-        })
-        .catch(err => {
-          setError(err.message);
-          console.error('Mobile push registration failed:', err);
-        });
+      checkMobilePermissionStatus();
+    }
+    
+    // Set up listeners for when we do have permission
+    if (Platform.OS === 'web') {
+      setupWebPushListener(setNotification);
+    } else if (Notifications) {
+      // Listen for incoming notifications
+      notificationListener.current = Notifications.addNotificationReceivedListener(
+        (notification) => {
+          setNotification(notification);
+        }
+      );
 
-      if (Notifications) {
-        // Listen for incoming notifications
-        notificationListener.current = Notifications.addNotificationReceivedListener(
-          (notification) => {
-            setNotification(notification);
-          }
-        );
-
-        // Listen for notification responses (user tapped notification)
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(
-          (response) => {
-            const data = response.notification.request.content.data;
-            console.log('Notification tapped:', data);
-          }
-        );
-      }
+      // Listen for notification responses (user tapped notification)
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(
+        (response) => {
+          const data = response.notification.request.content.data;
+          console.log('Notification tapped:', data);
+        }
+      );
     }
 
     return () => {
@@ -105,7 +88,97 @@ export function usePushNotifications(): PushNotificationState {
     };
   }, []);
 
-  return { pushToken, notification, error, platform };
+  // Check web permission status (without requesting)
+  const checkWebPermissionStatus = () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermissionStatus('denied');
+      return;
+    }
+    
+    const status = Notification.permission;
+    if (status === 'granted') {
+      setPermissionStatus('granted');
+      // Already have permission, get the token
+      registerForWebPushAsync()
+        .then(token => {
+          if (token) {
+            setPushToken(token);
+            setPlatform('web');
+            savePushToken(token, 'web');
+          }
+        })
+        .catch(err => {
+          setError(err.message);
+        });
+    } else if (status === 'denied') {
+      setPermissionStatus('denied');
+    } else {
+      setPermissionStatus('prompt');
+    }
+  };
+
+  // Check mobile permission status
+  const checkMobilePermissionStatus = async () => {
+    if (!Notifications) {
+      setPermissionStatus('denied');
+      return;
+    }
+
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') {
+      setPermissionStatus('granted');
+      // Already have permission, get the token
+      registerForMobilePushAsync()
+        .then(token => {
+          if (token) {
+            setPushToken(token);
+            setPlatform(Platform.OS as 'ios' | 'android');
+            savePushToken(token, Platform.OS as 'ios' | 'android');
+          }
+        })
+        .catch(err => {
+          setError(err.message);
+        });
+    } else if (status === 'denied') {
+      setPermissionStatus('denied');
+    } else {
+      setPermissionStatus('prompt');
+    }
+  };
+
+  // Request permission (call this from a user gesture!)
+  const requestPermission = useCallback(async () => {
+    setError(null);
+    
+    try {
+      if (Platform.OS === 'web') {
+        const token = await registerForWebPushAsync();
+        if (token) {
+          setPushToken(token);
+          setPlatform('web');
+          setPermissionStatus('granted');
+          savePushToken(token, 'web');
+        } else {
+          setPermissionStatus('denied');
+        }
+      } else {
+        const token = await registerForMobilePushAsync();
+        if (token) {
+          setPushToken(token);
+          setPlatform(Platform.OS as 'ios' | 'android');
+          setPermissionStatus('granted');
+          savePushToken(token, Platform.OS as 'ios' | 'android');
+        } else {
+          setPermissionStatus('denied');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message);
+      console.error('Push registration failed:', err);
+    }
+  }, []);
+
+  return { pushToken, notification, error, platform, permissionStatus, requestPermission };
 }
 
 /**
@@ -158,6 +231,7 @@ async function registerForMobilePushAsync(): Promise<string | null> {
 
 /**
  * Register for push notifications on web (FCM)
+ * MUST be called from a user gesture (button click) on web!
  */
 async function registerForWebPushAsync(): Promise<string | null> {
   if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -171,7 +245,7 @@ async function registerForWebPushAsync(): Promise<string | null> {
     return null;
   }
 
-  // Request permission
+  // Request permission (this will show the browser prompt if called from user gesture)
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
     console.log('Web notification permission denied');
