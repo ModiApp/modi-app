@@ -250,3 +250,4 @@ async function sendFcmNotification(fcmToken: string, gameId: string, playerName:
   const response = await admin.messaging().send(message);
   console.log('FCM push notification sent:', response);
 }
+
