@@ -23,7 +23,8 @@ export function NotificationPrompt() {
   // Check if user previously dismissed the prompt
   useEffect(() => {
     AsyncStorage.getItem(DISMISSED_KEY).then(value => {
-      if (value !== 'true' && permissionStatus === 'prompt') {
+      // Show prompt when permission is 'prompt' (not yet asked) or 'denied' (blocked)
+      if (value !== 'true' && (permissionStatus === 'prompt' || permissionStatus === 'denied')) {
         setDismissed(false);
         Animated.timing(opacity, {
           toValue: 1,
@@ -77,6 +78,31 @@ export function NotificationPrompt() {
   // Keep visible if there's an error so user can see it
   if (dismissed || (permissionStatus === 'granted' && !localError)) {
     return null;
+  }
+
+  // Show "blocked" state when permission is denied
+  if (permissionStatus === 'denied') {
+    return (
+      <Animated.View style={[styles.container, styles.containerDenied, { opacity }]}>
+        <View style={styles.content}>
+          <Ionicons name="notifications-off" size={24} color={colors.error} />
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Notifications Blocked</Text>
+            <Text style={styles.subtitle}>
+              Enable in your browser settings to get turn alerts
+            </Text>
+          </View>
+        </View>
+        <View style={styles.actions}>
+          <Pressable 
+            style={styles.dismissButton} 
+            onPress={handleDismiss}
+          >
+            <Text style={styles.dismissText}>Dismiss</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    );
   }
 
   return (
@@ -165,6 +191,9 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
     borderWidth: 1,
     borderColor: colors.gold + '40',
+  },
+  containerDenied: {
+    borderColor: colors.error + '40',
   },
   content: {
     flexDirection: 'row',
