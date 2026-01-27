@@ -329,17 +329,13 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
     const messaging = getMessaging(app);
     
     onMessage(messaging, (payload) => {
-      console.log('Web push message received:', payload);
+      console.log('Web push message received in foreground:', payload);
       setNotification(payload);
       
-      // Show notification manually since onMessage only fires in foreground
-      if (Notification.permission === 'granted' && payload.notification) {
-        new Notification(payload.notification.title || 'Modi', {
-          body: payload.notification.body,
-          icon: '/icon.png',
-          data: payload.data,
-        });
-      }
+      // Don't manually show notification here - the service worker handles it.
+      // This prevents duplicate notifications in PWA mode where both handlers may fire.
+      // The app can react to the notification data via the setNotification callback
+      // to update UI (e.g., show an in-app banner) if desired.
     });
   } catch (error) {
     console.error('Error setting up web push listener:', error);
