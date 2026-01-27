@@ -11,6 +11,9 @@ const database = admin.database();
 /**
  * Cleanup stale games and presence data
  * Runs every hour
+ * 
+ * Instead of deleting games, we archive them to preserve historical data.
+ * Archived games are moved to the 'archivedGames' collection.
  */
 export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
   const now = Date.now();
@@ -20,11 +23,11 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
 
   console.log('Starting cleanup job...');
 
-  let deletedGames = 0;
+  let archivedGames = 0;
   let deletedPresence = 0;
 
   try {
-    // 1. Clean up gathering-players games older than 2 hours
+    // 1. Archive gathering-players games older than 2 hours (abandoned lobbies)
     const gatheringGames = await firestore
       .collection('games')
       .where('status', '==', 'gathering-players')
@@ -35,12 +38,12 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
       const updatedAt = data.updatedAt?.toMillis?.() || data.createdAt?.toMillis?.() || 0;
       
       if (now - updatedAt > TWO_HOURS) {
-        await deleteGame(doc.id);
-        deletedGames++;
+        await archiveGame(doc.id, 'abandoned_lobby');
+        archivedGames++;
       }
     }
 
-    // 2. Clean up active games older than 24 hours (abandoned)
+    // 2. Archive active games older than 24 hours (abandoned mid-game)
     const activeGames = await firestore
       .collection('games')
       .where('status', '==', 'active')
@@ -51,12 +54,12 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
       const updatedAt = data.updatedAt?.toMillis?.() || 0;
       
       if (now - updatedAt > TWENTY_FOUR_HOURS) {
-        await deleteGame(doc.id);
-        deletedGames++;
+        await archiveGame(doc.id, 'abandoned_active');
+        archivedGames++;
       }
     }
 
-    // 3. Clean up ended games older than 7 days
+    // 3. Archive ended games older than 7 days (completed games)
     const endedGames = await firestore
       .collection('games')
       .where('status', '==', 'ended')
@@ -67,12 +70,12 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
       const updatedAt = data.updatedAt?.toMillis?.() || 0;
       
       if (now - updatedAt > SEVEN_DAYS) {
-        await deleteGame(doc.id);
-        deletedGames++;
+        await archiveGame(doc.id, 'completed');
+        archivedGames++;
       }
     }
 
-    // 4. Clean up orphaned presence data (games that no longer exist)
+    // 4. Clean up orphaned presence data (games that no longer exist in active collection)
     const presenceSnapshot = await database.ref('presence').once('value');
     const presenceData = presenceSnapshot.val() || {};
 
@@ -84,7 +87,7 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
       }
     }
 
-    console.log(`Cleanup complete: ${deletedGames} games, ${deletedPresence} presence records deleted`);
+    console.log(`Cleanup complete: ${archivedGames} games archived, ${deletedPresence} presence records deleted`);
   } catch (error) {
     console.error('Cleanup error:', error);
     throw error;
@@ -92,14 +95,35 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
 });
 
 /**
- * Delete a game and all its subcollections
+ * Archive a game by moving it to the archivedGames collection
+ * Preserves all game data including subcollections for historical analysis
  */
-async function deleteGame(gameId: string): Promise<void> {
-  console.log(`Deleting game: ${gameId}`);
+async function archiveGame(gameId: string, archiveReason: string): Promise<void> {
+  console.log(`Archiving game: ${gameId} (reason: ${archiveReason})`);
 
-  // Delete subcollections
   const subcollections = ['playerHands', 'internalState', 'actions', 'privateActions'];
   
+  // Get the main game document
+  const gameDoc = await firestore.collection('games').doc(gameId).get();
+  if (!gameDoc.exists) {
+    console.log(`Game ${gameId} not found, skipping archive`);
+    return;
+  }
+
+  const gameData = gameDoc.data()!;
+
+  // Create archived game document with metadata
+  const archivedGameRef = firestore.collection('archivedGames').doc(gameId);
+  await archivedGameRef.set({
+    ...gameData,
+    _archiveMetadata: {
+      archivedAt: admin.firestore.FieldValue.serverTimestamp(),
+      archiveReason,
+      originalGameId: gameId,
+    },
+  });
+
+  // Copy subcollections to archived game
   for (const subcollection of subcollections) {
     const snapshot = await firestore
       .collection('games')
@@ -107,16 +131,27 @@ async function deleteGame(gameId: string): Promise<void> {
       .collection(subcollection)
       .get();
     
-    const batch = firestore.batch();
-    snapshot.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
+    // Copy each document to the archived subcollection
+    for (const subDoc of snapshot.docs) {
+      await archivedGameRef
+        .collection(subcollection)
+        .doc(subDoc.id)
+        .set(subDoc.data());
+    }
+
+    // Delete from original location
+    const deleteBatch = firestore.batch();
+    snapshot.docs.forEach(doc => deleteBatch.delete(doc.ref));
+    await deleteBatch.commit();
   }
 
-  // Delete the game document
+  // Delete the original game document
   await firestore.collection('games').doc(gameId).delete();
 
-  // Delete presence data for this game
+  // Delete presence data for this game (no need to archive ephemeral data)
   await database.ref(`presence/${gameId}`).remove();
+
+  console.log(`Game ${gameId} archived successfully`);
 }
 
 // Initialize Expo SDK for push notifications
@@ -250,4 +285,3 @@ async function sendFcmNotification(fcmToken: string, gameId: string, playerName:
   const response = await admin.messaging().send(message);
   console.log('FCM push notification sent:', response);
 }
-
