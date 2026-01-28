@@ -37,13 +37,22 @@ export function WebAppHead() {
         }
         
         /* iOS PWA safe area support - ensures bottom content isn't hidden by home indicator.
-           Using !important to override Expo's default height:100% styles */
+           env(safe-area-inset-bottom) can return 0 in iOS standalone PWA mode,
+           so we also detect standalone mode via media query and add fallback padding. */
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
           #root {
             padding-bottom: env(safe-area-inset-bottom) !important;
             min-height: 100% !important;
             height: auto !important;
             box-sizing: border-box;
+          }
+        }
+        
+        /* Fallback for iOS PWA standalone mode where env() returns 0 */
+        @media all and (display-mode: standalone) {
+          #root {
+            /* 34px is the standard home indicator height on modern iPhones */
+            padding-bottom: max(env(safe-area-inset-bottom), 34px) !important;
           }
         }
       `}</style>
