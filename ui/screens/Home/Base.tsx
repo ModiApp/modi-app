@@ -13,9 +13,12 @@ import {
 export interface HomeScreenProps {
   isCreatingGame: boolean;
   shouldAskForUsername: boolean;
+  isUsernameValid: boolean;
+  usernameError: string | null;
   onAboutPress: () => void;
   onCreateGameBtnPressed: () => void;
   onJoinGameBtnPressed: () => void;
+  onUsernameValidationChange: (isValid: boolean, error: string | null) => void;
 }
 
 function HomeScreenBase({
@@ -23,7 +26,9 @@ function HomeScreenBase({
   onCreateGameBtnPressed,
   isCreatingGame,
   shouldAskForUsername,
+  usernameError,
   onAboutPress,
+  onUsernameValidationChange,
 }: HomeScreenProps) {
   return (
     <ScreenContainer>
@@ -51,11 +56,14 @@ function HomeScreenBase({
         </View>
 
         {shouldAskForUsername && (
-          <Text color="red" style={{ marginBottom: 8 }}>
-            Enter a username:
+          <Text color="error" size={16} style={{ marginBottom: 8, textAlign: "center" }}>
+            Please enter a valid username
           </Text>
         )}
-        <UsernameInput />
+        <UsernameInput
+          error={usernameError}
+          onValidationChange={onUsernameValidationChange}
+        />
       </KeyboardAvoidingView>
       <Button
         onPress={onJoinGameBtnPressed}
