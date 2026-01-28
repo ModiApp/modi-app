@@ -3,10 +3,11 @@ import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/ui/styles";
+import { SafeAreaBottomPadding } from "@/ui/components/SafeAreaBottomPadding";
 
 const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
-  // On web, bottom safe area is handled via CSS env() in WebAppHead
-  // This avoids double padding and ensures iOS PWA works correctly
+  // On web, bottom safe area is handled via SafeAreaBottomPadding component
+  // which detects iOS PWA standalone mode via navigator.standalone
   const edges = Platform.OS === 'web' 
     ? (['top', 'left', 'right'] as const)
     : (['top', 'bottom', 'left', 'right'] as const);
@@ -18,6 +19,7 @@ const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
           {children}
         </View>
       </View>
+      {Platform.OS === 'web' && <SafeAreaBottomPadding />}
     </SafeAreaView>
   );
 };
