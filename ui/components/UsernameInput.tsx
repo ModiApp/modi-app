@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { View } from "react-native";
 
 import { useUsername } from "@/providers/Username";
@@ -8,6 +8,9 @@ import {
   USERNAME_MAX_LENGTH,
   validateUsername,
 } from "@/utils/validation";
+
+/** Delay before showing validation errors (ms) */
+const VALIDATION_DEBOUNCE_MS = 600;
 
 type UsernameInputProps = Omit<
   TextInputProps,
@@ -21,6 +24,16 @@ type UsernameInputProps = Omit<
 
 function UsernameInput({ error, onValidationChange, ...props }: UsernameInputProps) {
   const username = useUsername();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const handleChangeText = (text: string) => {
     // Trim whitespace and enforce max length
@@ -31,7 +44,22 @@ function UsernameInput({ error, onValidationChange, ...props }: UsernameInputPro
     
     if (onValidationChange) {
       const validation = validateUsername(truncated);
-      onValidationChange(validation.isValid, validation.error);
+      
+      // Clear any pending debounce
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
+      
+      if (validation.isValid) {
+        // Clear errors immediately when valid
+        onValidationChange(true, null);
+      } else {
+        // Debounce showing errors to avoid nagging while typing
+        debounceTimer.current = setTimeout(() => {
+          onValidationChange(validation.isValid, validation.error);
+        }, VALIDATION_DEBOUNCE_MS);
+      }
     }
   };
 
