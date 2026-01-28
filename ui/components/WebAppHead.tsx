@@ -20,8 +20,20 @@ export function WebAppHead() {
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="theme-color" content="#35654D" />
       <style>{`
-        html, body, #root { height: 100%; background: #35654D; }
+        html, body, #root { 
+          height: 100%; 
+          background: #35654D; 
+        }
         body { margin: 0; }
+        
+        /* iOS PWA safe area support - ensures bottom content isn't hidden by home indicator.
+           This uses CSS env() which Safari supports even in standalone PWA mode. */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          body {
+            /* Use padding on body to push content up from the home indicator area */
+            padding-bottom: env(safe-area-inset-bottom);
+          }
+        }
       `}</style>
       <meta
         property="og:description"

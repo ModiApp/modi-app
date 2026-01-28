@@ -1,16 +1,26 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/ui/styles";
 
-const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => (
-  <SafeAreaView style={styles.container}>
-    <View style={styles.screen}>
-      <View style={styles.content}>{children}</View>
-    </View>
-  </SafeAreaView>
-);
+const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
+  // On web, bottom safe area is handled via CSS env() in WebAppHead
+  // This avoids double padding and ensures iOS PWA works correctly
+  const edges = Platform.OS === 'web' 
+    ? (['top', 'left', 'right'] as const)
+    : (['top', 'bottom', 'left', 'right'] as const);
+  
+  return (
+    <SafeAreaView style={styles.container} edges={edges}>
+      <View style={styles.screen}>
+        <View style={styles.content}>
+          {children}
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
