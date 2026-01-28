@@ -1,3 +1,4 @@
+import { useAuth } from '@/providers/Auth';
 import { usePushNotification } from '@/providers/PushNotifications';
 import { colors, spacing } from '@/ui/styles';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ const DISMISSED_KEY = 'notification_prompt_dismissed';
  * - We're on a supported platform
  */
 export function NotificationPrompt() {
+  const { userId, isLoading: authLoading } = useAuth();
   const { permissionStatus, requestPermission, isRequesting, error, pushToken } = usePushNotification();
   const [dismissed, setDismissed] = useState(true); // Start hidden
   const [localError, setLocalError] = useState<string | null>(null);
@@ -73,10 +75,11 @@ export function NotificationPrompt() {
   };
 
   // Don't show if:
+  // - Auth still loading or no user (prevents race condition with token save)
   // - Already granted (and no error)
   // - User dismissed it
   // Keep visible if there's an error so user can see it
-  if (dismissed || (permissionStatus === 'granted' && !localError)) {
+  if (authLoading || !userId || dismissed || (permissionStatus === 'granted' && !localError)) {
     return null;
   }
 
@@ -146,8 +149,14 @@ export function NotificationPrompt() {
  * Use this in game lobbies or settings.
  */
 export function NotificationButton() {
+  const { userId, isLoading: authLoading } = useAuth();
   const { permissionStatus, requestPermission, isRequesting, pushToken } = usePushNotification();
   
+  // Don't show until auth is ready
+  if (authLoading || !userId) {
+    return null;
+  }
+
   if (permissionStatus === 'granted' && pushToken) {
     return (
       <View style={styles.statusContainer}>
