@@ -1,6 +1,7 @@
 import { useAuth } from '@/providers/Auth';
 import { usePushNotification } from '@/providers/PushNotifications';
 import { colors, spacing } from '@/ui/styles';
+import { isPushNotificationSupported } from '@/utils/pushSupport';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform, Animated } from 'react-native';
@@ -75,11 +76,12 @@ export function NotificationPrompt() {
   };
 
   // Don't show if:
+  // - Push notifications aren't supported (e.g., Safari iOS non-PWA)
   // - Auth still loading or no user (prevents race condition with token save)
   // - Already granted (and no error)
   // - User dismissed it
   // Keep visible if there's an error so user can see it
-  if (authLoading || !userId || dismissed || (permissionStatus === 'granted' && !localError)) {
+  if (!isPushNotificationSupported() || authLoading || !userId || dismissed || (permissionStatus === 'granted' && !localError)) {
     return null;
   }
 
@@ -152,8 +154,8 @@ export function NotificationButton() {
   const { userId, isLoading: authLoading } = useAuth();
   const { permissionStatus, requestPermission, isRequesting, pushToken } = usePushNotification();
   
-  // Don't show until auth is ready
-  if (authLoading || !userId) {
+  // Don't show if push isn't supported or auth isn't ready
+  if (!isPushNotificationSupported() || authLoading || !userId) {
     return null;
   }
 
