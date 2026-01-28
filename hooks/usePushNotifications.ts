@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { firestore, auth } from '@/config/firebase';
+import { useAuth } from '@/providers/Auth';
+import { firestore } from '@/config/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // Platform-specific imports handled dynamically
@@ -43,11 +44,15 @@ export interface PushNotificationState {
  * as browsers block automatic permission requests.
  */
 export function usePushNotifications(): PushNotificationState {
+  const { userId } = useAuth();
   const [pushToken, setPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'web' | null>(null);
   const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown');
+  
+  // Track if we've saved the token for this userId to avoid duplicate saves
+  const savedForUser = useRef<string | null>(null);
   
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
@@ -88,6 +93,26 @@ export function usePushNotifications(): PushNotificationState {
     };
   }, []);
 
+  // Save token to Firestore when we have both token and userId
+  useEffect(() => {
+    if (!pushToken || !platform || !userId) {
+      return;
+    }
+    
+    // Avoid duplicate saves for the same user
+    if (savedForUser.current === userId) {
+      return;
+    }
+    
+    console.log('[Push] Saving token for user:', userId);
+    savedForUser.current = userId;
+    
+    savePushToken(userId, pushToken, platform).catch(err => {
+      console.error('[Push] Failed to save token:', err);
+      savedForUser.current = null; // Reset so we can retry
+    });
+  }, [pushToken, platform, userId]);
+
   // Check web permission status (without requesting)
   const checkWebPermissionStatus = () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -98,13 +123,12 @@ export function usePushNotifications(): PushNotificationState {
     const status = Notification.permission;
     if (status === 'granted') {
       setPermissionStatus('granted');
-      // Already have permission, get the token
+      // Already have permission, get the token (saving happens in useEffect above)
       registerForWebPushAsync()
         .then(token => {
           if (token) {
             setPushToken(token);
             setPlatform('web');
-            savePushToken(token, 'web');
           }
         })
         .catch(err => {
@@ -127,13 +151,12 @@ export function usePushNotifications(): PushNotificationState {
     const { status } = await Notifications.getPermissionsAsync();
     if (status === 'granted') {
       setPermissionStatus('granted');
-      // Already have permission, get the token
+      // Already have permission, get the token (saving happens in useEffect above)
       registerForMobilePushAsync()
         .then(token => {
           if (token) {
             setPushToken(token);
             setPlatform(Platform.OS as 'ios' | 'android');
-            savePushToken(token, Platform.OS as 'ios' | 'android');
           }
         })
         .catch(err => {
@@ -160,7 +183,7 @@ export function usePushNotifications(): PushNotificationState {
           setPushToken(token);
           setPlatform('web');
           setPermissionStatus('granted');
-          savePushToken(token, 'web');
+          // Token saving happens in useEffect above
         } else {
           setPermissionStatus('denied');
         }
@@ -171,7 +194,7 @@ export function usePushNotifications(): PushNotificationState {
           setPushToken(token);
           setPlatform(Platform.OS as 'ios' | 'android');
           setPermissionStatus('granted');
-          savePushToken(token, Platform.OS as 'ios' | 'android');
+          // Token saving happens in useEffect above
         } else {
           setPermissionStatus('denied');
         }
@@ -343,34 +366,26 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
 }
 
 /**
- * Save the push token to Firestore for this user
+ * Save the push token to Firestore for the given user.
  */
-async function savePushToken(token: string, platform: string): Promise<void> {
-  console.log('[Push] savePushToken called with platform:', platform);
+async function savePushToken(userId: string, token: string, platform: string): Promise<void> {
+  console.log('[Push] savePushToken called for user:', userId);
   console.log('[Push] Token (first 20 chars):', token?.substring(0, 20) + '...');
-  
-  const user = auth.currentUser;
-  console.log('[Push] Current user:', user?.uid || 'NO USER');
-  
-  if (!user) {
-    console.error('[Push] ERROR: No user logged in, cannot save push token');
-    return;
-  }
 
   try {
     // Determine token type for the Cloud Function
     const tokenType = platform === 'web' ? 'fcm' : 'expo';
     
-    console.log('[Push] Saving to Firestore pushTokens/' + user.uid);
-    await setDoc(doc(firestore, 'pushTokens', user.uid), {
+    console.log('[Push] Saving to Firestore pushTokens/' + userId);
+    await setDoc(doc(firestore, 'pushTokens', userId), {
       token,
       tokenType,
       platform,
       updatedAt: serverTimestamp(),
     }, { merge: true });
-    console.log('[Push] ✅ Token saved successfully for user:', user.uid);
+    console.log('[Push] ✅ Token saved successfully for user:', userId);
   } catch (error) {
     console.error('[Push] ❌ Error saving push token:', error);
-    throw error; // Re-throw so the UI can show the error
+    throw error;
   }
 }
