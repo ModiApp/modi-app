@@ -20,15 +20,10 @@ export function SafeAreaBottomPadding() {
     }
   }, []);
 
-  // DEBUG: Show red bar to confirm detection is working
-  // Remove this after confirming it works!
-  if (!isIOSStandalone) {
-    // Show thin blue bar when NOT in standalone (for comparison)
-    return <View style={[styles.padding, { height: 4, backgroundColor: 'blue' }]} />;
-  }
+  if (!isIOSStandalone) return null;
 
   // 34px is the home indicator height on modern iPhones (iPhone X and later)
-  return <View style={[styles.padding, { backgroundColor: 'red' }]} />;
+  return <View style={styles.padding} />;
 }
 
 const styles = StyleSheet.create({
