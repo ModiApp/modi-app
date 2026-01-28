@@ -55,7 +55,18 @@ export function WebAppHead() {
             padding-bottom: max(env(safe-area-inset-bottom), 34px) !important;
           }
         }
+        
+        /* iOS Safari standalone mode - detected via JS and .ios-standalone class */
+        .ios-standalone #root {
+          padding-bottom: 34px !important;
+        }
       `}</style>
+      <script dangerouslySetInnerHTML={{__html: `
+        // Detect iOS standalone PWA mode (navigator.standalone is iOS-specific)
+        if (window.navigator.standalone === true) {
+          document.documentElement.classList.add('ios-standalone');
+        }
+      `}} />
       <meta
         property="og:description"
         content="Play with friends, don't end up with the lowest card."
