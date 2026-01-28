@@ -20,18 +20,30 @@ export function WebAppHead() {
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="theme-color" content="#35654D" />
       <style>{`
-        html, body, #root { 
-          height: 100%; 
+        html { 
+          height: 100%;
           background: #35654D; 
         }
-        body { margin: 0; }
+        body { 
+          margin: 0;
+          min-height: 100%;
+          background: #35654D;
+        }
+        #root {
+          min-height: 100%;
+          background: #35654D;
+          display: flex;
+          flex-direction: column;
+        }
         
         /* iOS PWA safe area support - ensures bottom content isn't hidden by home indicator.
-           This uses CSS env() which Safari supports even in standalone PWA mode. */
+           Using !important to override Expo's default height:100% styles */
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
-          body {
-            /* Use padding on body to push content up from the home indicator area */
-            padding-bottom: env(safe-area-inset-bottom);
+          #root {
+            padding-bottom: env(safe-area-inset-bottom) !important;
+            min-height: 100% !important;
+            height: auto !important;
+            box-sizing: border-box;
           }
         }
       `}</style>
