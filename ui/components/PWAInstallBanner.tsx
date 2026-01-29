@@ -1,57 +1,98 @@
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { colors, spacing } from '@/ui/styles';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated, Platform } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  Pressable, 
+  StyleSheet, 
+  Animated, 
+  Platform,
+  Image,
+  Dimensions,
+} from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ICON_SIZE = 64;
 
 /**
- * A banner that prompts users to install the PWA.
- * - On Android/Chrome: Shows install button that triggers native prompt
- * - On iOS Safari: Shows instructions for "Add to Home Screen"
+ * A native-looking bottom sheet that prompts users to install the PWA.
  * 
- * Only shows after user engagement (2+ games/lobbies joined/created)
- * and respects dismissal for 14 days.
+ * Design inspired by Chrome's native install prompt and iOS system dialogs:
+ * - Bottom sheet style (feels native on both platforms)
+ * - Prominent app icon
+ * - Clean typography hierarchy
+ * - Native button styling
+ * - Smooth spring animations
+ * 
+ * Behavior:
+ * - On Android/Chrome: Shows install button that triggers native prompt
+ * - On iOS Safari: Shows step-by-step Add to Home Screen instructions
+ * - Only shows after user engagement (2+ games joined/created)
+ * - Respects dismissal for 14 days
  */
 export function PWAInstallBanner() {
   const { canPrompt, isIOS, isInstalled, isLoading, triggerInstall, dismiss } = usePWAInstall();
   const [isInstalling, setIsInstalling] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
-  const [opacity] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(-100));
+  
+  // Animation values
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const sheetTranslateY = useRef(new Animated.Value(400)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (canPrompt && !isLoading) {
-      // Animate in
-      Animated.parallel([
-        Animated.timing(opacity, {
+      // Animate in with staggered timing
+      Animated.sequence([
+        // First: fade in backdrop
+        Animated.timing(backdropOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 200,
           useNativeDriver: true,
         }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 8,
-          useNativeDriver: true,
-        }),
+        // Then: slide up sheet with spring physics
+        Animated.parallel([
+          Animated.spring(sheetTranslateY, {
+            toValue: 0,
+            tension: 65,
+            friction: 11,
+            useNativeDriver: true,
+          }),
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 250,
+            delay: 50,
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start();
     }
   }, [canPrompt, isLoading]);
 
-  const handleDismiss = async () => {
-    // Animate out
+  const animateOut = (callback: () => void) => {
     Animated.parallel([
-      Animated.timing(opacity, {
+      Animated.timing(backdropOpacity, {
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
-        toValue: -100,
-        duration: 200,
+      Animated.timing(sheetTranslateY, {
+        toValue: 400,
+        duration: 250,
         useNativeDriver: true,
       }),
-    ]).start(async () => {
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(callback);
+  };
+
+  const handleDismiss = async () => {
+    animateOut(async () => {
       await dismiss();
     });
   };
@@ -71,224 +112,462 @@ export function PWAInstallBanner() {
     }
   };
 
+  const handleBackIOSInstructions = () => {
+    setShowIOSInstructions(false);
+  };
+
   // Don't render on native or when conditions not met
   if (Platform.OS !== 'web' || isLoading || !canPrompt || isInstalled) {
     return null;
   }
 
-  // iOS Safari instructions view
-  if (showIOSInstructions) {
-    return (
+  return (
+    <View style={styles.overlay} pointerEvents="box-none">
+      {/* Semi-transparent backdrop */}
+      <Animated.View 
+        style={[styles.backdrop, { opacity: backdropOpacity }]}
+        pointerEvents="auto"
+      >
+        <Pressable style={styles.backdropPressable} onPress={handleDismiss} />
+      </Animated.View>
+
+      {/* Bottom sheet */}
       <Animated.View 
         style={[
-          styles.container, 
-          styles.iosContainer,
-          { opacity, transform: [{ translateY: slideAnim }] }
+          styles.sheet,
+          { 
+            transform: [{ translateY: sheetTranslateY }],
+          }
         ]}
       >
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Ionicons name="phone-portrait-outline" size={24} color={colors.gold} />
-            <Text style={styles.title}>Add Modi to Home Screen</Text>
-          </View>
-          <Pressable onPress={handleDismiss} style={styles.closeButton}>
-            <Ionicons name="close" size={20} color={colors.textSecondary} />
-          </Pressable>
-        </View>
-        
-        <View style={styles.instructionsList}>
-          <View style={styles.instructionItem}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>1</Text>
-            </View>
-            <Text style={styles.instructionText}>
-              Tap the <Text style={styles.highlight}>Share</Text> button{' '}
-              <Ionicons name="share-outline" size={16} color={colors.gold} />
-            </Text>
-          </View>
-          
-          <View style={styles.instructionItem}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>2</Text>
-            </View>
-            <Text style={styles.instructionText}>
-              Scroll down and tap{' '}
-              <Text style={styles.highlight}>"Add to Home Screen"</Text>
-            </Text>
-          </View>
-          
-          <View style={styles.instructionItem}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>3</Text>
-            </View>
-            <Text style={styles.instructionText}>
-              Tap <Text style={styles.highlight}>"Add"</Text> in the top right
-            </Text>
-          </View>
-        </View>
+        {/* Drag indicator (visual only) */}
+        <View style={styles.dragIndicator} />
 
-        <Pressable style={styles.gotItButton} onPress={handleDismiss}>
-          <Text style={styles.gotItText}>Got it!</Text>
-        </Pressable>
+        <Animated.View style={[styles.content, { opacity: contentOpacity }]}>
+          {showIOSInstructions ? (
+            <IOSInstructions 
+              onBack={handleBackIOSInstructions}
+              onDismiss={handleDismiss}
+            />
+          ) : (
+            <InstallPrompt 
+              isIOS={isIOS}
+              isInstalling={isInstalling}
+              onInstall={handleInstall}
+              onDismiss={handleDismiss}
+            />
+          )}
+        </Animated.View>
       </Animated.View>
-    );
-  }
+    </View>
+  );
+}
 
-  // Standard install banner
+// Main install prompt content
+function InstallPrompt({ 
+  isIOS, 
+  isInstalling, 
+  onInstall, 
+  onDismiss 
+}: {
+  isIOS: boolean;
+  isInstalling: boolean;
+  onInstall: () => void;
+  onDismiss: () => void;
+}) {
   return (
-    <Animated.View 
-      style={[
-        styles.container, 
-        { opacity, transform: [{ translateY: slideAnim }] }
-      ]}
-    >
-      <View style={styles.content}>
-        <Ionicons name="download-outline" size={24} color={colors.gold} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>Install Modi</Text>
-          <Text style={styles.subtitle}>
-            Quick access & push notifications
-          </Text>
+    <>
+      {/* App icon and info */}
+      <View style={styles.appInfo}>
+        <View style={styles.iconContainer}>
+          <Image 
+            source={{ uri: '/icon-192.png' }}
+            style={styles.appIcon}
+            resizeMode="cover"
+          />
+        </View>
+        <View style={styles.appDetails}>
+          <Text style={styles.appName}>Modi</Text>
+          <Text style={styles.appTagline}>Card Game</Text>
         </View>
       </View>
-      
+
+      {/* Value proposition */}
+      <View style={styles.features}>
+        <FeatureItem 
+          icon="flash-outline" 
+          text="Instant access from home screen"
+        />
+        <FeatureItem 
+          icon="notifications-outline" 
+          text="Get notified when friends play"
+        />
+        <FeatureItem 
+          icon="cloud-offline-outline" 
+          text="Works offline"
+        />
+      </View>
+
+      {/* Actions */}
       <View style={styles.actions}>
         <Pressable 
-          style={styles.dismissButton} 
-          onPress={handleDismiss}
-          disabled={isInstalling}
-        >
-          <Text style={styles.dismissText}>Not Now</Text>
-        </Pressable>
-        <Pressable 
           style={[styles.installButton, isInstalling && styles.buttonDisabled]} 
-          onPress={handleInstall}
+          onPress={onInstall}
           disabled={isInstalling}
         >
-          <Text style={styles.installText}>
-            {isInstalling ? 'Installing...' : 'Install'}
-          </Text>
+          {isInstalling ? (
+            <Text style={styles.installButtonText}>Installing...</Text>
+          ) : (
+            <>
+              <Ionicons 
+                name={isIOS ? "add-circle-outline" : "download-outline"} 
+                size={20} 
+                color={colors.darkGreen} 
+                style={styles.buttonIcon}
+              />
+              <Text style={styles.installButtonText}>
+                {isIOS ? 'Add to Home Screen' : 'Install App'}
+              </Text>
+            </>
+          )}
+        </Pressable>
+
+        <Pressable 
+          style={styles.dismissButton} 
+          onPress={onDismiss}
+          disabled={isInstalling}
+        >
+          <Text style={styles.dismissButtonText}>Not Now</Text>
         </Pressable>
       </View>
-    </Animated.View>
+    </>
+  );
+}
+
+// Feature list item
+function FeatureItem({ icon, text }: { icon: string; text: string }) {
+  return (
+    <View style={styles.featureItem}>
+      <View style={styles.featureIconContainer}>
+        <Ionicons name={icon as any} size={18} color={colors.gold} />
+      </View>
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
+  );
+}
+
+// iOS Safari instructions
+function IOSInstructions({ 
+  onBack, 
+  onDismiss 
+}: { 
+  onBack: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <>
+      {/* Header with back button */}
+      <View style={styles.iosHeader}>
+        <Pressable onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.gold} />
+        </Pressable>
+        <Text style={styles.iosHeaderTitle}>Add to Home Screen</Text>
+        <View style={styles.backButton} />
+      </View>
+
+      {/* Instructions */}
+      <View style={styles.instructionsList}>
+        <InstructionStep 
+          step={1}
+          text="Tap the Share button in Safari"
+          icon={
+            <View style={styles.shareIconContainer}>
+              <Ionicons name="share-outline" size={20} color="#007AFF" />
+            </View>
+          }
+        />
+        <InstructionStep 
+          step={2}
+          text="Scroll down and tap"
+          highlight="Add to Home Screen"
+          icon={
+            <View style={styles.addIconContainer}>
+              <Ionicons name="add-outline" size={16} color="#007AFF" />
+            </View>
+          }
+        />
+        <InstructionStep 
+          step={3}
+          text="Tap Add in the top right corner"
+        />
+      </View>
+
+      {/* Done button */}
+      <Pressable style={styles.doneButton} onPress={onDismiss}>
+        <Text style={styles.doneButtonText}>Got It</Text>
+      </Pressable>
+    </>
+  );
+}
+
+// Instruction step component
+function InstructionStep({ 
+  step, 
+  text, 
+  highlight,
+  icon 
+}: { 
+  step: number; 
+  text: string;
+  highlight?: string;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <View style={styles.instructionStep}>
+      <View style={styles.stepNumberContainer}>
+        <Text style={styles.stepNumber}>{step}</Text>
+      </View>
+      <View style={styles.stepContent}>
+        <Text style={styles.stepText}>
+          {text}
+          {highlight && (
+            <>
+              {' '}
+              <Text style={styles.stepHighlight}>{highlight}</Text>
+            </>
+          )}
+        </Text>
+        {icon}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.darkGreen,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.gold + '40',
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    zIndex: 1000,
   },
-  iosContainer: {
-    paddingBottom: spacing.md,
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  closeButton: {
-    padding: spacing.xs,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  textContainer: {
+  backdropPressable: {
     flex: 1,
   },
-  title: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
+  sheet: {
+    backgroundColor: colors.darkGreen,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34, // Safe area for home indicator
+    // Subtle shadow for elevation
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 20,
   },
-  subtitle: {
+  dragIndicator: {
+    width: 36,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+  },
+
+  // App info section
+  appInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  iconContainer: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: colors.feltGreen,
+    // iOS-style app icon shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  appIcon: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+  },
+  appDetails: {
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  appName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.white,
+    letterSpacing: -0.3,
+  },
+  appTagline: {
+    fontSize: 15,
     color: colors.textSecondary,
-    fontSize: 13,
     marginTop: 2,
   },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+
+  // Features section
+  features: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
     gap: spacing.sm,
-    marginTop: spacing.md,
   },
-  dismissButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  dismissText: {
-    color: colors.textSecondary,
+  featureIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  featureText: {
     fontSize: 14,
-    fontWeight: '500',
+    color: colors.textSecondary,
+    flex: 1,
+  },
+
+  // Action buttons
+  actions: {
+    gap: spacing.sm,
   },
   installButton: {
     backgroundColor: colors.gold,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  installText: {
+  buttonIcon: {
+    marginRight: 8,
+  },
+  installButtonText: {
     color: colors.darkGreen,
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  instructionsList: {
-    gap: spacing.sm,
+  dismissButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
   },
-  instructionItem: {
+  dismissButtonText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
+  // iOS instructions
+  iosHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
   },
-  stepNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.gold + '30',
+  backButton: {
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  stepNumberText: {
-    color: colors.gold,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  instructionText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    flex: 1,
-  },
-  highlight: {
-    color: colors.gold,
+  iosHeaderTitle: {
+    fontSize: 17,
     fontWeight: '600',
+    color: colors.white,
+    textAlign: 'center',
   },
-  gotItButton: {
+  instructionsList: {
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  instructionStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  stepNumberContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.gold,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 8,
-    alignSelf: 'center',
-    marginTop: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
-  gotItText: {
-    color: colors.darkGreen,
+  stepNumber: {
     fontSize: 14,
+    fontWeight: '700',
+    color: colors.darkGreen,
+  },
+  stepContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    paddingTop: 4,
+    gap: 6,
+  },
+  stepText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  stepHighlight: {
+    color: colors.white,
     fontWeight: '600',
+  },
+  shareIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addIconContainer: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 122, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  doneButton: {
+    backgroundColor: colors.gold,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: colors.darkGreen,
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
 });
