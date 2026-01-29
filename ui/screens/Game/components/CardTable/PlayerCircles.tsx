@@ -191,6 +191,13 @@ export function PlayerCircles() {
     const canDrag = isGatheringPlayers && isHost && playerId !== currUserId;
     const isOnline = isPlayerOnline(presence, playerId);
 
+    const playerName = game.usernames[playerId].slice(0, 8);
+    const isCurrentPlayer = playerId === currUserId;
+    const statusText = isOnline ? "online" : "offline";
+    const playerLabel = isCurrentPlayer
+      ? `You (${statusText})`
+      : `${playerName} (${statusText})`;
+
     const circleContent = (
       <Container
         key={playerId}
@@ -212,6 +219,8 @@ export function PlayerCircles() {
           ],
           opacity: isDragged ? 0.3 : 1,
         }}
+        accessibilityRole="text"
+        accessibilityLabel={playerLabel}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           <View
@@ -221,8 +230,9 @@ export function PlayerCircles() {
               borderRadius: 3,
               backgroundColor: isOnline ? "#22c55e" : "#6b7280",
             }}
+            accessibilityElementsHidden={true}
           />
-          <Text size={10}>{game.usernames[playerId].slice(0, 8)}</Text>
+          <Text size={10}>{playerName}</Text>
         </View>
       </Container>
     );
