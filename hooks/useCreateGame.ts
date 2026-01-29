@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -30,7 +29,6 @@ async function createGameFunction() {
 export function useCreateGame() {
   const router = useRouter();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
-  const { trackEngagement } = usePWAInstall();
   
   const createGame = async () => {
     try {
@@ -38,9 +36,6 @@ export function useCreateGame() {
       setIsCreatingGame(true);
       const game = await createGameFunction();
       console.log("useCreateGame: Game created:", game);
-      
-      // Track engagement for PWA install prompt
-      trackEngagement();
       
       router.push(`/games/${game.gameId}`);
     } catch (error: any) {

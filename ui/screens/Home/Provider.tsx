@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
-import React, { createContext, useCallback, useEffect, useState } from "react";
+import React, { createContext, useCallback, useEffect, useState, useRef } from "react";
 
 import { useCreateGame } from "@/hooks/useCreateGame";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useWarmUpServer } from "@/hooks/useWarmUpServer";
 import { useUsername } from "@/providers/Username";
 import { validateUsername } from "@/utils/validation";
@@ -27,6 +28,8 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const username = useUsername();
   const { createGame, isCreatingGame } = useCreateGame();
+  const { showPrompt: showPWAPrompt, isReady: isPWAReady } = usePWAInstall();
+  const hasShownPWAPrompt = useRef(false);
 
   // Validate initial username on mount and when username changes
   const isUsernameValid = validateUsername(username.value).isValid;
@@ -42,8 +45,16 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
       if (isValid && shouldAskForUsername) {
         setShouldAskForUsername(false);
       }
+      
+      // Show PWA install prompt when username becomes valid (once per session)
+      // This is the optimal time: before they join a game, so they install first
+      // and play with the correct auth token (avoids mid-game disconnection)
+      if (isValid && isPWAReady && !hasShownPWAPrompt.current) {
+        hasShownPWAPrompt.current = true;
+        showPWAPrompt();
+      }
     },
-    [shouldAskForUsername]
+    [shouldAskForUsername, isPWAReady, showPWAPrompt]
   );
 
   const handleCreateGame = useCallback(() => {

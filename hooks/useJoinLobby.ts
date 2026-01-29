@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Alert } from '@/ui/components/AlertBanner';
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -51,7 +50,6 @@ export function useJoinLobby() {
   const router = useRouter();
   const pathname = usePathname();
   const [isJoining, setIsJoining] = useState(false);
-  const { trackEngagement } = usePWAInstall();
 
   const joinLobby = async (gameId: string): Promise<JoinLobbyResult> => {
     const trimmedGameId = gameId.trim();
@@ -68,9 +66,6 @@ export function useJoinLobby() {
 
       const result = await joinGameApi(trimmedGameId);
       console.log('useJoinLobby: Successfully joined game:', result);
-
-      // Track engagement for PWA install prompt
-      trackEngagement();
 
       // Navigate to the lobby with the game ID
       // if route is not already /games/:gameId, push to it

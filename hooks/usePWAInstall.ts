@@ -13,9 +13,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = 'pwa-install-dismissed';
-const ENGAGEMENT_KEY = 'pwa-engagement-count';
+const SHOWN_KEY = 'pwa-install-shown'; // Track if we've shown the prompt this session
 const DISMISS_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
-const MIN_ENGAGEMENT_COUNT = 2; // Show after 2+ games/lobbies
 
 export interface PWAInstallState {
   /** Whether we can show the install prompt */
@@ -26,12 +25,14 @@ export interface PWAInstallState {
   isInstalled: boolean;
   /** Loading state while checking storage */
   isLoading: boolean;
+  /** Whether the prompt is ready to be triggered (browser event received or iOS) */
+  isReady: boolean;
+  /** Trigger showing the install prompt UI */
+  showPrompt: () => void;
   /** Trigger the native install prompt (Android/Chrome only) */
   triggerInstall: () => Promise<boolean>;
   /** Dismiss the prompt (remembers for 14 days) */
   dismiss: () => Promise<void>;
-  /** Track user engagement (call when joining/creating games) */
-  trackEngagement: () => Promise<void>;
 }
 
 export function usePWAInstall(): PWAInstallState {
@@ -39,8 +40,8 @@ export function usePWAInstall(): PWAInstallState {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isDismissed, setIsDismissed] = useState(true);
-  const [hasEngagement, setHasEngagement] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [shouldShow, setShouldShow] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
@@ -63,12 +64,8 @@ export function usePWAInstall(): PWAInstallState {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
     setIsIOS(iOS);
 
-    // Check dismissal state and engagement
-    Promise.all([
-      AsyncStorage.getItem(DISMISS_KEY),
-      AsyncStorage.getItem(ENGAGEMENT_KEY),
-    ]).then(([dismissedAt, engagementCount]) => {
-      // Check if dismissed recently
+    // Check dismissal state
+    AsyncStorage.getItem(DISMISS_KEY).then((dismissedAt) => {
       if (dismissedAt) {
         const dismissedTime = parseInt(dismissedAt, 10);
         if (Date.now() - dismissedTime < DISMISS_DURATION_MS) {
@@ -79,10 +76,6 @@ export function usePWAInstall(): PWAInstallState {
       } else {
         setIsDismissed(false);
       }
-
-      // Check engagement level
-      const count = engagementCount ? parseInt(engagementCount, 10) : 0;
-      setHasEngagement(count >= MIN_ENGAGEMENT_COUNT);
       
       setIsLoading(false);
     });
@@ -98,6 +91,7 @@ export function usePWAInstall(): PWAInstallState {
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setInstallPrompt(null);
+      setShouldShow(false);
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
@@ -105,6 +99,12 @@ export function usePWAInstall(): PWAInstallState {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
+  }, []);
+
+  // Show the prompt UI (called when user enters valid username)
+  const showPrompt = useCallback(() => {
+    if (Platform.OS !== 'web') return;
+    setShouldShow(true);
   }, []);
 
   const triggerInstall = useCallback(async (): Promise<boolean> => {
@@ -120,6 +120,7 @@ export function usePWAInstall(): PWAInstallState {
       }
 
       setInstallPrompt(null);
+      setShouldShow(false);
       return outcome === 'accepted';
     } catch (error) {
       console.error('Error triggering install prompt:', error);
@@ -130,36 +131,24 @@ export function usePWAInstall(): PWAInstallState {
   const dismiss = useCallback(async () => {
     await AsyncStorage.setItem(DISMISS_KEY, Date.now().toString());
     setIsDismissed(true);
+    setShouldShow(false);
   }, []);
 
-  const trackEngagement = useCallback(async () => {
-    if (Platform.OS !== 'web') return;
-    
-    try {
-      const current = await AsyncStorage.getItem(ENGAGEMENT_KEY);
-      const count = current ? parseInt(current, 10) : 0;
-      const newCount = count + 1;
-      await AsyncStorage.setItem(ENGAGEMENT_KEY, newCount.toString());
-      
-      if (newCount >= MIN_ENGAGEMENT_COUNT) {
-        setHasEngagement(true);
-      }
-    } catch (error) {
-      console.error('Error tracking engagement:', error);
-    }
-  }, []);
+  // Whether the prompt is ready (browser event received or iOS Safari)
+  const isReady = installPrompt !== null || isIOS;
 
   // Whether install prompt can be shown
-  // Show when: not installed, not dismissed, has engagement, and either has native prompt or is iOS
-  const canPrompt = !isInstalled && !isDismissed && hasEngagement && (installPrompt !== null || isIOS);
+  // Show when: not installed, not dismissed, shouldShow triggered, and ready
+  const canPrompt = !isInstalled && !isDismissed && shouldShow && isReady;
 
   return {
     canPrompt,
     isIOS,
     isInstalled,
     isLoading,
+    isReady,
+    showPrompt,
     triggerInstall,
     dismiss,
-    trackEngagement,
   };
 }
