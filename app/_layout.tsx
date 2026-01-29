@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/providers/Auth";
+import { ConnectionProvider } from "@/providers/Connection";
 import { PushNotificationProvider } from "@/providers/PushNotifications";
 import { SplashScreenProvider } from "@/providers/SplashScreen";
 import { UsernameProvider } from "@/providers/Username";
@@ -20,24 +21,26 @@ export default function RootLayout() {
         <BottomSheetModalProvider>
           <WebAppHead />
           <AuthProvider>
-            <PushNotificationProvider>
-              <UsernameProvider>
-                <SplashScreenProvider />
-                <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.feltGreen },
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="about" />
-                <Stack.Screen name="join-lobby" />
-                <Stack.Screen name="playground" />
-                <Stack.Screen name="games/[gameId]" />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              </UsernameProvider>
-            </PushNotificationProvider>
+            <ConnectionProvider>
+              <PushNotificationProvider>
+                <UsernameProvider>
+                  <SplashScreenProvider />
+                  <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.feltGreen },
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="about" />
+                  <Stack.Screen name="join-lobby" />
+                  <Stack.Screen name="playground" />
+                  <Stack.Screen name="games/[gameId]" />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                </UsernameProvider>
+              </PushNotificationProvider>
+            </ConnectionProvider>
           </AuthProvider>
           <AlertBanner />
           <StatusBar style="light" />
