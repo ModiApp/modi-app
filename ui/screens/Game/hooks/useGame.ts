@@ -3,7 +3,7 @@ import { firestore } from "@/config/firebase";
 import { useSessionTimeout, SessionTimeoutState } from "@/hooks/useSessionTimeout";
 import { useConnection } from "@/providers/Connection";
 import { doc, onSnapshot, FirestoreError } from "firebase/firestore";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export interface UseGameResult {
   /** The current game state, null if not found, undefined if loading */
@@ -33,66 +33,13 @@ export function useGame(gameId: string): UseGameResult {
     // No auto-navigation - let the UI handle it
   });
 
-  // Handle game state changes
-  const handleGameUpdate = useCallback((gameData: Game | null) => {
-    setGame(gameData);
-    setIsLoading(false);
-    setError(null);
+  // Use refs to access session methods without adding them to dependency arrays
+  // This prevents infinite rerender loops caused by session object recreation
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
-    if (gameData) {
-      // Game exists - track that we had a valid game
-      hadGameRef.current = true;
-      
-      // If we were in expired/reconnecting state, reset to active
-      if (session.sessionState === 'expired' || session.sessionState === 'reconnecting') {
-        session.resetSession();
-      }
-    } else if (gameData === null) {
-      // Game doesn't exist
-      if (hadGameRef.current) {
-        // We had a game before, now it's gone - session expired
-        session.expireSession(
-          'This game session has ended or was removed.',
-          false // Can't rejoin a deleted game
-        );
-      } else {
-        // Never had a game - it doesn't exist
-        session.expireSession(
-          'Game not found. It may have been deleted or the link is invalid.',
-          false
-        );
-      }
-    }
-  }, [session]);
-
-  // Handle Firestore errors
-  const handleError = useCallback((err: FirestoreError) => {
-    console.error('[useGame] Firestore error:', err);
-    setError(err);
-    setIsLoading(false);
-
-    // Check error type and provide appropriate message
-    if (err.code === 'permission-denied') {
-      session.expireSession(
-        'You no longer have access to this game.',
-        true // Might be able to rejoin
-      );
-    } else if (err.code === 'unavailable') {
-      // Firestore unavailable - connection issue
-      // Don't expire immediately, the connection provider will handle reconnect
-      if (!isConnected) {
-        session.expireSession(
-          'Connection lost. Please check your internet connection.',
-          true
-        );
-      }
-    } else {
-      session.expireSession(
-        'Unable to load game. Please try again.',
-        true
-      );
-    }
-  }, [session, isConnected]);
+  const isConnectedRef = useRef(isConnected);
+  isConnectedRef.current = isConnected;
 
   useEffect(() => {
     if (!gameId) {
@@ -109,21 +56,78 @@ export function useGame(gameId: string): UseGameResult {
     const unsubscribe = onSnapshot(
       gameRef,
       (snapshot) => {
+        const currentSession = sessionRef.current;
+        
         if (snapshot.exists()) {
-          handleGameUpdate(snapshot.data() as Game);
+          const gameData = snapshot.data() as Game;
+          setGame(gameData);
+          setIsLoading(false);
+          setError(null);
+          
+          // Game exists - track that we had a valid game
+          hadGameRef.current = true;
+          
+          // If we were in expired/reconnecting state, reset to active
+          if (currentSession.sessionState === 'expired' || currentSession.sessionState === 'reconnecting') {
+            currentSession.resetSession();
+          }
         } else {
-          handleGameUpdate(null);
+          setGame(null);
+          setIsLoading(false);
+          setError(null);
+          
+          // Game doesn't exist
+          if (hadGameRef.current) {
+            // We had a game before, now it's gone - session expired
+            currentSession.expireSession(
+              'This game session has ended or was removed.',
+              false // Can't rejoin a deleted game
+            );
+          } else {
+            // Never had a game - it doesn't exist
+            currentSession.expireSession(
+              'Game not found. It may have been deleted or the link is invalid.',
+              false
+            );
+          }
         }
       },
-      (err) => {
-        handleError(err);
+      (err: FirestoreError) => {
+        console.error('[useGame] Firestore error:', err);
+        setError(err);
+        setIsLoading(false);
+
+        const currentSession = sessionRef.current;
+        const connected = isConnectedRef.current;
+
+        // Check error type and provide appropriate message
+        if (err.code === 'permission-denied') {
+          currentSession.expireSession(
+            'You no longer have access to this game.',
+            true // Might be able to rejoin
+          );
+        } else if (err.code === 'unavailable') {
+          // Firestore unavailable - connection issue
+          // Don't expire immediately, the connection provider will handle reconnect
+          if (!connected) {
+            currentSession.expireSession(
+              'Connection lost. Please check your internet connection.',
+              true
+            );
+          }
+        } else {
+          currentSession.expireSession(
+            'Unable to load game. Please try again.',
+            true
+          );
+        }
       }
     );
     
     return () => {
       unsubscribe();
     };
-  }, [gameId, handleGameUpdate, handleError]);
+  }, [gameId]); // Only depend on gameId - session access via ref
 
   return {
     game,

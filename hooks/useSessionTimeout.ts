@@ -51,6 +51,8 @@ export function useSessionTimeout({
   const hasTriggeredExpired = useRef(false);
 
   // Sync with connection state for reconnecting
+  // Note: We intentionally access expireSession via ref pattern to avoid 
+  // dependency array issues that could cause infinite loops
   useEffect(() => {
     if (sessionState === 'active' && connectionState === 'reconnecting') {
       setSessionState('reconnecting');
@@ -60,9 +62,17 @@ export function useSessionTimeout({
       setEndReason(null);
     } else if (sessionState === 'reconnecting' && connectionState === 'disconnected') {
       // Failed to reconnect after timeout
-      expireSession('Connection lost. Unable to reconnect to the game.', true);
+      setSessionState('expired');
+      setEndReason('Connection lost. Unable to reconnect to the game.');
+      setCanAttemptRejoin(true);
+      
+      // Trigger callback only once
+      if (!hasTriggeredExpired.current && onSessionExpired) {
+        hasTriggeredExpired.current = true;
+        onSessionExpired();
+      }
     }
-  }, [connectionState, sessionState]);
+  }, [connectionState, sessionState, onSessionExpired]);
 
   const expireSession = useCallback((reason: string, canRejoin = false) => {
     setSessionState('expired');
