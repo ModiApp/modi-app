@@ -78,10 +78,15 @@ export const cleanupStaleData = onSchedule('every 1 hours', async (event) => {
     // 4. Clean up orphaned presence data (games that no longer exist in active collection)
     const presenceSnapshot = await database.ref('presence').once('value');
     const presenceData = presenceSnapshot.val() || {};
+    const presenceGameIds = Object.keys(presenceData);
+    
+    console.log(`Found ${presenceGameIds.length} presence records: ${presenceGameIds.join(', ')}`);
 
-    for (const gameId of Object.keys(presenceData)) {
+    for (const gameId of presenceGameIds) {
       const gameDoc = await firestore.collection('games').doc(gameId).get();
+      console.log(`Checking game ${gameId}: exists=${gameDoc.exists}`);
       if (!gameDoc.exists) {
+        console.log(`Deleting orphaned presence for game ${gameId}`);
         await database.ref(`presence/${gameId}`).remove();
         deletedPresence++;
       }
@@ -112,8 +117,8 @@ async function archiveGame(gameId: string, archiveReason: string): Promise<void>
 
   const gameData = gameDoc.data()!;
 
-  // Create archived game document with metadata
-  const archivedGameRef = firestore.collection('archivedGames').doc(gameId);
+  // Create archived game document with auto-generated ID (allows multiple archives of same gameId)
+  const archivedGameRef = firestore.collection('archivedGames').doc();
   await archivedGameRef.set({
     ...gameData,
     _archiveMetadata: {
