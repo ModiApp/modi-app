@@ -1,5 +1,4 @@
 import type { ActiveGame, Game } from "@/api/src/types";
-import { isActive } from "@/api/src/types";
 import { PresenceMap, usePresence } from "@/hooks/usePresence";
 import { useAuth } from "@/providers/Auth";
 import { createContext, useContext, useEffect, useRef } from "react";
@@ -34,13 +33,14 @@ function useTurnAnnouncements(game: Game) {
 
   useEffect(() => {
     // Only announce for active games
-    if (!isActive(game)) {
+    if (game.status !== "active") {
       prevActivePlayer.current = null;
       prevRoundState.current = null;
       return;
     }
 
-    const activeGame: ActiveGame = game;
+    // Type narrowing: at this point we know game is ActiveGame
+    const activeGame = game as ActiveGame;
     const activePlayer = activeGame.activePlayer;
     const roundState = activeGame.roundState;
     const playerName = activeGame.usernames[activePlayer];
