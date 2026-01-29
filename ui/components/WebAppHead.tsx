@@ -5,6 +5,7 @@ export function WebAppHead() {
   return (
     <Head>
       <title>Modi</title>
+      <link rel="manifest" href="/manifest.json" />
       <link
         rel="icon"
         href={Asset.fromModule(require("@/ui/assets/images/icon.png")).uri}
