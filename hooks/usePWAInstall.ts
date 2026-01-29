@@ -104,6 +104,7 @@ export function usePWAInstall(): PWAInstallState {
   // Show the prompt UI (called when user enters valid username)
   const showPrompt = useCallback(() => {
     if (Platform.OS !== 'web') return;
+    console.log('[PWA Debug] showPrompt called, setting shouldShow=true');
     setShouldShow(true);
   }, []);
 
@@ -140,6 +141,8 @@ export function usePWAInstall(): PWAInstallState {
   // Whether install prompt can be shown
   // Show when: not installed, not dismissed, shouldShow triggered, and ready
   const canPrompt = !isInstalled && !isDismissed && shouldShow && isReady;
+  
+  console.log('[PWA Debug] usePWAInstall state:', { isInstalled, isDismissed, shouldShow, isReady, canPrompt, hasInstallPrompt: installPrompt !== null, isIOS });
 
   return {
     canPrompt,

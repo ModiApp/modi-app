@@ -33,6 +33,18 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
 
   // Validate initial username on mount and when username changes
   const isUsernameValid = validateUsername(username.value).isValid;
+  
+  // Show PWA install prompt when both conditions are met:
+  // 1. Username is valid (user has engaged)
+  // 2. PWA is ready (beforeinstallprompt captured or iOS)
+  useEffect(() => {
+    console.log('[PWA Debug] useEffect check:', { isUsernameValid, isPWAReady, hasShown: hasShownPWAPrompt.current });
+    if (isUsernameValid && isPWAReady && !hasShownPWAPrompt.current) {
+      console.log('[PWA Debug] useEffect triggering showPWAPrompt!');
+      hasShownPWAPrompt.current = true;
+      showPWAPrompt();
+    }
+  }, [isUsernameValid, isPWAReady, showPWAPrompt]);
 
   // Awaken the server as soon as a user reaches the home screen
   // since we're no longer paying to keep the server awake 24/7
@@ -45,16 +57,9 @@ export default function HomeScreenProvider(props: React.PropsWithChildren) {
       if (isValid && shouldAskForUsername) {
         setShouldAskForUsername(false);
       }
-      
-      // Show PWA install prompt when username becomes valid (once per session)
-      // This is the optimal time: before they join a game, so they install first
-      // and play with the correct auth token (avoids mid-game disconnection)
-      if (isValid && isPWAReady && !hasShownPWAPrompt.current) {
-        hasShownPWAPrompt.current = true;
-        showPWAPrompt();
-      }
+      // PWA prompt is now handled by useEffect watching isUsernameValid + isPWAReady
     },
-    [shouldAskForUsername, isPWAReady, showPWAPrompt]
+    [shouldAskForUsername]
   );
 
   const handleCreateGame = useCallback(() => {
