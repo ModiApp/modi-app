@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Extend Navigator for iOS Safari's non-standard standalone property
+interface NavigatorStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -44,8 +49,9 @@ export function usePWAInstall(): PWAInstallState {
     }
 
     // Check if already installed (standalone mode)
+    const nav = navigator as NavigatorStandalone;
     const standalone = window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as any).standalone;
+      || nav.standalone === true;
     setIsInstalled(standalone);
     
     if (standalone) {
@@ -53,8 +59,8 @@ export function usePWAInstall(): PWAInstallState {
       return;
     }
 
-    // Detect iOS Safari
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // Detect iOS Safari (MSStream check excludes IE11)
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
     setIsIOS(iOS);
 
     // Check dismissal state and engagement
