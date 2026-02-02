@@ -1,6 +1,7 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 
+import { PWAInstallBanner } from "@/ui/components/PWAInstallBanner";
 import UsernameInput from "@/ui/components/UsernameInput";
 import {
   Button,
@@ -44,6 +45,7 @@ function HomeScreenBase({
           <Icon name="information-circle" size={22} color="white" />
         </Button>
       </View>
+      <PWAInstallBanner />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
