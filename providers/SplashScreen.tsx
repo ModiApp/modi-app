@@ -2,6 +2,7 @@ import { fontFamilies } from "@/ui/styles";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { useAuth } from "./Auth";
 import { useUsername } from "./Username";
 
 // prevent splash screen from hiding itself automatically
@@ -19,12 +20,13 @@ export function SplashScreenProvider() {
   });
 
   const { isLoading: isUsernameLoading } = useUsername();
+  const { isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
-    if (fontsLoaded && !isUsernameLoading) {
+    if (fontsLoaded && !isUsernameLoading && !isAuthLoading) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, isUsernameLoading]);
+  }, [fontsLoaded, isUsernameLoading, isAuthLoading]);
 
   return null;
 }

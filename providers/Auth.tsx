@@ -28,29 +28,33 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
+  const [isLoading, setIsLoading] = useState(!auth.currentUser);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    signInAnonymously(auth)
-      .then(async (result) => {
-        console.debug("Signed in anonymously", result.user.uid);
-        // Force-refresh token (useful after emulator restarts)
-        try {
-          await result.user.getIdToken(true);
-        } catch (e) {
-          console.warn("Failed to refresh ID token after sign-in", e);
-        }
-        setUserId(result.user.uid);
-      })
-      .catch((err) => {
-        console.error("Error signing in anonymously", err);
-        setError(err);
-      })
-      .finally(() => {
+    // Listen for auth state changes - this fires as soon as Firebase knows the user
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.debug("Auth state changed: signed in", user.uid);
+        setUserId(user.uid);
         setIsLoading(false);
-      });
+        // Force-refresh token in background (useful after emulator restarts)
+        user.getIdToken(true).catch((e) => {
+          console.warn("Failed to refresh ID token", e);
+        });
+      } else {
+        // No user yet, trigger anonymous sign-in
+        console.debug("Auth state changed: no user, signing in anonymously");
+        signInAnonymously(auth).catch((err) => {
+          console.error("Error signing in anonymously", err);
+          setError(err);
+          setIsLoading(false);
+        });
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
   return (

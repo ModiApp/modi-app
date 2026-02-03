@@ -5,6 +5,7 @@ import ScreenContainer from "@/ui/elements/Screen";
 import { GameActionProvider } from "@/ui/screens/Game/GameActionsProvider";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
+import { ActivityIndicator, View } from "react-native";
 import { CardTable } from "./components/CardTable";
 import { AnimatedCards } from "./components/CardTable/AnimatedCards";
 import { LiveCounts } from "./components/CardTable/LiveCounts";
@@ -19,8 +20,29 @@ const GameScreen: React.FC = () => {
   // get the game id from the url
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
   const game = useGame(gameId);
-  const { userId: currentUserId } = useAuth();
-  if (!game || !currentUserId) return <ScreenContainer />;
+  const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
+  
+  // Show loading indicator while auth is in progress
+  if (isAuthLoading || !currentUserId) {
+    return (
+      <ScreenContainer>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      </ScreenContainer>
+    );
+  }
+  
+  // Show loading for game data (will redirect to home via useGame hook if not found)
+  if (!gameId || !game) {
+    return (
+      <ScreenContainer>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>

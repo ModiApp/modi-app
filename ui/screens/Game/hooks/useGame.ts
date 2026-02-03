@@ -5,11 +5,15 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 /** Exports a live subscription to a game. If the game is not found, it will redirect to the home screen. */
-export function useGame(gameId: string): Game | null | undefined {
+export function useGame(gameId: string | undefined): Game | null | undefined {
   const [game, setGame] = useState<Game | null | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
+    // Don't subscribe if gameId is not yet available (e.g., during initial route parsing)
+    if (!gameId) {
+      return;
+    }
     return subscribeToGame(gameId, (game) => {
       setGame(game);
       if (game === null) {
