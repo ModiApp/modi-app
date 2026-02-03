@@ -1,6 +1,7 @@
 import _ from "lodash";
 import React, { useMemo, useRef } from "react";
 import {
+  AccessibilityState,
   StyleProp,
   TextStyle,
   TouchableOpacity,
@@ -28,6 +29,9 @@ interface ButtonProps {
   /** Shows a loading spinner instead of children when true. Also disables the button. */
   loading?: boolean;
 
+  /** Accessibility hint explaining what the button does */
+  accessibilityHint?: string;
+
   onPress(): void;
 }
 
@@ -41,6 +45,9 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
   children,
   style,
   loading,
+  accessibilityHint,
+  accessibilityLabel,
+  disabled,
   ...props
 }) => {
   const defaultStyles = useMemo<StyleProp<ViewStyle>>(
@@ -62,11 +69,29 @@ const Button: React.FC<ButtonProps & TouchableOpacityProps> = ({
     return _.throttle(() => onPressRef.current?.(), 600);
   }, []);
 
+  const isDisabled = loading || disabled;
+
+  // Build accessibility state
+  const accessibilityState: AccessibilityState = useMemo(
+    () => ({
+      disabled: isDisabled,
+      busy: loading,
+    }),
+    [isDisabled, loading]
+  );
+
+  // Use title as default accessibility label if not provided
+  const effectiveAccessibilityLabel = accessibilityLabel ?? title;
+
   return (
     <TouchableOpacity
       onPress={handlePress}
       style={[defaultStyles, style]}
-      disabled={loading}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={effectiveAccessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={accessibilityState}
       {...props}
     >
       {loading ? (

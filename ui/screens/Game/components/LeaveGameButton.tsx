@@ -22,6 +22,8 @@ export function LeaveGameButton(props: { variant?: "small" | "large" }) {
       loading={isLeaving}
       style={styles}
       fullWidth={variant === "large"}
+      accessibilityLabel="Leave Game"
+      accessibilityHint="Exit this game and return to the home screen"
     >
       <Icon name="back" size={22} color="white" />
       {variant === "large" && <Text>Leave Game</Text>}

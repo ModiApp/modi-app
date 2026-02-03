@@ -26,6 +26,9 @@ export function GameSettingsButton({ game }: GameSettingsButtonProps) {
       <Pressable
         onPress={() => setIsModalVisible(true)}
         style={styles.settingsButton}
+        accessibilityRole="button"
+        accessibilityLabel="Game Settings"
+        accessibilityHint="Open game settings to adjust starting lives"
       >
         <Icon name="settings" size={22} color={colors.white} />
       </Pressable>
@@ -52,13 +55,21 @@ export function GameSettingsButton({ game }: GameSettingsButtonProps) {
                 pressed && !isUpdating && localLives > 1 && styles.stepperButtonPressed,
               ]}
               disabled={localLives <= 1 || isUpdating}
+              accessibilityRole="button"
+              accessibilityLabel="Decrease lives"
+              accessibilityHint={`Reduce starting lives to ${localLives - 1}`}
+              accessibilityState={{ disabled: localLives <= 1 || isUpdating }}
             >
               <Text size={28} style={styles.stepperButtonText}>
                 −
               </Text>
             </Pressable>
 
-            <View style={styles.stepperValueContainer}>
+            <View 
+              style={styles.stepperValueContainer}
+              accessibilityRole="text"
+              accessibilityLabel={`${localLives} starting lives`}
+            >
               <Text size={36} style={styles.stepperValue}>
                 {localLives}
               </Text>
@@ -72,6 +83,10 @@ export function GameSettingsButton({ game }: GameSettingsButtonProps) {
                 pressed && !isUpdating && localLives < 5 && styles.stepperButtonPressed,
               ]}
               disabled={localLives >= 5 || isUpdating}
+              accessibilityRole="button"
+              accessibilityLabel="Increase lives"
+              accessibilityHint={`Increase starting lives to ${localLives + 1}`}
+              accessibilityState={{ disabled: localLives >= 5 || isUpdating }}
             >
               <Text size={28} style={styles.stepperButtonText}>
                 +

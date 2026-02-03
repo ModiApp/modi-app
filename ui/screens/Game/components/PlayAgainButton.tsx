@@ -13,6 +13,8 @@ export function PlayAgainButton(props: { gameId: string }) {
       loading={isPlayingAgain}
       fullWidth
       style={{ flexDirection: 'row', gap: 8 }}
+      accessibilityLabel="Play Again"
+      accessibilityHint="Start a new game with the same players"
     >
       <Text>Play Again</Text>
     </Button>

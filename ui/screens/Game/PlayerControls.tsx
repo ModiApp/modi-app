@@ -101,10 +101,22 @@ export function PlayerControls(props: { game: Game; currUserId: string }) {
 function SwapCardsButton(props: { game: ActiveGame; currUserId: string }) {
   const { game, currUserId } = props;
   const { swapCard, isSwapping } = useSwapCards();
+  const isDealer = game.dealer === currUserId;
+  const label = isDealer ? "Hit Deck" : "Swap";
+  const hint = isDealer
+    ? "Draw a new card from the deck, revealing your current card"
+    : "Exchange your card with the next player";
 
   return (
-    <Button color="red" onPress={swapCard} loading={isSwapping} fullWidth>
-      <Text>{game.dealer === currUserId ? "Hit Deck" : "Swap"}</Text>
+    <Button
+      color="red"
+      onPress={swapCard}
+      loading={isSwapping}
+      fullWidth
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+    >
+      <Text>{label}</Text>
     </Button>
   );
 }
@@ -113,7 +125,14 @@ function StickButton() {
   const { stick, isSticking } = useStick();
 
   return (
-    <Button color="blue" onPress={stick} loading={isSticking} fullWidth>
+    <Button
+      color="blue"
+      onPress={stick}
+      loading={isSticking}
+      fullWidth
+      accessibilityLabel="Stick"
+      accessibilityHint="Keep your current card and end your turn"
+    >
       <Text>Stick</Text>
     </Button>
   );
@@ -123,7 +142,14 @@ function EndRoundButton() {
   const { endRound, isEndingRound } = useEndRound();
 
   return (
-    <Button color="blue" fullWidth onPress={endRound} loading={isEndingRound}>
+    <Button
+      color="blue"
+      fullWidth
+      onPress={endRound}
+      loading={isEndingRound}
+      accessibilityLabel="End Round"
+      accessibilityHint="Reveal all cards and tally the round scores"
+    >
       <Text>End Round</Text>
     </Button>
   );

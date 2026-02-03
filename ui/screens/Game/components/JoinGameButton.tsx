@@ -23,6 +23,7 @@ export function JoinGameButton(props: { gameId: string }) {
       title="Join Game"
       onPress={handleJoinGame}
       loading={isJoining}
+      accessibilityHint="Join this game as a player"
     />
   );
 }

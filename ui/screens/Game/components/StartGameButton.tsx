@@ -16,6 +16,7 @@ export function StartGameButton({ gameId, fullWidth = false }: StartGameButtonPr
       onPress={() => startGame(gameId)}
       loading={isStartingGame}
       fullWidth={fullWidth}
+      accessibilityHint="Begin the game with current players"
     />
   );
 }

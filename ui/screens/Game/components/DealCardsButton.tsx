@@ -10,6 +10,7 @@ export function DealCardsButton() {
       onPress={dealCards}
       loading={isDealing}
       fullWidth
+      accessibilityHint="Deal one card to each player to start the round"
     />
   );
 }
