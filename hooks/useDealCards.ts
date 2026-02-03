@@ -33,11 +33,9 @@ export function useDealCards() {
 
   const dealCards = async () => {
     try {
-      console.log("useDealCards: Dealing cards");
       setIsDealing(true);
 
       const result = await dealCardsApi(game.gameId);
-      console.log("useDealCards: Cards dealt successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // The round state will change from "pre-deal" to "playing"

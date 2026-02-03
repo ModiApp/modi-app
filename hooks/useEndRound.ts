@@ -41,11 +41,9 @@ export function useEndRound() {
 
   const endRound = async () => {
     try {
-      console.log("useEndRound: Ending round");
       setIsEndingRound(true);
 
       const result = await endRoundApi(game.gameId);
-      console.log("useEndRound: Round ended successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // The round state will change from "tallying" to "pre-deal"

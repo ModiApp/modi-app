@@ -38,11 +38,9 @@ export function useSwapCards() {
 
   const swapCard = async () => {
     try {
-      console.log("useSwapCards: Swapping cards");
       setIsSwapping(true);
 
       const result = await swapCardApi(game.gameId);
-      console.log("useSwapCards: Cards swapped successfully:", result);
       
       // The game state will automatically update via Firestore listeners
       // Player hands will be updated with their new cards

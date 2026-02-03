@@ -61,11 +61,9 @@ export function useJoinLobby() {
     }
 
     try {
-      console.log('useJoinLobby: Joining game', { gameId: trimmedGameId });
       setIsJoining(true);
 
       const result = await joinGameApi(trimmedGameId);
-      console.log('useJoinLobby: Successfully joined game:', result);
 
       // Navigate to the lobby with the game ID
       // if route is not already /games/:gameId, push to it

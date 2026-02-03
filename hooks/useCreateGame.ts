@@ -31,10 +31,8 @@ export function useCreateGame() {
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const createGame = async () => {
     try {
-      console.log("useCreateGame: Creating game");
       setIsCreatingGame(true);
       const game = await createGameFunction();
-      console.log("useCreateGame: Game created:", game);
       router.push(`/games/${game.gameId}`);
     } catch (error: any) {
       console.error("useCreateGame: Error creating game:", error);

@@ -36,11 +36,9 @@ export function useStartGame() {
     }
 
     try {
-      console.log("useStartGame: Starting game", gameId);
       setIsStartingGame(true);
 
       const result = await startGameApi(gameId.trim());
-      console.log("useStartGame: Game started successfully:", result);
       
       // The game is now active, but we stay on the same route
       // The game screen will handle the active game state

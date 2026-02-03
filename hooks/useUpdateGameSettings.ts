@@ -43,11 +43,9 @@ export function useUpdateGameSettings() {
     }
 
     try {
-      console.log("useUpdateGameSettings: Updating settings", params);
       setIsUpdating(true);
 
       const result = await updateGameSettingsApi(params);
-      console.log("useUpdateGameSettings: Settings updated successfully:", result);
     } catch (error: any) {
       console.error("useUpdateGameSettings: Error updating settings:", error);
       Alert.error({ message: "Failed to update game settings. Please try again." });

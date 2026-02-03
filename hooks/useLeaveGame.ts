@@ -34,11 +34,9 @@ export function useLeaveGame() {
 
   const leaveGame = async () => {
     try {
-      console.log("useLeaveGame: Leaving game");
       setIsLeaving(true);
 
       const result = await leaveGameApi(game.gameId);
-      console.log("useLeaveGame: Successfully left game:", result);
       
       // Navigate back to home screen
       router.push("/");
