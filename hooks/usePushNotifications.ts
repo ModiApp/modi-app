@@ -79,8 +79,7 @@ export function usePushNotifications(): PushNotificationState {
       // Listen for notification responses (user tapped notification)
       responseListener.current = Notifications.addNotificationResponseReceivedListener(
         (response) => {
-          const data = response.notification.request.content.data;
-          console.log('Notification tapped:', data);
+          // Handle notification tap - data available via response.notification.request.content.data
         }
       );
     }
@@ -104,11 +103,9 @@ export function usePushNotifications(): PushNotificationState {
       return;
     }
     
-    console.log('[Push] Saving token for user:', userId);
     savedForUser.current = userId;
     
-    savePushToken(userId, pushToken, platform).catch(err => {
-      console.error('[Push] Failed to save token:', err);
+    savePushToken(userId, pushToken, platform).catch(() => {
       savedForUser.current = null; // Reset so we can retry
     });
   }, [pushToken, platform, userId]);
@@ -171,36 +168,29 @@ export function usePushNotifications(): PushNotificationState {
 
   // Request permission (call this from a user gesture!)
   const requestPermission = useCallback(async () => {
-    console.log('[Push] requestPermission called, platform:', Platform.OS);
     setError(null);
     
     try {
       if (Platform.OS === 'web') {
-        console.log('[Push] Calling registerForWebPushAsync...');
         const token = await registerForWebPushAsync();
-        console.log('[Push] registerForWebPushAsync returned:', token ? 'token received' : 'no token');
         if (token) {
           setPushToken(token);
           setPlatform('web');
           setPermissionStatus('granted');
-          // Token saving happens in useEffect above
         } else {
           setPermissionStatus('denied');
         }
       } else {
-        console.log('[Push] Calling registerForMobilePushAsync...');
         const token = await registerForMobilePushAsync();
         if (token) {
           setPushToken(token);
           setPlatform(Platform.OS as 'ios' | 'android');
           setPermissionStatus('granted');
-          // Token saving happens in useEffect above
         } else {
           setPermissionStatus('denied');
         }
       }
     } catch (err: any) {
-      console.error('[Push] Registration failed:', err);
       setError(err.message);
     }
   }, []);
@@ -213,13 +203,11 @@ export function usePushNotifications(): PushNotificationState {
  */
 async function registerForMobilePushAsync(): Promise<string | null> {
   if (!Notifications || !Device || !Constants) {
-    console.log('Expo modules not available');
     return null;
   }
 
   // Push notifications only work on physical devices
   if (!Device.isDevice) {
-    console.log('Push notifications require a physical device');
     return null;
   }
 
@@ -233,7 +221,6 @@ async function registerForMobilePushAsync(): Promise<string | null> {
   }
   
   if (finalStatus !== 'granted') {
-    console.log('Push notification permission denied');
     return null;
   }
 
@@ -261,28 +248,19 @@ async function registerForMobilePushAsync(): Promise<string | null> {
  * MUST be called from a user gesture (button click) on web!
  */
 async function registerForWebPushAsync(): Promise<string | null> {
-  console.log('[Push] registerForWebPushAsync started');
-  
   if (typeof window === 'undefined' || !('Notification' in window)) {
-    console.log('[Push] Web notifications not supported');
     return null;
   }
 
   // Check if service workers are supported
   if (!('serviceWorker' in navigator)) {
-    console.log('[Push] Service workers not supported');
     return null;
   }
 
-  console.log('[Push] Current permission status:', Notification.permission);
-  
   // Request permission (this will show the browser prompt if called from user gesture)
-  console.log('[Push] Calling Notification.requestPermission()...');
   const permission = await Notification.requestPermission();
-  console.log('[Push] Permission result:', permission);
   
   if (permission !== 'granted') {
-    console.log('[Push] Web notification permission denied');
     return null;
   }
 
@@ -303,7 +281,6 @@ async function registerForWebPushAsync(): Promise<string | null> {
 
     // Register service worker
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    console.log('Service worker registered:', registration);
     
     // Wait for service worker to be ready
     await navigator.serviceWorker.ready;
@@ -330,10 +307,8 @@ async function registerForWebPushAsync(): Promise<string | null> {
       serviceWorkerRegistration: registration,
     });
     
-    console.log('FCM web token:', token);
     return token;
   } catch (error) {
-    console.error('Error getting FCM token:', error);
     throw error;
   }
 }
@@ -352,16 +327,14 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
     const messaging = getMessaging(app);
     
     onMessage(messaging, (payload) => {
-      console.log('Web push message received in foreground:', payload);
       setNotification(payload);
-      
       // Don't manually show notification here - the service worker handles it.
       // This prevents duplicate notifications in PWA mode where both handlers may fire.
       // The app can react to the notification data via the setNotification callback
       // to update UI (e.g., show an in-app banner) if desired.
     });
-  } catch (error) {
-    console.error('Error setting up web push listener:', error);
+  } catch {
+    // Silent failure - web push listener setup is non-critical
   }
 }
 
@@ -369,23 +342,13 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
  * Save the push token to Firestore for the given user.
  */
 async function savePushToken(userId: string, token: string, platform: string): Promise<void> {
-  console.log('[Push] savePushToken called for user:', userId);
-  console.log('[Push] Token (first 20 chars):', token?.substring(0, 20) + '...');
-
-  try {
-    // Determine token type for the Cloud Function
-    const tokenType = platform === 'web' ? 'fcm' : 'expo';
-    
-    console.log('[Push] Saving to Firestore pushTokens/' + userId);
-    await setDoc(doc(firestore, 'pushTokens', userId), {
-      token,
-      tokenType,
-      platform,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    console.log('[Push] ✅ Token saved successfully for user:', userId);
-  } catch (error) {
-    console.error('[Push] ❌ Error saving push token:', error);
-    throw error;
-  }
+  // Determine token type for the Cloud Function
+  const tokenType = platform === 'web' ? 'fcm' : 'expo';
+  
+  await setDoc(doc(firestore, 'pushTokens', userId), {
+    token,
+    tokenType,
+    platform,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }

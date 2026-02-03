@@ -14,8 +14,8 @@ export function useShare() {
         message: 'Join my Modi game!',
         url,
       });
-    } catch (err) {
-      console.log('useShare: Error sharing game link', err);
+    } catch {
+      // Sharing cancelled or failed - non-critical, no action needed
     }
   };
 

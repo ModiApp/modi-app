@@ -6,9 +6,7 @@ export function useWarmUpServer() {
   useEffect(() => {
     if (calledWarmUpServer.current) return;
     calledWarmUpServer.current = true;
-    console.log('Warming up server');
     fetch(`${API_BASE_URL}/`).then(() => {
-      console.log('Server warmed up');
     }).catch((error) => {
       console.error('Failed to warm up server', error);
     });

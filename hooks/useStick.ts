@@ -37,11 +37,9 @@ export function useStick() {
 
   const stick = async () => {
     try {
-      console.log("useStick: Sticking (passing turn)");
       setIsSticking(true);
 
       const result = await stickApi(game.gameId);
-      console.log("useStick: Successfully stuck:", result);
       
       // The game state will automatically update via Firestore listeners
       // If the player was the dealer, the round state will change to "tallying"
