@@ -25,6 +25,8 @@ const iconNameMap = {
   warning: "warning",
   "information-circle": "information-circle",
   settings: "settings-sharp",
+  "cloud-offline": "cloud-offline",
+  "refresh": "refresh",
 } satisfies Record<string, IoniconIconName>;
 
 type IconName = keyof typeof iconNameMap;
