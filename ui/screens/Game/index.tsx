@@ -30,7 +30,16 @@ const GameScreen: React.FC = () => {
       </ScreenContainer>
     );
   }
-  if (!game) return <ScreenContainer />;
+  if (!game) {
+    // Game not found — useGame will redirect to "/". Show spinner while redirecting.
+    return (
+      <ScreenContainer>
+        <Container style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="white" />
+        </Container>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>
