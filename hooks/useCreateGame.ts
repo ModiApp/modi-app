@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/config/api';
 import { auth } from '@/config/firebase';
+import { useAuth } from '@/providers/Auth';
 import { Alert } from '@/ui/components/AlertBanner';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -7,11 +8,16 @@ import { useState } from 'react';
 type CreateGameResponse = { gameId: string };
 
 async function createGameFunction() {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Not authenticated - please wait for sign-in to complete");
+  }
+  const token = await user.getIdToken();
   const response = await fetch(`${API_BASE_URL}/games`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+      'Authorization': `Bearer ${token}`,
     },
   });
   if (!response.ok) {
@@ -22,19 +28,20 @@ async function createGameFunction() {
 
 /**
  * A hook to create a new game in the backend and navigate to the game screen.
- * 
- * This hook is used in the Home screen to create a new game and navigate to the game screen.
- * It's also used in the Lobby screen to create a new game and navigate to the game screen.
  */
 export function useCreateGame() {
   const router = useRouter();
+  const { userId, isLoading: isAuthLoading } = useAuth();
   const [isCreatingGame, setIsCreatingGame] = useState(false);
+  
   const createGame = async () => {
+    if (isAuthLoading || !userId) {
+      Alert.error({ message: "Still signing in, please wait..." });
+      return;
+    }
     try {
-      console.log("useCreateGame: Creating game");
       setIsCreatingGame(true);
       const game = await createGameFunction();
-      console.log("useCreateGame: Game created:", game);
       router.push(`/games/${game.gameId}`);
     } catch (error: any) {
       console.error("useCreateGame: Error creating game:", error);

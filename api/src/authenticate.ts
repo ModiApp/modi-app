@@ -15,14 +15,23 @@ export interface AuthenticatedRequest {
  * Get the authenticated user from firebase auth
  */
 const authenticate: RequestHandler = async function authenticate(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
+  const authHeader = req.headers.authorization;
+  console.log(`[AUTH] Authorization header: "${authHeader}"`);
+  const token = authHeader?.split(" ")[1];
+  console.log(`[AUTH] Extracted token (first 50 chars): "${token?.substring(0, 50)}"`);
+  if (!token || token === 'undefined' || token === 'null') {
+    console.log('[AUTH] No valid token provided');
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const decodedToken = await auth.verifyIdToken(token);
-  req.userId = decodedToken.uid;
-  next();
+  try {
+    const decodedToken = await auth.verifyIdToken(token);
+    req.userId = decodedToken.uid;
+    next();
+  } catch (error: any) {
+    console.error('[AUTH] Token verification failed:', error.message);
+    res.status(401).json({ error: "Unauthorized", details: error.message });
+  }
 };
 
 export default authenticate;
