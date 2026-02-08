@@ -22,11 +22,11 @@ const GameScreen: React.FC = () => {
   const game = useGame(gameId);
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   if (isAuthLoading || !currentUserId || game === undefined) {
-    return <GameScreenSkeleton />;
+    return <GameScreenSkeleton gameId={gameId} />;
   }
   if (!game) {
     // Game not found — useGame will redirect to "/". Show skeleton while redirecting.
-    return <GameScreenSkeleton />;
+    return <GameScreenSkeleton gameId={gameId} />;
   }
 
   return (

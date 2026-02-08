@@ -1,8 +1,9 @@
-import { Container } from "@/ui/elements";
+import { useShare } from "@/hooks/useShare";
+import { Button, Container, Text } from "@/ui/elements";
 import ScreenContainer from "@/ui/elements/Screen";
-import { colors, fontFamilies, fontSizes } from "@/ui/styles";
+import { colors } from "@/ui/styles";
 import React, { useEffect, useRef } from "react";
-import { Animated, View, StyleSheet } from "react-native";
+import { Animated } from "react-native";
 
 function usePulse() {
   const opacity = useRef(new Animated.Value(0.3)).current;
@@ -53,24 +54,27 @@ function SkeletonBar({
   );
 }
 
-export function GameScreenSkeleton() {
+export function GameScreenSkeleton({ gameId }: { gameId: string }) {
   const buttonOpacity = usePulse();
+  const { shareGame } = useShare();
 
   return (
     <ScreenContainer>
       <Container style={{ flex: 1, justifyContent: "space-between" }}>
-        {/* Top section: Game PIN placeholder + Invite button placeholder */}
+        {/* Top section: Real Game PIN + Invite button */}
         <Container
           style={{
             justifyContent: "center",
             paddingTop: 28,
             paddingVertical: 32,
             alignItems: "center",
-            gap: 12,
           }}
         >
-          <SkeletonBar width={180} height={24} />
-          <SkeletonBar width={140} height={16} />
+          <Text size={24}>Game PIN:</Text>
+          <Text size={42}>{gameId}</Text>
+          <Button color="red" onPress={() => shareGame(gameId)} thin>
+            <Text size={14}>Invite Friends</Text>
+          </Button>
         </Container>
 
         {/* Middle section: CardTable circle */}
