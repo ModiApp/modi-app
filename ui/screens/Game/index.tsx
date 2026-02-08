@@ -5,6 +5,7 @@ import ScreenContainer from "@/ui/elements/Screen";
 import { GameActionProvider } from "@/ui/screens/Game/GameActionsProvider";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
+import { ActivityIndicator } from "react-native";
 import { CardTable } from "./components/CardTable";
 import { AnimatedCards } from "./components/CardTable/AnimatedCards";
 import { LiveCounts } from "./components/CardTable/LiveCounts";
@@ -19,8 +20,26 @@ const GameScreen: React.FC = () => {
   // get the game id from the url
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
   const game = useGame(gameId);
-  const { userId: currentUserId } = useAuth();
-  if (!game || !currentUserId) return <ScreenContainer />;
+  const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
+  if (isAuthLoading || !currentUserId || game === undefined) {
+    return (
+      <ScreenContainer>
+        <Container style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="white" />
+        </Container>
+      </ScreenContainer>
+    );
+  }
+  if (!game) {
+    // Game not found — useGame will redirect to "/". Show spinner while redirecting.
+    return (
+      <ScreenContainer>
+        <Container style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="white" />
+        </Container>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>
