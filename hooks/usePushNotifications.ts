@@ -345,6 +345,12 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
   if (typeof window === 'undefined') return;
 
   try {
+    // Check if the browser supports the APIs required for Firebase Messaging
+    if (!('serviceWorker' in navigator) || !('Notification' in window) || !('PushManager' in window)) {
+      console.log('[Push] Browser does not support push notifications, skipping listener setup');
+      return;
+    }
+
     const { getMessaging, onMessage } = await import('firebase/messaging');
     const { getApp } = await import('firebase/app');
     
@@ -361,7 +367,8 @@ async function setupWebPushListener(setNotification: (n: any) => void): Promise<
       // to update UI (e.g., show an in-app banner) if desired.
     });
   } catch (error) {
-    console.error('Error setting up web push listener:', error);
+    // Silently handle unsupported browsers (e.g. iOS Safari in Simulator)
+    console.warn('[Push] Could not set up web push listener:', error);
   }
 }
 
