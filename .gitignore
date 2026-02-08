@@ -54,3 +54,5 @@ google-service-account.json
 # Mobile builds
 ios/
 android/
+*.mp4
+*.gif
