@@ -94,7 +94,7 @@ export function GameScreenSkeleton({ gameId }: { gameId: string }) {
             }}
           >
             {/* Card deck placeholder in center */}
-            <SkeletonBar width={24} height={36} style={{ borderRadius: 4 }} />
+            <SkeletonBar width={80} height={120} style={{ borderRadius: 8 }} />
           </Container>
         </Container>
 
