@@ -212,10 +212,7 @@ function createInitialCardDeck(
         backOpacity: useSharedValue(1),
         faceOpacity: useSharedValue(0),
         rotateY: useSharedValue(0),
-        // Start at deck scale (0.3) to match the deck's resting state.
-        // This prevents the visual "tweak" where cards briefly flash at
-        // full size before being scaled down to the deck.
-        scale: useSharedValue(0.3),
+        scale: useSharedValue(1),
       })
     )
   );
