@@ -16,32 +16,36 @@ export function LiveCounts() {
 
   return (
     <>
-      {game.players.map((playerId) => (
-        <Container
-          key={playerId}
-          style={{
-            position: "absolute",
-            top: playerPositions[playerId]?.y,
-            left: playerPositions[playerId]?.x,
-            transform: [
-              playerPositions[playerId]?.x > 0
-                ? { translateX: "-100%" }
-                : undefined,
-            ].filter(Boolean) as any,
-          }}
-        >
-          <PlayerLiveCount
-            playerId={playerId}
-            initialLives={game.initialLives}
-          />
-        </Container>
-      ))}
+      {game.players.map((playerId) => {
+        const playerName = game.usernames[playerId];
+        return (
+          <Container
+            key={playerId}
+            style={{
+              position: "absolute",
+              top: playerPositions[playerId]?.y,
+              left: playerPositions[playerId]?.x,
+              transform: [
+                playerPositions[playerId]?.x > 0
+                  ? { translateX: "-100%" }
+                  : undefined,
+              ].filter(Boolean) as any,
+            }}
+          >
+            <PlayerLiveCount
+              playerId={playerId}
+              playerName={playerName}
+              initialLives={game.initialLives}
+            />
+          </Container>
+        );
+      })}
     </>
   );
 }
 
-function PlayerLiveCount(props: { playerId: string; initialLives: number }) {
-  const { playerId, initialLives } = props;
+function PlayerLiveCount(props: { playerId: string; playerName: string; initialLives: number }) {
+  const { playerId, playerName, initialLives } = props;
   const [lives, setLives] = useState(initialLives ?? 3);
 
   const opacity = useSharedValue(1);
@@ -67,8 +71,16 @@ function PlayerLiveCount(props: { playerId: string; initialLives: number }) {
     },
   });
 
+  const livesLabel = lives === 1 
+    ? `${playerName} has 1 life remaining` 
+    : `${playerName} has ${lives} lives remaining`;
+
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View 
+      style={animatedStyle}
+      accessibilityRole="text"
+      accessibilityLabel={livesLabel}
+    >
       <LiveCount lives={lives} />
     </Animated.View>
   );

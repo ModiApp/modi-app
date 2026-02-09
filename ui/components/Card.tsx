@@ -8,6 +8,59 @@ interface CardProps {
   style?: ImageStyle;
   width?: number;
   height?: number;
+  /** Custom accessibility label override */
+  accessibilityLabel?: string;
+}
+
+/**
+ * Converts a CardID to a human-readable accessibility label
+ * e.g., "2H" -> "2 of Hearts", "AS" -> "Ace of Spades"
+ */
+export function getCardAccessibilityLabel(cardId: CardID): string {
+  const rank = cardId.slice(0, -1);
+  const suit = cardId.slice(-1);
+
+  // Convert rank to readable name
+  let rankName: string;
+  switch (rank) {
+    case "A":
+      rankName = "Ace";
+      break;
+    case "J":
+      rankName = "Jack";
+      break;
+    case "Q":
+      rankName = "Queen";
+      break;
+    case "K":
+      rankName = "King";
+      break;
+    default:
+      rankName = rank;
+      break;
+  }
+
+  // Convert suit to readable name
+  let suitName: string;
+  switch (suit) {
+    case "H":
+      suitName = "Hearts";
+      break;
+    case "D":
+      suitName = "Diamonds";
+      break;
+    case "C":
+      suitName = "Clubs";
+      break;
+    case "S":
+      suitName = "Spades";
+      break;
+    default:
+      suitName = suit;
+      break;
+  }
+
+  return `${rankName} of ${suitName}`;
 }
 
 /**
@@ -59,17 +112,20 @@ function cardIdToImage(cardId: CardID): any {
   return cardImgs[suitKey][rankNum as keyof (typeof cardImgs)[typeof suitKey]];
 }
 
-export function Card({ cardId, style, width = 80, height = 120 }: CardProps) {
+export function Card({ cardId, style, width = 80, height = 120, accessibilityLabel: customLabel }: CardProps) {
   if (!cardId) {
     return null; // Show nothing if no card
   }
 
   try {
     const cardImage = cardIdToImage(cardId);
+    const accessibilityLabel = customLabel ?? getCardAccessibilityLabel(cardId);
 
     return (
       <Image
         source={cardImage}
+        accessibilityRole="image"
+        accessibilityLabel={accessibilityLabel}
         style={[
           {
             width,
@@ -91,15 +147,23 @@ export function Card({ cardId, style, width = 80, height = 120 }: CardProps) {
   }
 }
 
+interface CardBackProps extends Omit<ImageProps, 'source'> {
+  width?: number;
+  height?: number;
+}
+
 export function CardBack({
   style,
   width = 80,
   height = 120,
+  accessibilityLabel = "Card face down",
   ...props
-}: ImageProps) {
+}: CardBackProps) {
   return (
     <Image
       source={cardImgs.back}
+      accessibilityRole="image"
+      accessibilityLabel={accessibilityLabel}
       {...props}
       style={[
         style,
