@@ -43,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   plugins: [
-    "expo-router",
+    ["expo-router", { origin: "https://modi.app" }],
     [
       "expo-splash-screen",
       {
