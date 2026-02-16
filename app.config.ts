@@ -49,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         image: "./ui/assets/images/splash-image.png",
         imageWidth: 200,
-        resizeMode: "center",
+        resizeMode: "contain",
         backgroundColor: "#35654D",
       },
     ],
@@ -60,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     router: {},
     eas: {
-      projectId: "1c48f7a3-d55e-4a9c-b077-1e421bbd5906",
+      projectId: "1ef6e6c9-0750-4576-b1ab-09ce59acba23",
     },
   },
 });

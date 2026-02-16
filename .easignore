@@ -1,17 +1,15 @@
 # Dependencies
 node_modules/
-yarn.lock
-package-lock.json
+
+# API workspace (not needed for mobile app build)
+api/
 
 # Development files
 .git/
-.gitignore
 README.md
 docs/
-*.md
 
-# Firebase
-firebase.json
+# Firebase emulator/functions
 firestore.rules
 firestore.indexes.json
 emulator-data/
@@ -19,14 +17,10 @@ functions/
 
 # Scripts
 scripts/
-*.ts
-!*.d.ts
 
 # Development tools
 .eslintrc*
 .prettierrc*
-tsconfig.json
-babel.config.js
 
 # IDE
 .vscode/
@@ -48,12 +42,9 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage
 coverage/
 
 # Temporary folders
 tmp/
-temp/ 
-
-android/
-ios/
+temp/
