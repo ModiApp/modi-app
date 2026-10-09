@@ -10,6 +10,9 @@ const STALE_THRESHOLDS: { status: string; maxIdleMs: number; archiveReason: stri
   { status: 'ended', maxIdleMs: SEVEN_DAYS, archiveReason: 'completed' },
 ];
 
+// gRPC status returned when a write precondition (e.g. lastUpdateTime) fails
+const FAILED_PRECONDITION = 9;
+
 /**
  * Archive stale games and delete orphaned presence data.
  *
@@ -25,29 +28,38 @@ export async function runCleanup(
 
   let archivedGames = 0;
   let deletedPresence = 0;
+  const failures: unknown[] = [];
 
   for (const { status, maxIdleMs, archiveReason } of STALE_THRESHOLDS) {
     const games = await firestore.collection('games').where('status', '==', status).get();
+    const cutoff = now - maxIdleMs;
 
     for (const doc of games.docs) {
-      const lastActivity = await getLastActivityMillis(doc);
+      // Isolate failures so one bad game can't block every other cleanup step
+      try {
+        const lastActivity = await getLastActivityMillis(doc, cutoff);
 
-      // Never archive a game we can't date. Treating a missing timestamp as 0
-      // made every game look decades old and archived games mid-play.
-      if (lastActivity === null) {
-        console.warn(`Skipping game ${doc.id} (${status}): no activity timestamp found`);
-        continue;
-      }
+        // Never archive a game we can't date. Treating a missing timestamp as 0
+        // made every game look decades old and archived games mid-play. Stamp it
+        // instead so it ages out from now rather than being skipped forever.
+        if (lastActivity === null) {
+          console.warn(`Game ${doc.id} (${status}) has no activity timestamp, stamping createdAt`);
+          await doc.ref.update({ createdAt: admin.firestore.FieldValue.serverTimestamp() });
+          continue;
+        }
 
-      if (now - lastActivity > maxIdleMs) {
-        await archiveGame(firestore, database, doc.id, archiveReason);
-        archivedGames++;
+        if (lastActivity < cutoff && (await archiveGame(firestore, database, doc, archiveReason))) {
+          archivedGames++;
+        }
+      } catch (error) {
+        console.error(`Failed to clean up game ${doc.id}:`, error);
+        failures.push(error);
       }
     }
   }
 
   // Archive subcollections left behind under deleted game docs
-  const archivedOrphans = await archiveOrphanedSubcollections(firestore);
+  const archivedOrphans = await archiveOrphanedSubcollections(firestore, failures);
 
   // Clean up orphaned presence data (games that no longer exist in active collection)
   const presenceSnapshot = await database.ref('presence').once('value');
@@ -66,6 +78,12 @@ export async function runCleanup(
     `Cleanup complete: ${archivedGames} games archived, ${archivedOrphans} orphaned game trees archived, ` +
       `${deletedPresence} presence records deleted`,
   );
+
+  // Surface partial failures to the scheduler after doing all the work we could
+  if (failures.length > 0) {
+    throw new Error(`Cleanup finished with ${failures.length} failure(s); see logs above`);
+  }
+
   return { archivedGames, archivedOrphans, deletedPresence };
 }
 
@@ -73,21 +91,22 @@ export async function runCleanup(
  * The most recent sign of life for a game: the newest of its updatedAt/createdAt
  * fields and its latest action. Every gameplay handler writes an action, so the
  * actions subcollection reflects activity even when the game doc isn't stamped.
- * Returns null if no timestamp exists at all.
+ * Skips the actions query when the doc's own timestamps are already newer than
+ * `cutoff`. Returns null if no timestamp exists at all.
  */
-export async function getLastActivityMillis(
-  doc: admin.firestore.QueryDocumentSnapshot,
+async function getLastActivityMillis(
+  doc: admin.firestore.DocumentSnapshot,
+  cutoff: number,
 ): Promise<number | null> {
-  const data = doc.data();
+  const data = doc.data() ?? {};
+  const docMillis = Math.max(toMillis(data.updatedAt) ?? -Infinity, toMillis(data.createdAt) ?? -Infinity);
+  if (docMillis >= cutoff) return docMillis;
+
   const latestAction = await doc.ref.collection('actions').orderBy('timestamp', 'desc').limit(1).get();
+  const actionMillis = latestAction.empty ? null : toMillis(latestAction.docs[0].data().timestamp);
 
-  const candidates = [
-    toMillis(data.updatedAt),
-    toMillis(data.createdAt),
-    latestAction.empty ? null : toMillis(latestAction.docs[0].data().timestamp),
-  ].filter((ms): ms is number => ms !== null);
-
-  return candidates.length > 0 ? Math.max(...candidates) : null;
+  const lastActivity = Math.max(docMillis, actionMillis ?? -Infinity);
+  return lastActivity === -Infinity ? null : lastActivity;
 }
 
 function toMillis(value: unknown): number | null {
@@ -98,22 +117,17 @@ function toMillis(value: unknown): number | null {
 
 /**
  * Archive a game by moving it to the archivedGames collection
- * Preserves all game data including subcollections for historical analysis
+ * Preserves all game data including subcollections for historical analysis.
+ * Returns false without deleting anything if the game changed while archiving.
  */
 async function archiveGame(
   firestore: admin.firestore.Firestore,
   database: admin.database.Database,
-  gameId: string,
+  gameDoc: admin.firestore.QueryDocumentSnapshot,
   archiveReason: string,
-): Promise<void> {
+): Promise<boolean> {
+  const gameId = gameDoc.id;
   console.log(`Archiving game: ${gameId} (reason: ${archiveReason})`);
-
-  const gameRef = firestore.collection('games').doc(gameId);
-  const gameDoc = await gameRef.get();
-  if (!gameDoc.exists) {
-    console.log(`Game ${gameId} not found, skipping archive`);
-    return;
-  }
 
   // Create archived game document with auto-generated ID (allows multiple archives of same gameId)
   const archivedGameRef = firestore.collection('archivedGames').doc();
@@ -126,15 +140,29 @@ async function archiveGame(
     },
   });
 
-  await copySubcollections(gameRef, archivedGameRef);
+  await copySubcollections(firestore, gameDoc.ref, archivedGameRef);
 
-  // Deleting a doc doesn't delete its subcollections, so delete the whole tree
-  await firestore.recursiveDelete(gameRef);
+  // Only delete the game if nobody touched it since we decided it was stale.
+  // Gameplay handlers update the game doc, so a start/join/move mid-archive
+  // fails this precondition and the game survives.
+  try {
+    await gameDoc.ref.delete({ lastUpdateTime: gameDoc.updateTime });
+  } catch (error: any) {
+    if (error?.code !== FAILED_PRECONDITION) throw error;
+    console.log(`Game ${gameId} changed while archiving, keeping it`);
+    await firestore.recursiveDelete(archivedGameRef);
+    return false;
+  }
+
+  // Deleting a doc doesn't delete its subcollections, so delete the rest of the tree.
+  // If this fails, the orphan sweep picks the leftovers up on the next run.
+  await firestore.recursiveDelete(gameDoc.ref);
 
   // Delete presence data for this game (no need to archive ephemeral data)
   await database.ref(`presence/${gameId}`).remove();
 
   console.log(`Game ${gameId} archived successfully`);
+  return true;
 }
 
 /**
@@ -143,7 +171,10 @@ async function archiveGame(
  * subcollections, leaving privateActions/{playerId}/actions behind. Those
  * orphans also make the game ID look free, so a new game could reuse it.
  */
-async function archiveOrphanedSubcollections(firestore: admin.firestore.Firestore): Promise<number> {
+async function archiveOrphanedSubcollections(
+  firestore: admin.firestore.Firestore,
+  failures: unknown[],
+): Promise<number> {
   // listDocuments includes "missing" docs that only exist as a parent of subcollections
   const gameRefs = await firestore.collection('games').listDocuments();
   let archivedOrphans = 0;
@@ -155,34 +186,39 @@ async function archiveOrphanedSubcollections(firestore: admin.firestore.Firestor
       if (snapshot.exists) continue;
 
       const gameId = snapshot.id;
-      console.log(`Archiving orphaned subcollections for game ${gameId}`);
+      try {
+        console.log(`Archiving orphaned subcollections for game ${gameId}`);
 
-      // Merge into the most recent archive of this game, or create one if there isn't any
-      const archives = await firestore
-        .collection('archivedGames')
-        .where('_archiveMetadata.originalGameId', '==', gameId)
-        .get();
-      const latestArchive = archives.docs.sort(
-        (a, b) =>
-          (toMillis(b.data()._archiveMetadata?.archivedAt) ?? 0) -
-          (toMillis(a.data()._archiveMetadata?.archivedAt) ?? 0),
-      )[0];
+        // Merge into the most recent archive of this game, or create one if there isn't any
+        const archives = await firestore
+          .collection('archivedGames')
+          .where('_archiveMetadata.originalGameId', '==', gameId)
+          .get();
+        const latestArchive = archives.docs.sort(
+          (a, b) =>
+            (toMillis(b.data()._archiveMetadata?.archivedAt) ?? 0) -
+            (toMillis(a.data()._archiveMetadata?.archivedAt) ?? 0),
+        )[0];
 
-      let archivedGameRef = latestArchive?.ref;
-      if (!archivedGameRef) {
-        archivedGameRef = firestore.collection('archivedGames').doc();
-        await archivedGameRef.set({
-          _archiveMetadata: {
-            archivedAt: admin.firestore.FieldValue.serverTimestamp(),
-            archiveReason: 'orphaned_subcollections',
-            originalGameId: gameId,
-          },
-        });
+        let archivedGameRef = latestArchive?.ref;
+        if (!archivedGameRef) {
+          archivedGameRef = firestore.collection('archivedGames').doc();
+          await archivedGameRef.set({
+            _archiveMetadata: {
+              archivedAt: admin.firestore.FieldValue.serverTimestamp(),
+              archiveReason: 'orphaned_subcollections',
+              originalGameId: gameId,
+            },
+          });
+        }
+
+        await copySubcollections(firestore, snapshot.ref, archivedGameRef);
+        await firestore.recursiveDelete(snapshot.ref);
+        archivedOrphans++;
+      } catch (error) {
+        console.error(`Failed to archive orphaned subcollections for game ${gameId}:`, error);
+        failures.push(error);
       }
-
-      await copySubcollections(snapshot.ref, archivedGameRef);
-      await firestore.recursiveDelete(snapshot.ref);
-      archivedOrphans++;
     }
   }
 
@@ -191,21 +227,34 @@ async function archiveOrphanedSubcollections(firestore: admin.firestore.Firestor
 
 /**
  * Recursively copy every subcollection of `source` under `destination`.
- * Uses listCollections/listDocuments so docs that exist only as parents of
- * nested subcollections (e.g. privateActions/{playerId}) are still traversed.
+ * Uses listDocuments so docs that exist only as parents of nested
+ * subcollections (e.g. privateActions/{playerId}) are still traversed.
  */
 async function copySubcollections(
+  firestore: admin.firestore.Firestore,
   source: admin.firestore.DocumentReference,
   destination: admin.firestore.DocumentReference,
 ): Promise<void> {
-  for (const collection of await source.listCollections()) {
-    for (const docRef of await collection.listDocuments()) {
-      const destinationDoc = destination.collection(collection.id).doc(docRef.id);
-      const snapshot = await docRef.get();
-      if (snapshot.exists) {
-        await destinationDoc.set(snapshot.data()!);
+  const writer = firestore.bulkWriter();
+  const writeErrors: unknown[] = [];
+
+  async function copy(src: admin.firestore.DocumentReference, dst: admin.firestore.DocumentReference) {
+    for (const collection of await src.listCollections()) {
+      const [snapshot, docRefs] = await Promise.all([collection.get(), collection.listDocuments()]);
+
+      for (const doc of snapshot.docs) {
+        writer.set(dst.collection(collection.id).doc(doc.id), doc.data()).catch((error) => writeErrors.push(error));
       }
-      await copySubcollections(docRef, destinationDoc);
+
+      await Promise.all(docRefs.map((docRef) => copy(docRef, dst.collection(collection.id).doc(docRef.id))));
     }
   }
+
+  try {
+    await copy(source, destination);
+  } finally {
+    await writer.close();
+  }
+
+  if (writeErrors.length > 0) throw writeErrors[0];
 }

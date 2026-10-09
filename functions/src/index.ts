@@ -11,9 +11,9 @@ const database = admin.database();
 
 /**
  * Cleanup stale games and presence data
- * Runs every hour
+ * Runs every hour. Archiving copies whole game trees, so allow well past the 60s default timeout.
  */
-export const cleanupStaleData = onSchedule('every 1 hours', async () => {
+export const cleanupStaleData = onSchedule({ schedule: 'every 1 hours', timeoutSeconds: 540 }, async () => {
   try {
     await runCleanup(firestore, database);
   } catch (error) {

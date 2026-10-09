@@ -265,13 +265,14 @@ describe('cleanupStaleData', () => {
       expect((await gameRef.get()).exists).toBe(true);
     });
 
-    it('should never archive a game with no timestamps at all', async () => {
+    it('should never archive a game with no timestamps, and stamp createdAt so it can age out', async () => {
       await firestore.collection('games').doc('undated-game').set({ status: 'active' });
 
       await runCleanup();
 
       const game = await firestore.collection('games').doc('undated-game').get();
       expect(game.exists).toBe(true);
+      expect(game.data()!.createdAt).toBeInstanceOf(admin.firestore.Timestamp);
     });
   });
 
