@@ -1,5 +1,6 @@
 import type { AuthenticatedRequest } from "@/authenticate";
 import { db } from "@/firebase";
+import { FieldValue } from "firebase-admin/firestore";
 import { GameStatus, InitialGame } from "@/types";
 import { generateRandomIdForRef, getUsername } from "@/util";
 
@@ -24,7 +25,8 @@ export async function createGame({ userId }: CreateGameRequest): Promise<CreateG
     initialLives: 3,
   }
   
-  await gamesRef.doc(gameId).set(game);
+  // createdAt lets the cleanup job date lobbies that have no actions yet
+  await gamesRef.doc(gameId).set({ ...game, createdAt: FieldValue.serverTimestamp() });
   console.info("CreateGame: Game document created:", gameId);
   return { gameId };
 

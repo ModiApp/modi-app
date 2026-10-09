@@ -2,6 +2,7 @@ import { addActionToBatch, createPlayerLeftAction } from "@/actions";
 import type { AuthenticatedRequest } from "@/authenticate";
 import { db } from "@/firebase";
 import type { Game } from "@/types";
+import { GameStatus } from "@/types";
 
 export interface LeaveGameRequest extends AuthenticatedRequest { gameId: string }
 export interface LeaveGameResponse { success: boolean; gameId: string }
@@ -12,32 +13,19 @@ export async function leaveGame({ userId, gameId }: LeaveGameRequest): Promise<L
   if (!gameDoc.exists) return { success: true, gameId: "" };
   const gameData = gameDoc.data() as Game;
 
+  // Leaving a finished game is just navigation. Keep the game intact so the
+  // cleanup job archives it with every player, rather than stripping players
+  // or deleting it when the last one leaves.
+  if (gameData.status === GameStatus.Ended) return { success: true, gameId };
+
   const username = gameData.usernames?.[userId] || "Unknown Player";
 
   const batch = db.batch();
   const updatedPlayers = gameData.players.filter((pid: string) => pid !== userId);
   if (updatedPlayers.length === 0) {
-    // Delete the whole game tree
-    // Firestore Admin SDK lacks recursive delete; emulate by deleting known subcollections then the doc
-    const internalStateRef = db.collection("games").doc(gameId).collection("internalState").doc("state");
-    const playerHandsRef = db.collection("games").doc(gameId).collection("playerHands");
-    const actionsRef = db.collection("games").doc(gameId).collection("actions");
-    const privateActionsRef = db.collection("games").doc(gameId).collection("privateActions");
-
-    // best-effort deletes
-    const playerHands = await playerHandsRef.get();
-    playerHands.forEach((d) => batch.delete(d.ref));
-    const actions = await actionsRef.get();
-    actions.forEach((d) => batch.delete(d.ref));
-    const privateUsers = await privateActionsRef.get();
-    for (const userDoc of privateUsers.docs) {
-      const userActions = await privateActionsRef.doc(userDoc.id).collection("actions").get();
-      userActions.forEach((d) => batch.delete(d.ref));
-      batch.delete(userDoc.ref);
-    }
-    batch.delete(internalStateRef);
-    batch.delete(gameDoc.ref);
-    await batch.commit();
+    // Delete the whole game tree. Deleting just the doc would leave subcollections
+    // behind, including privateActions/{playerId}/actions whose parent docs don't exist.
+    await db.recursiveDelete(gameDoc.ref);
     return { success: true, gameId: "" };
   }
 
