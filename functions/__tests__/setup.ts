@@ -29,12 +29,9 @@ export const getDatabase = () => admin.database();
 export async function clearFirestore() {
   const firestore = getFirestore();
   const collections = await firestore.listCollections();
-  
+
   for (const collection of collections) {
-    const docs = await collection.listDocuments();
-    for (const doc of docs) {
-      await doc.delete();
-    }
+    await firestore.recursiveDelete(collection);
   }
 }
 

@@ -9,6 +9,8 @@ module.exports = {
   coverageDirectory: 'coverage',
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
   testTimeout: 30000,
+  // Suites share one emulator and clear it between tests, so they can't run in parallel
+  maxWorkers: 1,
   forceExit: true,
   detectOpenHandles: false,
 };

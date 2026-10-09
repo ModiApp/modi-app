@@ -1,6 +1,7 @@
 import { createAndStoreAction, createPlayerJoinedAction } from "@/actions";
 import type { AuthenticatedRequest } from "@/authenticate";
 import { db } from "@/firebase";
+import { FieldValue } from "firebase-admin/firestore";
 import type { Game, InitialGame } from "@/types";
 import { GameStatus } from "@/types";
 import { getUsername } from "@/util";
@@ -43,7 +44,7 @@ export async function playAgain({ userId, gameId }: PlayAgainRequest): Promise<P
         usernames: { [userId]: username },
         initialLives: gameData.initialLives,
       };
-      tx.set(nextGameRef, newGame);
+      tx.set(nextGameRef, { ...newGame, createdAt: FieldValue.serverTimestamp() });
       tx.update(gameRef, { nextGameId });
       return;
     }
